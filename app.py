@@ -136,8 +136,9 @@ if st.session_state.selected_mode is None:
             <div class="mode-desc">증권사의 마케팅 이벤트·유튜브·블로그를 자동 수집하고 KODEX ETF 금융투자 순매수 DiD를 측정합니다</div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("증권사 채널 분석 시작 →", key="btn_securities", use_container_width=True, type="primary"):
+        if st.button("증권사 채널 →", key="btn_securities", use_container_width=True, type="primary"):
             st.session_state.selected_mode = "securities"
+            st.session_state["analysis_run"] = False
             st.rerun()
 
     with col2:
@@ -168,8 +169,9 @@ if st.session_state.selected_mode is None:
 
 # 증권사 모드 선택됨 → 사이드바에 뒤로가기 추가
 with st.sidebar:
-    if st.button("← 채널 선택으로 돌아가기"):
+    if st.button("← 채널 선택"):
         st.session_state.selected_mode = None
+        st.session_state["analysis_run"] = False
         st.rerun()
     st.divider()
 
@@ -348,7 +350,7 @@ else:
     base_loaded = False
 
 # 신규 주차 파일 추가 업로드
-st.header("📂 데이터")
+st.header("📂 추가 데이터 업로드")
 
 col_upload = st.container()
 with col_upload:
@@ -398,7 +400,6 @@ if not sheet_names:
     st.error("유효한 데이터 시트를 찾지 못했습니다.")
     st.stop()
 
-st.success(f"✅ 시트 {len(sheet_names)}개 로드됨")
 
 # 시트명에 날짜 경과 여부 라벨 추가
 def _sheet_label(name: str) -> str:
@@ -444,7 +445,10 @@ else:
         unsafe_allow_html=True)
 st.markdown("")
 
-if not st.button("분석 시작", type="primary", use_container_width=True):
+if st.button("🚀 분석 시작", type="primary", use_container_width=True):
+    st.session_state["analysis_run"] = True
+
+if not st.session_state.get("analysis_run", False):
     st.stop()
 
 # ════════════════════════════════════════════════════════════════════
@@ -470,18 +474,20 @@ else:
     def on_prog(idx, total, name):
         pct = idx / total
         prog.progress(pct)
-        bar_filled = int(pct * 20)
-        bar = "█" * bar_filled + "░" * (20 - bar_filled)
-        sweat = "💦" if pct < 0.9 else "😤"
+        # 공룡 위치: 0~85% 범위에서 pct에 따라 이동
+        left_pct = int(pct * 85)
+        # 땀 방울: 진행률에 따라 1~3개
+        sweat_count = 1 if pct < 0.4 else (2 if pct < 0.75 else 3)
+        sweat = "💧" * sweat_count
+        dino = "🦕" if pct < 0.7 else "🦖"
         dino_ph.markdown(
-            f"<div style='font-size:1.5rem; letter-spacing:2px;'>"
-            f"{'🦕' if pct < 0.5 else '🦖'}{sweat} "
-            f"<span style='font-family:monospace;font-size:0.9rem;color:#4d9fff;'>[{bar}]</span> "
-            f"<span style='font-size:0.85rem;opacity:0.7;'>{int(pct*100)}%</span>"
+            f"<div style='position:relative; height:44px; background:rgba(255,255,255,0.04); border-radius:8px; overflow:hidden; margin:6px 0;'>"
+            f"<div style='position:absolute; left:{left_pct}%; top:4px; font-size:1.8rem; transition:left 0.3s;'>{dino}</div>"
+            f"<div style='position:absolute; left:{left_pct+4}%; top:0px; font-size:0.65rem; transition:left 0.3s;'>{sweat}</div>"
+            f"<div style='position:absolute; bottom:4px; left:4px; font-size:0.7rem; opacity:.5;'>{int(pct*100)}% — {name[:30]}</div>"
             f"</div>",
             unsafe_allow_html=True
         )
-        status.markdown(f"<small style='opacity:.6;'>🔍 {name}</small>", unsafe_allow_html=True)
 
     t0 = time.time()
     collection_results = collector.collect_all(progress_callback=on_prog)

@@ -197,6 +197,11 @@ with st.sidebar:
 """)
 
 # ── 헬퍼 ─────────────────────────────────────────────────────────────────────
+def did_pct(v: float) -> str:
+    """DiD 소수 → '평소 대비 +42%' 형식."""
+    p = int(round(v * 100))
+    return f"평소 대비 {p:+d}%"
+
 def _parse_sheet_dates(sheet_name: str):
     """시트명에서 시작/종료 날짜 추출. 예: '5.25-5.28' → (date(5/25), date(5/28))"""
     from datetime import date
@@ -445,7 +450,7 @@ if not st.button("분석 시작", type="primary", use_container_width=True):
 # ════════════════════════════════════════════════════════════════════
 # STEP 1: 마케팅 채널 수집 (주간 분석 모드만)
 # ════════════════════════════════════════════════════════════════════
-st.markdown('<div class="step-header">Step 1 · 마케팅 채널 데이터 수집</div>', unsafe_allow_html=True)
+st.markdown('<div class="step-header">Step 1 · 마케팅 채널 수집</div>', unsafe_allow_html=True)
 
 if IS_BACKTEST:
     st.info(f"📼 백테스팅 모드: {current_sheet}은 {days_ago}일 전 데이터입니다. "
@@ -457,12 +462,26 @@ else:
         naver_client_secret=naver_secret, anthropic_api_key=anthropic_key,
         week_start=week_start_dt, week_end=week_end_dt,
     )
-    prog = st.progress(0)
+    # 공룡 달리기 로딩 애니메이션
+    dino_ph = st.empty()
     status = st.empty()
+    prog = st.progress(0)
 
     def on_prog(idx, total, name):
-        prog.progress(idx/total)
-        status.info(f"🔍 ({idx}/{total}) {name}")
+        pct = idx / total
+        prog.progress(pct)
+        bar_filled = int(pct * 20)
+        bar = "█" * bar_filled + "░" * (20 - bar_filled)
+        sweat = "💦" if pct < 0.9 else "😤"
+        dino_ph.markdown(
+            f"<div style='font-size:1.5rem; letter-spacing:2px;'>"
+            f"{'🦕' if pct < 0.5 else '🦖'}{sweat} "
+            f"<span style='font-family:monospace;font-size:0.9rem;color:#4d9fff;'>[{bar}]</span> "
+            f"<span style='font-size:0.85rem;opacity:0.7;'>{int(pct*100)}%</span>"
+            f"</div>",
+            unsafe_allow_html=True
+        )
+        status.markdown(f"<small style='opacity:.6;'>🔍 {name}</small>", unsafe_allow_html=True)
 
     t0 = time.time()
     collection_results = collector.collect_all(progress_callback=on_prog)
@@ -470,17 +489,26 @@ else:
     ok   = sum(1 for r in collection_results.values() if r.success)
     fail = len(collection_results) - ok
     prog.progress(1.0)
-    status.success(f"✅ 수집 완료 ({elapsed:.1f}초) — 성공 {ok}개 / 실패 {fail}개")
+    dino_ph.markdown(
+        f"<div style='font-size:1.2rem;'>🦕✅ "
+        f"<span style='font-size:0.9rem;color:#4ec880;'>수집 완료 {elapsed:.1f}초</span></div>",
+        unsafe_allow_html=True
+    )
+    # 채널 결과 pill 형태로 표시
+    pills_html = ""
+    for r in collection_results.values():
+        cls = "ch-ok" if r.success else "ch-fail"
+        icon = "✓" if r.success else "✗"
+        pills_html += f'<span class="ch-pill {cls}">{icon} {r.channel_name}</span>'
+    status.markdown(f"<div style='margin-top:6px;'>{pills_html}</div>", unsafe_allow_html=True)
 
-    with st.expander("📡 채널별 수집 결과", expanded=False):
-        cols = st.columns(2)
+    with st.expander("📡 채널별 상세", expanded=False):
+        cols = st.columns(3)
         for i, r in enumerate(collection_results.values()):
             icon = "✅" if r.success else "❌"
-            detail = summarize_channel(r) if r.success else (r.error_label or "")
-            err = f": {r.error}" if not r.success and r.error else ""
-            col_style = "" if r.success else "color:#dc3545;"
-            cols[i%2].markdown(
-                f"{icon} **{r.channel_name}**  \n<small style='{col_style}'>{detail}{err}</small>",
+            detail = summarize_channel(r) if r.success else (r.error_label or r.error or "")
+            cols[i%3].markdown(
+                f"{icon} **{r.channel_name}**  \n<small style='opacity:.7;'>{detail[:60]}</small>",
                 unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════════════
@@ -602,7 +630,8 @@ if not target_codes:
 # ════════════════════════════════════════════════════════════════════
 st.markdown('<div class="step-header">Step 3 · 비교군 매핑</div>', unsafe_allow_html=True)
 
-with st.expander("🔗 비교군 매핑 결과 (클릭해서 확인/수정)", expanded=True):
+with st.expander("🔗 비교군 매핑", expanded=True):
+    st.caption("📌 매핑 근거: 네이버 금융 기초지수 일치 우선 → 이름 유사도 → 운용사별 최대 2개 선정")
     analyzer = MarketingAnalyzer()
     for code in target_codes:
         row_etf = analyzer.loader.get_etf_row(current_df, code, code)
@@ -615,15 +644,22 @@ with st.expander("🔗 비교군 매핑 결과 (클릭해서 확인/수정)", ex
 
         st.markdown(f"**{etf_name}** `{code}`")
         if comps:
-            comp_cols = st.columns(len(comps))
-            for ci, comp in enumerate(comps):
-                with comp_cols[ci]:
-                    st.markdown(
-                        f"<div class='comp-card'>🆚 <b>{comp['name']}</b><br>"
-                        f"<small>{comp['code']} · {comp['provider']}</small></div>",
-                        unsafe_allow_html=True)
+            # 그리드 박스 형태 (균일한 비율)
+            cards_html = '<div class="comp-grid">'
+            for comp in comps:
+                provider_colors = {"TIGER":"#f4a261","ACE":"#e76f51","PLUS":"#2a9d8f","SOL":"#e9c46a"}
+                c = provider_colors.get(comp['provider'], "#adb5bd")
+                cards_html += (
+                    f'<div class="comp-card" style="border-color:{c}40; min-width:140px; flex:1;">'
+                    f'<div style="font-size:0.7rem;color:{c};font-weight:700;">{comp["provider"]}</div>'
+                    f'<div style="font-size:0.85rem;font-weight:600;margin:4px 0;">{comp["name"].replace("TIGER ","T.").replace("PLUS ","P.").replace("ACE ","A.").replace("SOL ","S.")}</div>'
+                    f'<div style="font-size:0.7rem;opacity:.6;">{comp["code"]}</div>'
+                    f'</div>'
+                )
+            cards_html += '</div>'
+            st.markdown(cards_html, unsafe_allow_html=True)
         else:
-            st.error("⚫ 비교군 없음 — DiD 측정 불가 (유사 상품 없음)")
+            st.error("⚫ 비교군 없음 — DiD 측정 불가")
         st.divider()
 
 # ════════════════════════════════════════════════════════════════════
@@ -710,7 +746,7 @@ if did_results:
                 f"<div style='border:2px solid {c};border-radius:8px;padding:14px;text-align:center;'>"
                 f"<div style='font-size:2rem;'>{res.judgement_emoji}</div>"
                 f"<div style='font-weight:700;font-size:0.85rem;'>{res.kodex_name}</div>"
-                f"<div class='did-result' style='color:{c};'>DiD {res.did_value:+.4f}</div>"
+                f"<div class='did-result' style='color:{c};'>{did_pct(res.did_value)}</div>"
                 f"<div style='font-size:0.78rem;color:#555;'>{res.judgement}</div>"
                 f"</div>", unsafe_allow_html=True)
 
@@ -721,30 +757,33 @@ if did_results:
     did_vals   = [r.did_value for r in did_results.values()]
     bar_colors = [color_map.get(r.judgement_emoji, "#6c757d") for r in did_results.values()]
 
-    # ── DiD 결과: 가로 막대 (ETF명 길어도 안 겹침) ──
+    # ── DiD 결과: 가로 막대 — % 표시 ──
     short_names = [n.replace("KODEX ", "") for n in etf_names]
+    did_pct_vals = [v * 100 for v in did_vals]  # % 단위로 변환
+
     fig_did = go.Figure()
-    for name, short, val, color in zip(etf_names, short_names, did_vals, bar_colors):
+    for name, short, val_raw, val_pct, color in zip(etf_names, short_names, did_vals, did_pct_vals, bar_colors):
+        label = f"  {val_pct:+.0f}%"
         fig_did.add_trace(go.Bar(
-            y=[short], x=[val],
+            y=[short], x=[val_pct],
             orientation="h",
             marker_color=color,
             marker_line_width=0,
-            text=f"  {val:+.3f}",
+            text=label,
             textposition="outside",
-            hovertemplate=f"<b>{name}</b><br>DiD: {val:+.4f}<extra></extra>",
+            hovertemplate=f"<b>{name}</b><br>평소 대비 {val_pct:+.0f}%<br>(DiD={val_raw:+.3f})<extra></extra>",
             showlegend=False,
         ))
     fig_did.add_vline(x=0,    line_dash="solid", line_color="rgba(200,200,200,0.4)", line_width=1)
-    fig_did.add_vline(x=1.0,  line_dash="dot",   line_color="#28a745", line_width=1.5,
-                      annotation=dict(text="강함 1.0", font_color="#28a745", font_size=11, y=1.08))
-    fig_did.add_vline(x=0.3,  line_dash="dot",   line_color="#ffc107", line_width=1.5,
-                      annotation=dict(text="효과있음 0.3", font_color="#ffc107", font_size=11, y=1.08))
-    fig_did.add_vline(x=-0.3, line_dash="dot",   line_color="#dc3545", line_width=1.5,
-                      annotation=dict(text="-0.3", font_color="#dc3545", font_size=11, y=1.08))
+    fig_did.add_vline(x=100,  line_dash="dot",   line_color="#28a745", line_width=1.5,
+                      annotation=dict(text="+100% 강함", font_color="#28a745", font_size=11, y=1.08))
+    fig_did.add_vline(x=30,   line_dash="dot",   line_color="#ffc107", line_width=1.5,
+                      annotation=dict(text="+30% 효과있음", font_color="#ffc107", font_size=11, y=1.08))
+    fig_did.add_vline(x=-30,  line_dash="dot",   line_color="#dc3545", line_width=1.5,
+                      annotation=dict(text="-30%", font_color="#dc3545", font_size=11, y=1.08))
     fig_did.update_layout(
-        title=dict(text="📊 ETF별 DiD 결과", font_size=15, x=0),
-        xaxis=dict(title="DiD (정규화 절대 변화)", gridcolor="rgba(255,255,255,0.08)", zeroline=False),
+        title=dict(text="📊 ETF별 마케팅 효과 (평소 대비 %)", font_size=15, x=0),
+        xaxis=dict(title="평소 변동 대비 (%)", gridcolor="rgba(255,255,255,0.08)", zeroline=False),
         yaxis=dict(title="", autorange="reversed", tickfont=dict(size=12)),
         template="plotly_dark",
         height=max(180, len(did_results) * 72 + 100),
@@ -826,7 +865,7 @@ st.markdown("---")
 # ── ETF별 상세 계산 과정 ──
 for code, res in did_results.items():
     with st.expander(
-        f"🔎 {res.kodex_name} ({code})  |  DiD = {res.did_value:+.2f}%p  {res.judgement_emoji} {res.judgement}",
+        f"🔎 {res.kodex_name} ({code})  |  {did_pct(res.did_value)}  {res.judgement_emoji} {res.judgement}",
         expanded=True
     ):
         # LP 감지 배지
@@ -895,10 +934,9 @@ for code, res in did_results.items():
                 f"   ({ctrl_parts}) ÷ {n} = {res.control_avg_pct:+.4f}\n\n"
                 f"③ DiD = ① − ②\n"
                 f"   {res.kodex_change_pct:+.4f} − ({res.control_avg_pct:+.4f}) = {res.did_value:+.4f}\n\n"
-                f"→ 판정: {res.judgement_emoji} {res.judgement}\n"
-                f"   (기준: ≥1.0 강함 / ≥0.3 효과있음 / ≥-0.3 불분명 / <-0.3 효과 확인 어려움)\n"
-                f"   단위: KODEX가 TIGER 대비 평소 변동 크기(4주절댓값평균) 기준 얼마나 초과했는지\n"
-                f"   예) DiD=1.0 → 평소 변동 크기만큼 초과 / DiD=0.3 → 평소의 30% 초과\n"
+                f"→ 판정: {res.judgement_emoji} {res.judgement}  ({did_pct(res.did_value)})\n"
+                f"   ≥+100% 강함  /  ≥+30% 효과있음  /  -30%~+30% 불분명  /  <-30% 효과확인어려움\n"
+                f"   ※ % = 평소 변동 크기(4주 평균) 대비 KODEX가 비교군을 얼마나 초과했는지\n"
                 f"   ※ 공식은 정규화 절대 변화 방식으로 설계됨. 단, 판정 임계값(≥1.0/≥0.3)은\n"
                 f"     이론적 설정값으로 주차 데이터 축적 후 실증 재보정 필요"
                 f"{single_note}"

@@ -483,33 +483,31 @@ else:
         bar_w = int(pct * 100)
 
         dino_ph.markdown(
-            f"""<div style='position:relative; height:64px;
-                            background:rgba(255,255,255,0.03);
-                            border-radius:8px; margin:6px 0;'>
-              <!-- 진행 바 (하단에 위치) -->
-              <div style='position:absolute; left:0; bottom:10px;
-                          height:5px; width:{bar_w}%;
-                          background:linear-gradient(90deg,#4d9fff,#00c6ff);
-                          border-radius:3px; transition:width 0.25s;'></div>
-              <!-- 🔥 불 (황소 바로 위) -->
-              <div style='position:absolute;
-                          left:calc({bar_w}% - 1.2rem);
-                          bottom:32px;
-                          font-size:{fire_size};
-                          transition:left 0.25s, font-size 0.15s;
-                          line-height:1;'>🔥</div>
-              <!-- 🐂 황소 (바 위에 서있음) -->
-              <div style='position:absolute;
-                          left:calc({bar_w}% - 1.4rem);
-                          bottom:15px;
-                          font-size:1.8rem;
-                          transform:scaleX(-1);
-                          transition:left 0.25s;
-                          line-height:1;'>🐂</div>
-              <!-- 채널 이름 -->
-              <div style='position:absolute; bottom:0; left:4px;
-                          font-size:0.65rem; opacity:.45;
-                          line-height:1.8;'>{int(pct*100)}% — {name[:30]}</div>
+            f"""<div style='background:rgba(255,255,255,0.03); border-radius:8px; padding:8px 8px 4px; margin:6px 0;'>
+              <!-- 황소+불 애니메이션 영역 -->
+              <div style='position:relative; height:50px;'>
+                <!-- 배경 트랙 -->
+                <div style='position:absolute; left:0; top:50%; transform:translateY(-50%);
+                            height:5px; width:100%; background:rgba(255,255,255,0.06); border-radius:3px;'></div>
+                <!-- 진행 바 -->
+                <div style='position:absolute; left:0; top:50%; transform:translateY(-50%);
+                            height:5px; width:{bar_w}%;
+                            background:linear-gradient(90deg,#4d9fff,#00c6ff);
+                            border-radius:3px; transition:width 0.25s;'></div>
+                <!-- 🔥 불 (황소 바로 위) -->
+                <div style='position:absolute;
+                            left:calc({bar_w}% - 1.1rem);
+                            top:2px; font-size:{fire_size};
+                            transition:left 0.25s, font-size 0.15s; line-height:1;'>🔥</div>
+                <!-- 🐂 황소 (바 위에 딱 붙어서) -->
+                <div style='position:absolute;
+                            left:calc({bar_w}% - 1.4rem);
+                            top:18px; font-size:1.8rem;
+                            transform:scaleX(-1);
+                            transition:left 0.25s; line-height:1;'>🐂</div>
+              </div>
+              <!-- 텍스트 (별도 줄) -->
+              <div style='font-size:0.65rem; opacity:.45; margin-top:2px;'>{int(pct*100)}% — {name[:35]}</div>
             </div>""",
             unsafe_allow_html=True
         )
@@ -521,14 +519,16 @@ else:
     fail = len(collection_results) - ok
     # 완료: 황소가 바 끝(100%)에 서있고 불 꺼짐
     dino_ph.markdown(
-        f"""<div style='position:relative; height:64px;
-                        background:rgba(255,255,255,0.03); border-radius:8px; margin:6px 0;'>
-          <div style='position:absolute; left:0; bottom:10px; height:5px; width:100%;
-                      background:linear-gradient(90deg,#4d9fff,#00c6ff); border-radius:3px;'></div>
-          <div style='position:absolute; left:calc(100% - 1.2rem); bottom:32px; font-size:1rem;'>✅</div>
-          <div style='position:absolute; left:calc(100% - 1.4rem); bottom:15px;
-                      font-size:1.8rem; transform:scaleX(-1);'>🐂</div>
-          <div style='position:absolute; bottom:0; left:4px; font-size:0.65rem; opacity:.6; line-height:1.8;'>
+        f"""<div style='background:rgba(255,255,255,0.03); border-radius:8px; padding:8px 8px 4px; margin:6px 0;'>
+          <div style='position:relative; height:50px;'>
+            <div style='position:absolute; left:0; top:50%; transform:translateY(-50%);
+                        height:5px; width:100%;
+                        background:linear-gradient(90deg,#4d9fff,#00c6ff); border-radius:3px;'></div>
+            <div style='position:absolute; left:calc(100% - 1.1rem); top:2px; font-size:1rem;'>✅</div>
+            <div style='position:absolute; left:calc(100% - 1.4rem); top:18px;
+                        font-size:1.8rem; transform:scaleX(-1);'>🐂</div>
+          </div>
+          <div style='font-size:0.65rem; opacity:.6; margin-top:2px;'>
             완료 {elapsed:.1f}초 — 성공 {ok}개 / 실패 {fail}개</div>
         </div>""",
         unsafe_allow_html=True

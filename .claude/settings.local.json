@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import pandas as pd; xl = pd.ExcelFile\\('C:/Users/USER/Desktop/kodex agent/ETF_순매수_데이터_260529.xlsx'\\); print\\(xl.sheet_names\\)\")",
+      "Bash(where python *)",
+      "PowerShell(python --version)",
+      "PowerShell(python -c \"print\\('hello'\\)\")",
+      "PowerShell($env:PATH -split ';' | Where-Object { $_ -match 'python|conda|uv' })",
+      "mcp__Claude_in_Chrome__tabs_context_mcp"
+    ]
+  }
+}

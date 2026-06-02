@@ -352,8 +352,19 @@ class DataCollector:
                         continue
                 except Exception:
                     pass
-                is_etf = bool(re.search(r"ETF|KODEX|TIGER|코덱스|배당|채권|지수|리츠|반도체|AI", title, re.I))
-                videos.append({"title": title, "published_at": pub_str, "is_etf_related": is_etf, "url": vid_url})
+                # 영상 description 가져오기 (RSS media:description 또는 summary)
+                desc_tag = entry.find("description") or entry.find("summary")
+                media_desc = entry.find("media:description") or entry.find("group")
+                video_desc = ""
+                if desc_tag:
+                    video_desc = desc_tag.get_text(strip=True)[:500]
+                elif media_desc:
+                    video_desc = media_desc.get_text(strip=True)[:500]
+
+                content = title + " " + video_desc
+                is_etf = bool(re.search(r"ETF|KODEX|TIGER|코덱스|배당|채권|지수|리츠|반도체|AI|이벤트|프로모션", content, re.I))
+                videos.append({"title": title, "description": video_desc,
+                                "published_at": pub_str, "is_etf_related": is_etf, "url": vid_url})
             week_info = f"{self.week_start.strftime('%m/%d')}~{self.week_end.strftime('%m/%d')}" if self.week_start else "최근 7일"
             return ChannelResult(ch, name, True, data={"source": "rss", "videos": videos,
                                                         "note": f"RSS ({week_info})"})
@@ -502,25 +513,29 @@ class DataCollector:
 
             posts = []
 
-            for item in items[:50]:
+            for item in items[:30]:
                 title   = item.find("title").get_text(strip=True)       if item.find("title")       else ""
                 link    = item.find("link").get_text(strip=True)         if item.find("link")         else ""
                 desc    = item.find("description").get_text(strip=True)  if item.find("description")  else ""
                 pub_str = item.find("pubDate").get_text(strip=True)      if item.find("pubDate")      else ""
 
-                is_etf = bool(re.search(r"ETF|KODEX|코덱스|펀드|배당|채권|지수|리츠|커버드콜", title + desc, re.I))
+                pub_dt = self._parse_pub_date(pub_str)
+                if pub_dt is not None and not self._in_range(pub_dt):
+                    continue
 
-                entry = {
+                # 포스트 전문 읽기
+                full_text = self._fetch_article_text(link) if link else ""
+                content = full_text if full_text else desc
+
+                is_etf = bool(re.search(r"ETF|KODEX|코덱스|펀드|배당|채권|지수|리츠|커버드콜|이벤트|프로모션", content, re.I))
+
+                posts.append({
                     "title": title,
                     "link": link,
-                    "description": desc[:300],
+                    "description": content[:1000],
                     "pub_date": pub_str,
                     "is_etf_related": is_etf,
-                }
-
-                pub_dt = self._parse_pub_date(pub_str)
-                if pub_dt is None or self._in_range(pub_dt):
-                    posts.append(entry)
+                })
 
             week_info = f"{self.week_start.strftime('%m/%d')}~{self.week_end.strftime('%m/%d')}" if self.week_start else "최근 7일"
             return ChannelResult(ch, name, True, data={

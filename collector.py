@@ -129,6 +129,30 @@ class DataCollector:
             return dt >= datetime.now() - timedelta(days=7)
         return self.week_start <= dt <= self.week_end + timedelta(days=1)
 
+    def _fetch_article_text(self, url: str) -> str:
+        """기사 URL에서 본문 전문 추출."""
+        if not url or not url.startswith("http"):
+            return ""
+        try:
+            r = requests.get(url, headers=BROWSER_HEADERS, timeout=8)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "lxml")
+            # 스크립트/스타일 제거
+            for tag in soup(["script", "style", "nav", "header", "footer", "aside"]):
+                tag.decompose()
+            # 본문 텍스트 추출 (article, main, .content 등 시도)
+            for selector in ["article", "main", ".article-content", ".news-content",
+                             ".article_body", "#articleBody", ".article-body"]:
+                el = soup.select_one(selector)
+                if el:
+                    text = el.get_text(" ", strip=True)
+                    if len(text) > 200:
+                        return text[:2000]
+            # fallback: body 전체
+            return soup.get_text(" ", strip=True)[:2000]
+        except Exception:
+            return ""
+
     def _parse_pub_date(self, pub_str: str) -> Optional[datetime]:
         """RSS pubDate 문자열 → datetime."""
         if not pub_str:
@@ -807,15 +831,20 @@ class DataCollector:
                     )
                     r.raise_for_status()
                     soup = BeautifulSoup(r.text, "xml")
-                    for item in soup.find_all("item")[:20]:
+                    for item in soup.find_all("item")[:10]:
                         pub_str = item.find("pubDate").get_text(strip=True) if item.find("pubDate") else ""
                         pub_dt = self._parse_pub_date(pub_str)
                         if pub_dt and not self._in_range(pub_dt):
                             continue
+                        link = item.find("link").get_text(strip=True) if item.find("link") else ""
+                        title = item.find("title").get_text(strip=True) if item.find("title") else ""
+                        # 기사 전문 읽기
+                        full_text = self._fetch_article_text(link)
                         articles.append({
-                            "title": item.find("title").get_text(strip=True) if item.find("title") else "",
-                            "description": item.find("description").get_text(strip=True)[:300] if item.find("description") else "",
-                            "link": item.find("link").get_text(strip=True) if item.find("link") else "",
+                            "title": title,
+                            "description": full_text if full_text else
+                                          (item.find("description").get_text(strip=True)[:500] if item.find("description") else ""),
+                            "link": link,
                             "pub_date": pub_str,
                             "keyword": q.replace("+", " "),
                         })

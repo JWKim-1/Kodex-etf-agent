@@ -262,14 +262,6 @@ def keyword_fallback(collection_results, all_kodex_etfs: dict) -> dict:
                     matched_codes.append(code)
                     matched_names.append(etf_name)
 
-            # ETF명 없어도 "KODEX + 이벤트/이벤트/출시/돌파" 조합이면 전체 마케팅으로 감지
-            if not matched_codes and re.search(
-                r'KODEX.{0,20}(이벤트|출시|신규상장|돌파|프로모션|혜택|캠페인)',
-                text, re.I
-            ):
-                matched_codes = list(all_kodex_etfs.keys())[:1]  # 대표 코드 1개
-                matched_names = ["KODEX ETF (전체)"]
-
             if matched_codes:
                 for code in matched_codes:
                     if code not in found:

@@ -686,41 +686,39 @@ with st.expander("🔗 비교군 매핑", expanded=True):
         else:
             comps = auto_map_competitors(etf_name, code, etf_universe)
 
-        prov_colors = {"KODEX":"#4d9fff","TIGER":"#f4a261","ACE":"#e76f51","PLUS":"#2a9d8f","SOL":"#e9c46a","RISE":"#6b9fff","HANARO":"#a78bfa"}
-        total_cards = 1 + len(comps)  # KODEX + 비교군
-        card_style = f"flex:1; min-width:0; width:calc(100%/{total_cards} - 8px);"
+        _pc = {"KODEX":"#4d9fff","TIGER":"#f4a261","ACE":"#e76f51","PLUS":"#2a9d8f","SOL":"#e9c46a","RISE":"#6b9fff","HANARO":"#a78bfa"}
+        total_cards = 1 + len(comps)
+        card_w = f"flex:1; min-width:0; max-width:calc(100%/{total_cards});"
 
-        # KODEX 카드 + 비교군 카드 균일 그리드
-        cards_html = '<div class="comp-grid" style="align-items:stretch;">'
+        def _card(logo, name, code_str, color, label=""):
+            return (
+                f'<div style="{card_w} border:2px solid {color}; border-radius:8px; '
+                f'padding:14px 12px; text-align:center; background:rgba(0,0,0,0.15);">'
+                f'<img src="{logo}" style="height:28px;margin-bottom:6px;display:block;margin-left:auto;margin-right:auto;" onerror="this.style.display=\'none\'">'
+                f'<div style="font-size:0.72rem;color:{color};font-weight:700;margin-bottom:2px;">{label}</div>'
+                f'<div style="font-size:1.05rem;font-weight:700;">{name}</div>'
+                f'<div style="font-size:0.72rem;opacity:.5;margin-top:3px;">{code_str}</div>'
+                f'</div>'
+            )
+
+        cards_html = '<div style="display:flex; gap:10px; margin:8px 0;">'
         # KODEX 카드
-        kodex_logo = "https://ssl.pstatic.net/imgstock/fn/real/logo/etf/StockKRETFKODEX.svg"
-        short_kodex = etf_name.replace("KODEX ","")
-        cards_html += (
-            f'<div class="comp-card" style="border-color:#4d9fff80; {card_style} border-width:2px;">'
-            f'<img src="{kodex_logo}" style="height:22px;margin-bottom:4px;" onerror="this.style.display=\'none\'">'
-            f'<div style="font-size:0.7rem;color:#4d9fff;font-weight:700;">KODEX ← 처리군</div>'
-            f'<div style="font-size:0.95rem;font-weight:600;margin:2px 0;">{short_kodex}</div>'
-            f'<div style="font-size:0.68rem;opacity:.5;">{code}</div>'
-            f'</div>'
+        cards_html += _card(
+            "https://ssl.pstatic.net/imgstock/fn/real/logo/etf/StockKRETFKODEX.svg",
+            etf_name.replace("KODEX ",""), code, "#4d9fff", "KODEX"
         )
         if comps:
             for comp in comps:
-                c = prov_colors.get(comp['provider'], "#adb5bd")
-                logo_url = f"https://ssl.pstatic.net/imgstock/fn/real/logo/etf/StockKRETF{comp['provider']}.svg"
+                c = _pc.get(comp['provider'], "#adb5bd")
                 short_name = comp["name"].replace("TIGER ","").replace("PLUS ","").replace("ACE ","").replace("SOL ","").replace("RISE ","").replace("HANARO ","")
-                cards_html += (
-                    f'<div class="comp-card" style="border-color:{c}40; {card_style}">'
-                    f'<img src="{logo_url}" style="height:22px;margin-bottom:4px;" onerror="this.style.display=\'none\'">'
-                    f'<div style="font-size:0.7rem;color:{c};font-weight:700;">{comp["provider"]} ← 비교군</div>'
-                    f'<div style="font-size:0.95rem;font-weight:600;margin:2px 0;">{short_name}</div>'
-                    f'<div style="font-size:0.68rem;opacity:.5;">{comp["code"]}</div>'
-                    f'</div>'
+                cards_html += _card(
+                    f"https://ssl.pstatic.net/imgstock/fn/real/logo/etf/StockKRETF{comp['provider']}.svg",
+                    f"{comp['provider']} {short_name}", comp["code"], c, "비교군"
                 )
             cards_html += '</div>'
             st.markdown(cards_html, unsafe_allow_html=True)
-            # 단일 매핑 주석
             if len(comps) == 1:
-                st.caption("※ 동일 유형 ETF가 시장에 1종만 존재 — 통상 2개 대조군 기준이나 1개만 매핑됨")
+                st.caption("※ 동일 유형 ETF 시장에 1종만 존재 — 통상 2개 비교군 기준이나 1개만 매핑됨")
         else:
             cards_html += '</div>'
             st.markdown(cards_html, unsafe_allow_html=True)
@@ -880,71 +878,47 @@ if did_results:
             chart_rows.append({"ETF": short, "구분": "비교군없음", "변화율": 0, "order": 1, "no_comp": True})
 
     if chart_rows:
-        provider_colors = {
-            "KODEX":    "#4d9fff",
-            "TIGER":    "#f4a261",
-            "ACE":      "#e76f51",
-            "PLUS":     "#2a9d8f",
-            "SOL":      "#e9c46a",
-            "비교군없음": "rgba(100,100,100,0.3)",
-        }
+        from plotly.subplots import make_subplots
+        _pc2 = {"KODEX":"#4d9fff","TIGER":"#f4a261","ACE":"#e76f51","PLUS":"#2a9d8f","SOL":"#e9c46a","RISE":"#6b9fff","HANARO":"#a78bfa"}
         etf_groups = list(dict.fromkeys(r["ETF"] for r in chart_rows))
+        n = len(etf_groups)
 
-        fig_comp = go.Figure()
-        all_providers = list(dict.fromkeys(r["구분"] for r in chart_rows))
+        # ETF별 서브플롯 (가로로 나란히)
+        fig_comp = make_subplots(
+            rows=1, cols=n,
+            subplot_titles=etf_groups,
+            shared_yaxes=True,
+        )
+        for col_i, etf in enumerate(etf_groups):
+            etf_rows = [r for r in chart_rows if r["ETF"] == etf]
+            labels = [r["구분"] for r in etf_rows]
+            vals   = [r["변화율"] for r in etf_rows]
+            colors = [_pc2.get(lbl, "#adb5bd") for lbl in labels]
+            texts  = [f"{v:+.0f}%" if not r.get("no_comp") else "없음" for r, v in zip(etf_rows, vals)]
+            fig_comp.add_trace(
+                go.Bar(
+                    x=labels, y=vals,
+                    marker_color=colors,
+                    marker_line_width=0,
+                    text=texts,
+                    textposition="outside",
+                    textfont=dict(size=11, color="white"),
+                    hovertemplate="%{x}: %{y:+.0f}%<extra></extra>",
+                    showlegend=False,
+                ),
+                row=1, col=col_i+1
+            )
+            fig_comp.add_hline(y=0, line_dash="dash", line_color="rgba(200,200,200,0.4)", line_width=1, row=1, col=col_i+1)
 
-        for provider in all_providers:
-            y_vals, x_vals, texts, patterns = [], [], [], []
-            for etf in etf_groups:
-                match = [r for r in chart_rows if r["ETF"] == etf and r["구분"] == provider]
-                val = match[0]["변화율"] if match else None
-                x_vals.append(etf)
-                y_vals.append(val if val is not None else 0)
-                if val is None:
-                    texts.append("")
-                elif provider == "비교군없음":
-                    texts.append("비교군 없음")
-                else:
-                    texts.append(f"{val:+.0f}%")
-                patterns.append("/" if provider == "비교군없음" else "")
-
-            is_dummy = provider == "비교군없음"
-            fig_comp.add_trace(go.Bar(
-                name=provider,
-                x=x_vals,
-                y=y_vals,
-                marker_color=provider_colors.get(provider, "#adb5bd"),
-                marker_pattern_shape=patterns if is_dummy else None,
-                marker_line_width=0,
-                text=texts,
-                textposition="outside",
-                textfont=dict(size=10),
-                hovertemplate="<b>%{x}</b><br>" + provider + ": %{y:+.0f}%<extra></extra>" if not is_dummy else "<b>%{x}</b><br>비교군 없음<extra></extra>",
-                showlegend=not is_dummy or provider not in [r["구분"] for r in chart_rows if not r.get("no_comp")],
-            ))
-
-        fig_comp.add_hline(y=0, line_dash="dash", line_color="rgba(200,200,200,0.4)", line_width=1)
-        # x축 카테고리 순서 명시적으로 고정 → 간격 일관성 유지
         fig_comp.update_layout(
-            title=dict(text="🔵 KODEX vs 비교군 변화율 비교", font_size=15, x=0),
-            barmode="group",
-            bargap=0.4,
-            bargroupgap=0.1,
-            xaxis=dict(
-                title="",
-                tickfont=dict(size=13),
-                categoryorder="array",
-                categoryarray=[e for e in etf_groups],  # 순서 고정
-            ),
-            yaxis=dict(title="비교군 대비 초과 (%)", gridcolor="rgba(255,255,255,0.08)", zeroline=False),
+            title=dict(text="🔵 KODEX vs 비교군 변화율", font_size=15, x=0),
             template="plotly_dark",
-            height=420,
-            legend=dict(orientation="h", y=-0.18, x=0.5, xanchor="center", font_size=12),
-            margin=dict(t=60, b=90, l=20, r=20),
+            height=320,
+            margin=dict(t=60, b=40, l=20, r=20),
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
-            uniformtext=dict(mode="hide", minsize=9),
         )
+        fig_comp.update_yaxes(title_text="비교군 대비 초과(%)", gridcolor="rgba(255,255,255,0.08)", row=1, col=1)
         st.plotly_chart(fig_comp, use_container_width=True)
 
 st.markdown("---")
@@ -957,7 +931,7 @@ for code, res in did_results.items():
 
     with st.expander(
         f"{res.judgement_emoji} {res.kodex_name}  |  {did_pct(res.did_value)}  —  {res.judgement}",
-        expanded=True
+        expanded=False
     ):
         # ── 상단: 핵심 수치 3컬럼 ──
         c1, c2, c3 = st.columns(3)
@@ -1014,7 +988,7 @@ for code, res in did_results.items():
                 f"           = {int(res.control_avg_pct*100):+d}%\n\n"
                 f"  ③ DiD   = ① − ② = {did_pct(res.did_value)}\n\n"
                 f"  판정   {res.judgement_emoji} {res.judgement}\n"
-                f"  기준   >+100%: 강함 / +30%~+100%: 효과있음 / -30%~+30%: 불분명 / <-30%: 확인어려움{single_note}"
+                f"  기준   >+100%: 강함 / >+30%: 효과있음 / <-30%: 불분명 / <-100%: 확인어려움{single_note}"
             )
             st.markdown(f"<div class='formula-box'>{formula}</div>", unsafe_allow_html=True)
 

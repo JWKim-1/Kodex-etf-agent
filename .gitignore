@@ -2,7 +2,5 @@ __pycache__/
 *.pyc
 *.pyo
 .env
-*.xlsx
-*.csv
 .streamlit/credentials.toml
 *.log

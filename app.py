@@ -28,35 +28,49 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 # ── CSS ───────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
+/* ── Coinbase-inspired design system ── */
+/* Primary: #0052ff | Dark canvas: #0a0b0d | Elevated: #16181c */
+/* Semantic up: #05b169 | Semantic down: #cf202f */
+
 .step-header {
-    font-size:1.05rem; font-weight:700; color:#4d9fff;
-    border-left:4px solid #4d9fff; padding-left:10px; margin:16px 0 8px;
+    font-size:1rem; font-weight:600; color:#0052ff;
+    border-left:3px solid #0052ff; padding-left:12px; margin:20px 0 10px;
+    letter-spacing:-0.01em;
 }
 .formula-box {
-    border:1px solid rgba(128,128,255,0.35); border-radius:6px;
-    padding:12px 16px; font-family:monospace; font-size:0.88rem;
-    white-space:pre-wrap; margin:8px 0;
-    background:rgba(100,120,255,0.08); color:inherit;
+    border:1px solid rgba(0,82,255,0.2); border-radius:12px;
+    padding:16px 20px; font-family:'JetBrains Mono','Courier New',monospace; font-size:0.85rem;
+    white-space:pre-wrap; margin:10px 0;
+    background:#16181c; color:#e8eaed;
 }
-.comp-card {
-    border:1px solid rgba(128,128,128,0.3); border-radius:8px;
-    padding:12px; margin:4px;
-    background:rgba(128,128,128,0.1); color:inherit;
-    text-align:center; min-height:90px;
+.comp-grid { display:flex; gap:12px; margin:12px 0; flex-wrap:nowrap; }
+.did-result { font-size:1.4rem; font-weight:700; padding:6px 0; font-family:'JetBrains Mono','Courier New',monospace; }
+.badge-lp  { background:rgba(244,176,0,0.15); color:#f4b000; padding:3px 10px;
+              border-radius:100px; font-size:0.72rem; font-weight:600; border:1px solid rgba(244,176,0,0.3); }
+.badge-ok  { background:rgba(5,177,105,0.12); color:#05b169; padding:3px 10px;
+              border-radius:100px; font-size:0.72rem; font-weight:600; border:1px solid rgba(5,177,105,0.3); }
+.mode-badge-weekly { background:rgba(0,82,255,0.1); border:1px solid rgba(0,82,255,0.3);
+                     color:#0052ff; padding:5px 16px; border-radius:100px;
+                     font-weight:600; font-size:0.88rem; display:inline-block; }
+/* Streamlit button override → Coinbase Blue pill */
+.stButton > button[kind="primary"] {
+    background:#0052ff !important; color:#fff !important;
+    border-radius:100px !important; border:none !important;
+    font-weight:600 !important; letter-spacing:0.01em !important;
 }
-.comp-grid { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
-.did-result  { font-size:1.3rem; font-weight:700; padding:8px 0; }
-.badge-lp    { background:rgba(255,200,50,0.25); color:#f0c040; padding:2px 8px;
-               border-radius:10px; font-size:0.78rem; font-weight:700; }
-.badge-ok    { background:rgba(50,200,100,0.2); color:#4ec880; padding:2px 8px;
-               border-radius:10px; font-size:0.78rem; font-weight:700; }
-.mode-badge-weekly { background:rgba(50,200,100,0.2); border:1px solid rgba(50,200,100,0.5);
-                     color:#4ec880; padding:4px 12px; border-radius:8px;
-                     font-weight:700; font-size:0.9rem; display:inline-block; }
-.ch-pill { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.75rem;
+.stButton > button[kind="primary"]:hover { background:#003ecc !important; }
+/* Number emphasis */
+.num { font-family:'JetBrains Mono','Courier New',monospace; font-weight:500; }
+/* Provider colored badges */
+.prov-badge {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:32px; height:32px; border-radius:9999px;
+    font-size:0.7rem; font-weight:700; flex-shrink:0;
+}
+.ch-pill { display:inline-block; padding:2px 8px; border-radius:100px; font-size:0.72rem;
            font-weight:600; margin:2px; }
-.ch-ok   { background:rgba(50,200,100,0.2); color:#4ec880; border:1px solid rgba(50,200,100,0.4); }
-.ch-fail { background:rgba(220,53,69,0.15); color:#ff6b7a; border:1px solid rgba(220,53,69,0.3); }
+.ch-ok   { background:rgba(5,177,105,0.12); color:#05b169; border:1px solid rgba(5,177,105,0.3); }
+.ch-fail { background:rgba(207,32,47,0.1); color:#cf202f; border:1px solid rgba(207,32,47,0.25); }
 
 /* 공룡 달리기 애니메이션 */
 @keyframes dino-run {
@@ -690,31 +704,25 @@ with st.expander("🔗 비교군 매핑", expanded=True):
         total_cards = 1 + len(comps)
         card_w = f"flex:1; min-width:0; max-width:calc(100%/{total_cards});"
 
-        def _card(logo, name, code_str, color, label=""):
+        def _card(provider, name, code_str, color, label=""):
+            initial = provider[0] if provider else "?"
             return (
-                f'<div style="{card_w} border:2px solid {color}; border-radius:8px; '
-                f'padding:14px 12px; text-align:center; background:rgba(0,0,0,0.15);">'
-                f'<img src="{logo}" style="height:28px;margin-bottom:6px;display:block;margin-left:auto;margin-right:auto;" onerror="this.style.display=\'none\'">'
-                f'<div style="font-size:0.72rem;color:{color};font-weight:700;margin-bottom:2px;">{label}</div>'
-                f'<div style="font-size:1.05rem;font-weight:700;">{name}</div>'
-                f'<div style="font-size:0.72rem;opacity:.5;margin-top:3px;">{code_str}</div>'
+                f'<div style="{card_w} border:2px solid {color}; border-radius:24px; '
+                f'padding:16px 14px; text-align:center; background:#16181c;">'
+                f'<div class="prov-badge" style="background:{color}20;color:{color};margin:0 auto 8px;">{initial}</div>'
+                f'<div style="font-size:0.7rem;color:{color};font-weight:700;margin-bottom:3px;letter-spacing:.05em;">{provider}</div>'
+                f'<div style="font-size:1rem;font-weight:700;color:#e8eaed;line-height:1.2;">{name}</div>'
+                f'<div style="font-size:0.68rem;color:#5b616e;margin-top:4px;">{code_str}</div>'
                 f'</div>'
             )
 
-        cards_html = '<div style="display:flex; gap:10px; margin:8px 0;">'
-        # KODEX 카드
-        cards_html += _card(
-            "https://ssl.pstatic.net/imgstock/fn/real/logo/etf/StockKRETFKODEX.svg",
-            etf_name.replace("KODEX ",""), code, "#4d9fff", "KODEX"
-        )
+        cards_html = '<div style="display:flex; gap:12px; margin:10px 0;">'
+        cards_html += _card("KODEX", etf_name.replace("KODEX ",""), code, "#0052ff")
         if comps:
             for comp in comps:
                 c = _pc.get(comp['provider'], "#adb5bd")
                 short_name = comp["name"].replace("TIGER ","").replace("PLUS ","").replace("ACE ","").replace("SOL ","").replace("RISE ","").replace("HANARO ","")
-                cards_html += _card(
-                    f"https://ssl.pstatic.net/imgstock/fn/real/logo/etf/StockKRETF{comp['provider']}.svg",
-                    f"{comp['provider']} {short_name}", comp["code"], c, "비교군"
-                )
+                cards_html += _card(comp['provider'], short_name, comp["code"], c)
             cards_html += '</div>'
             st.markdown(cards_html, unsafe_allow_html=True)
             if len(comps) == 1:
@@ -958,14 +966,18 @@ for code, res in did_results.items():
                 c = provider_colors.get(comp.provider, "#adb5bd")
                 pct_disp = f"{int(comp.change_pct*100):+d}%"
                 cur = comp.current_fi if comp.metric_used=="financial" else comp.current_ind
-                logo_url2 = f"https://ssl.pstatic.net/imgstock/fn/real/logo/etf/StockKRETF{comp.provider}.svg"
                 short2 = comp.name.replace("TIGER ","").replace("PLUS ","").replace("ACE ","").replace("SOL ","").replace("RISE ","").replace("HANARO ","")
+                initial2 = comp.provider[0] if comp.provider else "?"
                 cards += (
-                    f'<div class="comp-card" style="border-color:{c}50; flex:1; min-width:120px;">'
-                    f'<img src="{logo_url2}" style="height:20px;margin-bottom:3px;" onerror="this.style.display=\'none\'">'
-                    f'<div style="font-size:.95rem;font-weight:600;">{short2}</div>'
-                    f'<div style="font-size:1.1rem;font-weight:700;color:{c};">{pct_disp}</div>'
-                    f'<div style="font-size:.68rem;opacity:.6;">{cur/1e6:.1f}M 이번주</div>'
+                    f'<div style="flex:1; min-width:110px; border:2px solid {c}; border-radius:24px; '
+                    f'padding:14px 10px; text-align:center; background:#16181c;">'
+                    f'<div style="width:32px;height:32px;border-radius:9999px;background:{c}20;color:{c};'
+                    f'display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;'
+                    f'margin:0 auto 6px;">{initial2}</div>'
+                    f'<div style="font-size:.68rem;color:{c};font-weight:700;letter-spacing:.05em;">{comp.provider}</div>'
+                    f'<div style="font-size:.95rem;font-weight:700;color:#e8eaed;">{short2}</div>'
+                    f'<div style="font-size:1.1rem;font-weight:700;color:{c};font-family:monospace;">{pct_disp}</div>'
+                    f'<div style="font-size:.68rem;color:#5b616e;">{cur/1e6:.1f}M</div>'
                     f'</div>'
                 )
             st.markdown(f'<div class="comp-grid">{cards}</div>', unsafe_allow_html=True)

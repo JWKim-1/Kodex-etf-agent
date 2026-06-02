@@ -533,13 +533,7 @@ else:
         </div>""",
         unsafe_allow_html=True
     )
-    # 채널 결과 pill 형태로 표시
-    pills_html = ""
-    for r in collection_results.values():
-        cls = "ch-ok" if r.success else "ch-fail"
-        icon = "✓" if r.success else "✗"
-        pills_html += f'<span class="ch-pill {cls}">{icon} {r.channel_name}</span>'
-    status.markdown(f"<div style='margin-top:6px;'>{pills_html}</div>", unsafe_allow_html=True)
+    status.empty()  # 채널 이름 pills 제거
 
     with st.expander("📡 채널별 상세", expanded=False):
         cols = st.columns(3)
@@ -583,58 +577,55 @@ else:
         if llm_result.get("summary"):
             st.caption(llm_result["summary"])
 
-        # 감지 근거 — 채널별 전체 표시
+        # 감지 근거 — 탭 형태
         evidence = llm_result.get("evidence", [])
-        if evidence:
-            st.markdown("**📌 채널별 감지 근거**")
-            # 채널별로 그룹핑
-            from collections import defaultdict
-            by_channel = defaultdict(list)
-            for ev in evidence:
-                by_channel[ev.get("channel", "기타")].append(ev)
+        from collections import defaultdict
+        by_channel = defaultdict(list)
+        for ev in (evidence or []):
+            by_channel[ev.get("channel", "기타")].append(ev)
 
-            for ch_name, evs in by_channel.items():
-                st.markdown(f"<small>📡 **{ch_name}**</small>", unsafe_allow_html=True)
-                for ev in evs:
-                    title  = ev.get("title", "")
-                    url    = ev.get("url", "")
-                    reason = ev.get("reason", "")
-                    etf_codes = ev.get("etf_codes", [])
-                    etf_names = [all_kodex_etfs.get(c, c) for c in etf_codes]
-                    link_md = f"[{title}]({url})" if url and url.startswith("http") else title
-                    etf_str = f" → `{'`, `'.join(etf_names[:3])}`" if etf_names else ""
-                    mkt_reason = ev.get("marketing_reason", "")
-                    mkt_line = f"<br>&nbsp;&nbsp;&nbsp;&nbsp;<small style='opacity:.5;'>📋 마케팅 분류 근거: {mkt_reason}</small>" if mkt_reason else ""
-                    st.markdown(
-                        f"&nbsp;&nbsp;• {link_md}  \n"
-                        f"&nbsp;&nbsp;&nbsp;&nbsp;<small style='opacity:.7;'>{reason}{etf_str}</small>"
-                        f"{mkt_line}",
-                        unsafe_allow_html=True)
-        else:
-            st.caption("감지 근거 정보 없음")
-
-        # 수집됐으나 ETF 미감지 채널 목록
-        detected_channels = {ev.get("channel") for ev in evidence}
-        non_detected = []
+        # 미감지 채널도 탭에 포함
+        detected_channels = set(by_channel.keys())
+        non_detected_tabs = {}
         for r in collection_results.values():
             if not r.success or not r.data or r.channel_name in detected_channels:
                 continue
             d = r.data
             items = []
-            if "videos"   in d: items = [v.get("title","") for v in d["videos"][:2]]
-            elif "posts"  in d: items = [p.get("title","") for p in d["posts"][:2]]
-            elif "articles" in d: items = [a.get("title","") for a in d["articles"][:2]]
-            elif "events" in d: items = d["events"][:2]
+            if "videos"   in d: items = [v.get("title","") for v in d["videos"][:3]]
+            elif "posts"  in d: items = [p.get("title","") for p in d["posts"][:3]]
+            elif "articles" in d: items = [a.get("title","") for a in d["articles"][:3]]
+            elif "events" in d: items = d["events"][:3]
             if items:
-                non_detected.append((r.channel_name, items))
+                non_detected_tabs[r.channel_name] = items
 
-        if non_detected:
-            with st.expander("📋 수집됐으나 ETF 미감지 채널 (참고용)", expanded=False):
-                st.caption("이번 주 해당 채널에서 콘텐츠는 수집됐지만 KODEX ETF 관련 내용이 없어 감지 근거에서 제외됐습니다.")
-                for ch_name, items in non_detected:
-                    st.markdown(f"<small>📡 **{ch_name}**</small>", unsafe_allow_html=True)
+        tab_labels = list(by_channel.keys()) + list(non_detected_tabs.keys())
+        if tab_labels:
+            tabs = st.tabs([f"📡 {t}" for t in tab_labels])
+            for i, (ch_name, evs) in enumerate(by_channel.items()):
+                with tabs[i]:
+                    for ev in evs:
+                        title  = ev.get("title", "")
+                        url    = ev.get("url", "")
+                        reason = ev.get("reason", "")
+                        etf_codes = ev.get("etf_codes", [])
+                        etf_names = [all_kodex_etfs.get(c, c) for c in etf_codes]
+                        link_md = f"[{title}]({url})" if url and url.startswith("http") else f"**{title}**"
+                        etf_str = f" → `{'`, `'.join(etf_names[:3])}`" if etf_names else ""
+                        mkt_reason = ev.get("marketing_reason", "")
+                        st.markdown(f"• {link_md}{etf_str}")
+                        if reason:
+                            st.caption(f"↳ {reason}")
+                        if mkt_reason:
+                            st.caption(f"📋 {mkt_reason}")
+            offset = len(by_channel)
+            for i, (ch_name, items) in enumerate(non_detected_tabs.items()):
+                with tabs[offset + i]:
+                    st.caption("콘텐츠 수집됐으나 KODEX ETF 관련 내용 없음")
                     for it in items:
-                        st.markdown(f"&nbsp;&nbsp;• {it}", unsafe_allow_html=True)
+                        st.markdown(f"• {it}")
+        else:
+            st.caption("감지 근거 없음")
     else:
         st.warning("이번 주 마케팅 활동 없음 — 베이스라인 업데이트만 수행됩니다.")
         if llm_result.get("summary"):

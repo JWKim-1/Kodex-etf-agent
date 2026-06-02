@@ -30,25 +30,31 @@ ERROR_TYPES = {
 }
 
 CHANNEL_LABELS = {
-    # ── 삼성자산운용 / 삼성증권 ──────────────────────
-    "samsung_fund_event":  "삼성자산운용 이벤트 페이지",
+    # ── 삼성증권 ─────────────────────────────────────
     "samsung_youtube":     "삼성증권 유튜브",
     "samsung_blog":        "삼성증권 블로그 (네이버)",
     # ── 미래에셋증권 ─────────────────────────────────
     "mirae_youtube":       "미래에셋증권 유튜브",
+    "mirae_blog":          "미래에셋증권 블로그 (how2invest)",
     # ── 키움증권 ─────────────────────────────────────
     "kiwoom_youtube":      "키움증권 유튜브",
     "kiwoom_blog":         "키움증권 블로그 (네이버)",
     # ── 토스증권 ─────────────────────────────────────
     "toss_youtube":        "토스증권 유튜브",
+    # ── 한국투자증권 ─────────────────────────────────
+    "kis_youtube":         "한국투자증권 유튜브",
+    # ── 신한투자증권 ─────────────────────────────────
+    "shinhan_youtube":     "신한투자증권 유튜브",
+    # ── KB증권 ───────────────────────────────────────
+    "kb_youtube":          "KB증권 유튜브",
     # ── 공통 채널 ────────────────────────────────────
     "krx_news":            "KRX 보도자료",
     "krx_trading":         "KRX 투자자별 거래실적 (수동 엑셀 대체)",
     "news":                "네이버/구글 뉴스",
 }
 
+# 삼성자산운용 이벤트 페이지 → 대고객 디지털 마케팅 채널로 이동 (증권 채널 아님)
 # 제거된 채널 (구조적 불가) → 제거된채널목록.md 참조
-# instagram, kakao, google_trends, samsung_pop_event, pension_pdf
 
 
 @dataclass
@@ -139,17 +145,23 @@ class DataCollector:
 
     def collect_all(self, progress_callback=None) -> Dict[str, ChannelResult]:
         channels = [
-            # 삼성자산운용/삼성증권
-            ("samsung_fund_event", self._ch_samsung_fund_event),
+            # 삼성증권
             ("samsung_youtube",    self._ch_samsung_youtube),
             ("samsung_blog",       self._ch_samsung_blog),
             # 미래에셋증권
             ("mirae_youtube",      self._ch_mirae_youtube),
+            ("mirae_blog",         self._ch_mirae_blog),
             # 키움증권
             ("kiwoom_youtube",     self._ch_kiwoom_youtube),
             ("kiwoom_blog",        self._ch_kiwoom_blog),
             # 토스증권
             ("toss_youtube",       self._ch_toss_youtube),
+            # 한국투자증권
+            ("kis_youtube",        self._ch_kis_youtube),
+            # 신한투자증권
+            ("shinhan_youtube",    self._ch_shinhan_youtube),
+            # KB증권
+            ("kb_youtube",         self._ch_kb_youtube),
             # 공통
             ("krx_news",           self._ch_krx_news),
             ("krx_trading",        self._ch_krx_trading),
@@ -774,9 +786,12 @@ class DataCollector:
             queries = [
                 "삼성증권+KODEX+이벤트",
                 "삼성증권+ETF+이벤트",
-                "삼성증권+ETF+프로모션",
-                "KODEX+ETF+신규상장",        # 신규 상장 ETF
-                "삼성자산운용+ETF+출시",      # 신규 출시
+                "미래에셋증권+ETF+이벤트",
+                "키움증권+ETF+이벤트",
+                "한국투자증권+ETF+이벤트",
+                "증권사+ETF+앱+이벤트",       # 앱 내 이벤트 기사
+                "KODEX+ETF+신규상장",
+                "삼성자산운용+ETF+출시",
             ]
             for q in queries:
                 try:
@@ -826,6 +841,12 @@ class DataCollector:
             "UCZS9wEZ4itPbBZk_sqccXfw"
         )
 
+    def _ch_mirae_blog(self) -> ChannelResult:
+        return self._ch_naver_blog_base(
+            "mirae_blog", CHANNEL_LABELS["mirae_blog"],
+            "https://rss.blog.naver.com/how2invest.xml"
+        )
+
     # ── 키움증권 채널 ────────────────────────────────────────────────────────
 
     def _ch_kiwoom_youtube(self) -> ChannelResult:
@@ -846,4 +867,28 @@ class DataCollector:
         return self._fetch_youtube_rss(
             "toss_youtube", CHANNEL_LABELS["toss_youtube"],
             "UCW_P8DTCnlDcUHRfGFwRRLA"
+        )
+
+    # ── 한국투자증권 채널 ────────────────────────────────────────────────────
+
+    def _ch_kis_youtube(self) -> ChannelResult:
+        return self._fetch_youtube_rss(
+            "kis_youtube", CHANNEL_LABELS["kis_youtube"],
+            "UCU6f21g_qaJk6rkX-IF6X2g"
+        )
+
+    # ── 신한투자증권 채널 ────────────────────────────────────────────────────
+
+    def _ch_shinhan_youtube(self) -> ChannelResult:
+        return self._fetch_youtube_rss(
+            "shinhan_youtube", CHANNEL_LABELS["shinhan_youtube"],
+            "UCYzZm9_nasRW6npCkjlTjKQ"
+        )
+
+    # ── KB증권 채널 ───────────────────────────────────────────────────────────
+
+    def _ch_kb_youtube(self) -> ChannelResult:
+        return self._fetch_youtube_rss(
+            "kb_youtube", CHANNEL_LABELS["kb_youtube"],
+            "UCD0k4Kq7SJROxxV-9N5v8IA"
         )

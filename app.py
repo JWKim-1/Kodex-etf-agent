@@ -238,8 +238,10 @@ def keyword_fallback(collection_results, all_kodex_etfs: dict) -> dict:
                           "text": a.get("title","") + " " + a.get("description",""),
                           "channel_reason": "삼성증권 ETF 이벤트 관련 뉴스 기사에서 종목명 확인"})
         for ev in d.get("event_details", []):
+            # full_text 있으면 본문까지 활용, 없으면 제목만
+            text = ev.get("full_text", ev.get("title",""))
             items.append({"title": ev.get("title",""), "url": ev.get("url",""),
-                          "text": ev.get("title",""),
+                          "text": text,
                           "channel_reason": "삼성자산운용 공식 이벤트 페이지에 '진행중' 이벤트로 등록됨 (이벤트 제목·기간 명시)"})
         if not d.get("event_details"):
             for e in d.get("events", []):

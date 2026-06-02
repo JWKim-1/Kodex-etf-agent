@@ -199,44 +199,47 @@ class DataCollector:
 
                 url_full = base_url + href if not href.startswith("http") else href
 
-                # 제목에서 ETF 이름 추출
+                # 제목에서 ETF 이름 1차 추출
                 etf_m = re.findall(
                     r"[Kk][Oo][Dd][Ee][Xx]\s+((?!ETF|이벤트|매수|투자|증권사)[\w가-힣\-\+\.]+(?:\s+(?!ETF|이벤트|매수|투자)[\w가-힣\-\+\.]+)*)",
                     title
                 )
                 etf_m = ["KODEX " + e.strip() for e in etf_m if e.strip()]
 
-                # 제목에서 ETF 못 찾으면 본문 페이지 직접 크롤링
-                if not etf_m:
-                    try:
-                        detail_r = requests.get(url_full, headers=BROWSER_HEADERS, timeout=10)
-                        detail_soup = BeautifulSoup(detail_r.text, "lxml")
-                        # 이미지 alt 텍스트 포함해서 ETF 이름 추출
-                        detail_text = detail_soup.get_text(" ", strip=True)
-                        alt_texts = " ".join(
-                            img.get("alt", "") for img in detail_soup.find_all("img")
-                            if "KODEX" in img.get("alt", "") or "Kodex" in img.get("alt", "")
-                        )
-                        combined = detail_text + " " + alt_texts
-                        etf_m2 = re.findall(
-                            r"[Kk][Oo][Dd][Ee][Xx]\s+((?!ETF|이벤트|매수|투자|증권사|페이지로|분배금|search|Kodex|200액티브|fang)[\w가-힣\-\+\.]+(?:\s+(?!ETF|이벤트|매수|투자|search)[\w가-힣\-\+\.]+){0,3})",
-                            combined
-                        )
-                        # 5자 이하 단어 단독으로 나오는 잡음 제거
-                        etf_m = list(dict.fromkeys([
-                            "KODEX " + e.strip() for e in etf_m2
-                            if e.strip() and len(e.strip()) >= 3
-                            and not re.match(r'^(ETF|Kodex|search|fang|액티브|인기|키워드)$', e.strip())
-                        ]))[:3]
-                    except Exception:
-                        pass
+                # 항상 본문 페이지 전체를 긁어서 ETF명 보완 + 전체 텍스트 수집
+                page_full_text = title  # 최소한 제목은 포함
+                try:
+                    detail_r = requests.get(url_full, headers=BROWSER_HEADERS, timeout=10)
+                    detail_soup = BeautifulSoup(detail_r.text, "lxml")
+                    detail_text = detail_soup.get_text(" ", strip=True)
+                    alt_texts = " ".join(
+                        img.get("alt", "") for img in detail_soup.find_all("img")
+                        if img.get("alt", "").strip()
+                    )
+                    page_full_text = detail_text + " " + alt_texts
+
+                    # 본문에서 ETF 이름 추가 추출 (제목에서 못 찾은 것 보완)
+                    etf_m2 = re.findall(
+                        r"[Kk][Oo][Dd][Ee][Xx]\s+((?!ETF|이벤트|매수|투자|증권사|페이지로|분배금|search|Kodex|200액티브|fang)[\w가-힣\-\+\.]+(?:\s+(?!ETF|이벤트|매수|투자|search)[\w가-힣\-\+\.]+){0,3})",
+                        page_full_text
+                    )
+                    extra = list(dict.fromkeys([
+                        "KODEX " + e.strip() for e in etf_m2
+                        if e.strip() and len(e.strip()) >= 3
+                        and not re.match(r'^(ETF|Kodex|search|fang|액티브|인기|키워드)$', e.strip())
+                    ]))[:3]
+                    # 제목 추출과 합치되 중복 제거
+                    etf_m = list(dict.fromkeys(etf_m + [e for e in extra if e not in etf_m]))[:3]
+                except Exception:
+                    pass
 
                 events.append({
                     "title": title,
                     "url": url_full,
-                    "etf_names": list(dict.fromkeys(etf_m)),
+                    "etf_names": etf_m,
+                    "full_text": page_full_text[:1500],  # 전체 텍스트 저장 (키워드 매칭용)
                 })
-                raw_combined += " " + title
+                raw_combined += " " + page_full_text[:500]  # 제목 대신 본문도 포함
 
             if not events:
                 return ChannelResult(ch, name, False,

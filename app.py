@@ -588,46 +588,85 @@ if did_results:
     did_vals   = [r.did_value for r in did_results.values()]
     bar_colors = [color_map.get(r.judgement_emoji, "#6c757d") for r in did_results.values()]
 
-    fig_did = go.Figure(go.Bar(
-        x=etf_names, y=did_vals,
-        marker_color=bar_colors,
-        text=[f"{v:+.4f}" for v in did_vals],
-        textposition="outside",
-        hovertemplate="<b>%{x}</b><br>DiD: %{y:+.4f}<extra></extra>",
-    ))
-    fig_did.add_hline(y=0, line_dash="dash", line_color="gray", line_width=1)
-    fig_did.add_hline(y=1.0,  line_dash="dot", line_color="#28a745", line_width=1, annotation_text="강함(1.0)")
-    fig_did.add_hline(y=0.3,  line_dash="dot", line_color="#ffc107", line_width=1, annotation_text="효과있음(0.3)")
-    fig_did.add_hline(y=-0.3, line_dash="dot", line_color="#dc3545", line_width=1, annotation_text="어려움(-0.3)")
+    # ── DiD 결과: 가로 막대 (ETF명 길어도 안 겹침) ──
+    short_names = [n.replace("KODEX ", "") for n in etf_names]
+    fig_did = go.Figure()
+    for name, short, val, color in zip(etf_names, short_names, did_vals, bar_colors):
+        fig_did.add_trace(go.Bar(
+            y=[short], x=[val],
+            orientation="h",
+            marker_color=color,
+            marker_line_width=0,
+            text=f"  {val:+.3f}",
+            textposition="outside",
+            hovertemplate=f"<b>{name}</b><br>DiD: {val:+.4f}<extra></extra>",
+            showlegend=False,
+        ))
+    fig_did.add_vline(x=0,    line_dash="solid", line_color="rgba(200,200,200,0.4)", line_width=1)
+    fig_did.add_vline(x=1.0,  line_dash="dot",   line_color="#28a745", line_width=1.5,
+                      annotation=dict(text="강함 1.0", font_color="#28a745", font_size=11, y=1.08))
+    fig_did.add_vline(x=0.3,  line_dash="dot",   line_color="#ffc107", line_width=1.5,
+                      annotation=dict(text="효과있음 0.3", font_color="#ffc107", font_size=11, y=1.08))
+    fig_did.add_vline(x=-0.3, line_dash="dot",   line_color="#dc3545", line_width=1.5,
+                      annotation=dict(text="-0.3", font_color="#dc3545", font_size=11, y=1.08))
     fig_did.update_layout(
-        title="ETF별 DiD (정규화 절대 변화)",
-        xaxis_title="", yaxis_title="DiD",
+        title=dict(text="📊 ETF별 DiD 결과", font_size=15, x=0),
+        xaxis=dict(title="DiD (정규화 절대 변화)", gridcolor="rgba(255,255,255,0.08)", zeroline=False),
+        yaxis=dict(title="", autorange="reversed", tickfont=dict(size=12)),
         template="plotly_dark",
-        height=380,
-        showlegend=False,
-        margin=dict(t=50, b=30),
+        height=max(180, len(did_results) * 72 + 100),
+        margin=dict(t=70, b=40, l=10, r=90),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
     )
     st.plotly_chart(fig_did, use_container_width=True)
 
-    # KODEX vs 비교군 변화율 비교 차트
+    # ── KODEX vs 비교군 그룹 바 차트 ──
     chart_rows = []
     for res in did_results.values():
-        chart_rows.append({"ETF": res.kodex_name, "구분": "KODEX", "변화율": res.kodex_change_pct})
-        for comp in res.competitors:
-            chart_rows.append({"ETF": res.kodex_name, "구분": comp.name, "변화율": comp.change_pct})
+        short = res.kodex_name.replace("KODEX ", "")
+        chart_rows.append({"ETF": short, "구분": "KODEX", "변화율": res.kodex_change_pct, "order": 0})
+        for i, comp in enumerate(res.competitors):
+            label = comp.provider  # TIGER / ACE / PLUS / SOL 등
+            chart_rows.append({"ETF": short, "구분": label, "변화율": comp.change_pct, "order": i+1})
 
     if chart_rows:
-        df_chart = pd.DataFrame(chart_rows)
-        fig_comp = px.bar(
-            df_chart, x="ETF", y="변화율", color="구분",
+        df_chart = pd.DataFrame(chart_rows).sort_values(["ETF","order"])
+        provider_colors = {
+            "KODEX": "#4d9fff",
+            "TIGER": "#f4a261",
+            "ACE":   "#e76f51",
+            "PLUS":  "#2a9d8f",
+            "SOL":   "#e9c46a",
+        }
+        fig_comp = go.Figure()
+        for grp in df_chart["구분"].unique():
+            sub = df_chart[df_chart["구분"] == grp]
+            fig_comp.add_trace(go.Bar(
+                name=grp,
+                x=sub["ETF"],
+                y=sub["변화율"],
+                marker_color=provider_colors.get(grp, "#adb5bd"),
+                marker_line_width=0,
+                text=[f"{v:+.3f}" for v in sub["변화율"]],
+                textposition="outside",
+                hovertemplate="<b>%{x}</b><br>" + grp + ": %{y:+.4f}<extra></extra>",
+            ))
+        fig_comp.add_hline(y=0, line_dash="dash", line_color="rgba(200,200,200,0.4)", line_width=1)
+        fig_comp.update_layout(
+            title=dict(text="🔵 KODEX vs 비교군 변화율 비교", font_size=15, x=0),
             barmode="group",
-            title="KODEX vs 비교군 정규화 변화율",
+            bargap=0.25,
+            bargroupgap=0.1,
+            xaxis=dict(title="", tickangle=0),
+            yaxis=dict(title="정규화 절대 변화", gridcolor="rgba(255,255,255,0.08)"),
             template="plotly_dark",
-            height=360,
-            color_discrete_sequence=px.colors.qualitative.Set2,
+            height=420,
+            legend=dict(orientation="h", y=-0.18, x=0.5, xanchor="center", font_size=12),
+            margin=dict(t=60, b=90, l=20, r=20),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
         )
-        fig_comp.add_hline(y=0, line_dash="dash", line_color="gray", line_width=1)
-        fig_comp.update_layout(margin=dict(t=50, b=30), legend_title="")
         st.plotly_chart(fig_comp, use_container_width=True)
 
 st.markdown("---")

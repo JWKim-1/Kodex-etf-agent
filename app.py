@@ -629,11 +629,15 @@ else:
                             st.caption(f"↳ {reason}")
                         if mkt_reason:
                             st.caption(f"📋 {mkt_reason}")
-            for ch_name, items in non_detected_tabs.items():
-                with st.expander(f"📡 {ch_name} (ETF 미감지)", expanded=False):
-                    st.caption("수집됐으나 KODEX ETF 관련 내용 없음")
-                    for it in items:
-                        st.markdown(f"• {it}")
+            # 미감지 채널 하나의 expander에 탭으로 묶기
+            if non_detected_tabs:
+                with st.expander(f"📋 수집됐으나 ETF 미감지 채널 ({len(non_detected_tabs)}개)", expanded=False):
+                    st.caption("콘텐츠는 수집됐으나 KODEX ETF 관련 내용 없어 감지 제외")
+                    nd_tabs = st.tabs([f"📡 {ch}" for ch in non_detected_tabs])
+                    for ti, (ch_name, items) in enumerate(non_detected_tabs.items()):
+                        with nd_tabs[ti]:
+                            for it in items:
+                                st.markdown(f"• {it}")
         else:
             st.caption("감지 근거 없음")
     else:
@@ -682,26 +686,45 @@ with st.expander("🔗 비교군 매핑", expanded=True):
         else:
             comps = auto_map_competitors(etf_name, code, etf_universe)
 
-        st.markdown(f"**{etf_name}** `{code}`")
+        prov_colors = {"KODEX":"#4d9fff","TIGER":"#f4a261","ACE":"#e76f51","PLUS":"#2a9d8f","SOL":"#e9c46a","RISE":"#6b9fff","HANARO":"#a78bfa"}
+        total_cards = 1 + len(comps)  # KODEX + 비교군
+        card_style = f"flex:1; min-width:0; width:calc(100%/{total_cards} - 8px);"
+
+        # KODEX 카드 + 비교군 카드 균일 그리드
+        cards_html = '<div class="comp-grid" style="align-items:stretch;">'
+        # KODEX 카드
+        kodex_logo = "https://ssl.pstatic.net/imgstock/fn/real/logo/etf/StockKRETFKODEX.svg"
+        short_kodex = etf_name.replace("KODEX ","")
+        cards_html += (
+            f'<div class="comp-card" style="border-color:#4d9fff80; {card_style} border-width:2px;">'
+            f'<img src="{kodex_logo}" style="height:22px;margin-bottom:4px;" onerror="this.style.display=\'none\'">'
+            f'<div style="font-size:0.7rem;color:#4d9fff;font-weight:700;">KODEX ← 처리군</div>'
+            f'<div style="font-size:0.95rem;font-weight:600;margin:2px 0;">{short_kodex}</div>'
+            f'<div style="font-size:0.68rem;opacity:.5;">{code}</div>'
+            f'</div>'
+        )
         if comps:
-            # 그리드 박스 형태 (균일한 비율)
-            cards_html = '<div class="comp-grid">'
             for comp in comps:
-                provider_colors = {"TIGER":"#f4a261","ACE":"#e76f51","PLUS":"#2a9d8f","SOL":"#e9c46a","RISE":"#6b9fff","HANARO":"#a78bfa"}
-                c = provider_colors.get(comp['provider'], "#adb5bd")
+                c = prov_colors.get(comp['provider'], "#adb5bd")
                 logo_url = f"https://ssl.pstatic.net/imgstock/fn/real/logo/etf/StockKRETF{comp['provider']}.svg"
                 short_name = comp["name"].replace("TIGER ","").replace("PLUS ","").replace("ACE ","").replace("SOL ","").replace("RISE ","").replace("HANARO ","")
                 cards_html += (
-                    f'<div class="comp-card" style="border-color:{c}40; min-width:140px; flex:1;">'
+                    f'<div class="comp-card" style="border-color:{c}40; {card_style}">'
                     f'<img src="{logo_url}" style="height:22px;margin-bottom:4px;" onerror="this.style.display=\'none\'">'
+                    f'<div style="font-size:0.7rem;color:{c};font-weight:700;">{comp["provider"]} ← 비교군</div>'
                     f'<div style="font-size:0.95rem;font-weight:600;margin:2px 0;">{short_name}</div>'
                     f'<div style="font-size:0.68rem;opacity:.5;">{comp["code"]}</div>'
                     f'</div>'
                 )
             cards_html += '</div>'
             st.markdown(cards_html, unsafe_allow_html=True)
+            # 단일 매핑 주석
+            if len(comps) == 1:
+                st.caption("※ 동일 유형 ETF가 시장에 1종만 존재 — 통상 2개 대조군 기준이나 1개만 매핑됨")
         else:
-            st.error("⚫ 비교군 없음 — DiD 측정 불가")
+            cards_html += '</div>'
+            st.markdown(cards_html, unsafe_allow_html=True)
+            st.warning("⚫ 비교군 없음 — DiD 측정 불가")
         st.divider()
 
 # ════════════════════════════════════════════════════════════════════
@@ -818,16 +841,22 @@ if did_results:
             hovertemplate=f"<b>{name}</b><br>평소 대비 {val_pct:+.0f}%<br>(DiD={val_raw:+.3f})<extra></extra>",
             showlegend=False,
         ))
-    fig_did.add_vline(x=0,    line_dash="solid", line_color="rgba(200,200,200,0.4)", line_width=1)
+    # x축 범위: 데이터 기반이되 0이 중앙에 오도록
+    _max_abs = max(abs(v) for v in did_pct_vals) if did_pct_vals else 100
+    _x_range = max(_max_abs * 1.3, 120)
+    fig_did.add_vline(x=0,    line_dash="solid", line_color="rgba(200,200,200,0.5)", line_width=1.5)
     fig_did.add_vline(x=100,  line_dash="dot",   line_color="#28a745", line_width=1.5,
-                      annotation=dict(text="+100% 강함", font_color="#28a745", font_size=11, y=1.08))
+                      annotation=dict(text="+100%", font_color="#28a745", font_size=10, y=1.08))
     fig_did.add_vline(x=30,   line_dash="dot",   line_color="#ffc107", line_width=1.5,
-                      annotation=dict(text="+30% 효과있음", font_color="#ffc107", font_size=11, y=1.08))
+                      annotation=dict(text="+30%", font_color="#ffc107", font_size=10, y=1.08))
     fig_did.add_vline(x=-30,  line_dash="dot",   line_color="#dc3545", line_width=1.5,
-                      annotation=dict(text="-30%", font_color="#dc3545", font_size=11, y=1.08))
+                      annotation=dict(text="-30%", font_color="#dc3545", font_size=10, y=1.08))
+    fig_did.add_vline(x=-100, line_dash="dot",   line_color="#dc3545", line_width=1,
+                      annotation=dict(text="-100%", font_color="#dc3545", font_size=10, y=1.08))
     fig_did.update_layout(
-        title=dict(text="📊 ETF별 마케팅 효과 (평소 대비 %)", font_size=15, x=0),
-        xaxis=dict(title="평소 변동 대비 (%)", gridcolor="rgba(255,255,255,0.08)", zeroline=False),
+        title=dict(text="📊 ETF별 DiD 마케팅 효과", font_size=15, x=0),
+        xaxis=dict(title="비교군 대비 초과 순매수 (%)", range=[-_x_range, _x_range],
+                   gridcolor="rgba(255,255,255,0.08)", zeroline=False),
         yaxis=dict(title="", autorange="reversed", tickfont=dict(size=12)),
         template="plotly_dark",
         height=max(180, len(did_results) * 72 + 100),
@@ -895,13 +924,19 @@ if did_results:
             ))
 
         fig_comp.add_hline(y=0, line_dash="dash", line_color="rgba(200,200,200,0.4)", line_width=1)
+        # x축 카테고리 순서 명시적으로 고정 → 간격 일관성 유지
         fig_comp.update_layout(
-            title=dict(text="🔵 KODEX vs 비교군 변화율 비교 (평소 대비 %)", font_size=15, x=0),
+            title=dict(text="🔵 KODEX vs 비교군 변화율 비교", font_size=15, x=0),
             barmode="group",
-            bargap=0.3,
-            bargroupgap=0.05,
-            xaxis=dict(title="", tickfont=dict(size=12)),
-            yaxis=dict(title="평소 대비 (%)", gridcolor="rgba(255,255,255,0.08)", zeroline=False),
+            bargap=0.4,
+            bargroupgap=0.1,
+            xaxis=dict(
+                title="",
+                tickfont=dict(size=13),
+                categoryorder="array",
+                categoryarray=[e for e in etf_groups],  # 순서 고정
+            ),
+            yaxis=dict(title="비교군 대비 초과 (%)", gridcolor="rgba(255,255,255,0.08)", zeroline=False),
             template="plotly_dark",
             height=420,
             legend=dict(orientation="h", y=-0.18, x=0.5, xanchor="center", font_size=12),
@@ -962,9 +997,6 @@ for code, res in did_results.items():
             st.markdown(f'<div class="comp-grid">{cards}</div>', unsafe_allow_html=True)
             if len(res.competitors) == 1:
                 st.caption("※ 동일 유형 ETF 1종만 존재 — 단일 비교 (÷1)")
-        else:
-            st.warning("⚫ 비교군 없음 — 유사 ETF를 찾지 못했습니다. 아래 수치는 DiD가 아닌 KODEX 단독값입니다.")
-
         # ── DiD 계산식 (이쁘게) ──
         if not res.no_competitors:
             metric = res.lp.use_metric
@@ -982,7 +1014,7 @@ for code, res in did_results.items():
                 f"           = {int(res.control_avg_pct*100):+d}%\n\n"
                 f"  ③ DiD   = ① − ② = {did_pct(res.did_value)}\n\n"
                 f"  판정   {res.judgement_emoji} {res.judgement}\n"
-                f"  기준   ≥+100% 강함 / ≥+30% 효과있음 / ±30% 불분명 / <-30% 확인어려움{single_note}"
+                f"  기준   >+100%: 강함 / +30%~+100%: 효과있음 / -30%~+30%: 불분명 / <-30%: 확인어려움{single_note}"
             )
             st.markdown(f"<div class='formula-box'>{formula}</div>", unsafe_allow_html=True)
 
@@ -1023,10 +1055,14 @@ report_data = build_report(
     google_trends_data=trends_data,
 )
 
-with st.expander("💡 마케팅 개선 제안 (추후 LLM 자동화 예정)", expanded=True):
-    st.caption("※ 현재는 DiD 결과 기반 자동 체크포인트 표시. 향후 LLM이 유사 사례·경쟁사 동향 분석 후 구체적 마케팅 제안 자동 생성 예정.")
-    for pt in report_data["checkpoints"]:
-        st.markdown(f"- {pt}")
+with st.expander("💡 마케팅 개선 제안", expanded=True):
+    st.markdown(
+        "<div style='text-align:center; padding:24px; opacity:.5;'>"
+        "🔒 추후 출시 예정<br>"
+        "<small>DiD 누적 데이터 기반 LLM 마케팅 제안 자동 생성</small>"
+        "</div>",
+        unsafe_allow_html=True
+    )
 
 html_content = export_html(report_data)
 dl1, dl2 = st.columns(2)

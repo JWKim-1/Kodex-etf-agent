@@ -5,5 +5,4 @@ __pycache__/
 *.xlsx
 *.csv
 .streamlit/credentials.toml
-*.txt
 *.log

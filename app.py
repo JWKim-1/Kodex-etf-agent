@@ -510,12 +510,12 @@ else:
                 <!-- 🔥 불 (황소 바로 위) -->
                 <div style='position:absolute;
                             left:calc({bar_w}% - 1.1rem);
-                            top:2px; font-size:{fire_size};
+                            top:0px; font-size:{fire_size};
                             transition:left 0.25s, font-size 0.15s; line-height:1;'>🔥</div>
-                <!-- 🐂 황소 (바 위에 딱 붙어서) -->
+                <!-- 🐂 황소 (바 바로 위에 서있음) -->
                 <div style='position:absolute;
                             left:calc({bar_w}% - 1.4rem);
-                            top:18px; font-size:1.8rem;
+                            top:12px; font-size:1.8rem;
                             transform:scaleX(-1);
                             transition:left 0.25s; line-height:1;'>🐂</div>
               </div>
@@ -537,8 +537,8 @@ else:
             <div style='position:absolute; left:0; top:50%; transform:translateY(-50%);
                         height:5px; width:100%;
                         background:linear-gradient(90deg,#4d9fff,#00c6ff); border-radius:3px;'></div>
-            <div style='position:absolute; left:calc(100% - 1.1rem); top:2px; font-size:1rem;'>✅</div>
-            <div style='position:absolute; left:calc(100% - 1.4rem); top:18px;
+            <div style='position:absolute; left:calc(100% - 1.1rem); top:0px; font-size:1rem;'>✅</div>
+            <div style='position:absolute; left:calc(100% - 1.4rem); top:12px;
                         font-size:1.8rem; transform:scaleX(-1);'>🐂</div>
           </div>
           <div style='font-size:0.65rem; opacity:.6; margin-top:2px;'>
@@ -694,9 +694,9 @@ with st.expander("🔗 비교군 매핑", expanded=True):
                 c = provider_colors.get(comp['provider'], "#adb5bd")
                 cards_html += (
                     f'<div class="comp-card" style="border-color:{c}40; min-width:140px; flex:1;">'
-                    f'<div style="font-size:0.7rem;color:{c};font-weight:700;">{comp["provider"]}</div>'
-                    f'<div style="font-size:0.85rem;font-weight:600;margin:4px 0;">{comp["name"].replace("TIGER ","T.").replace("PLUS ","P.").replace("ACE ","A.").replace("SOL ","S.")}</div>'
-                    f'<div style="font-size:0.7rem;opacity:.6;">{comp["code"]}</div>'
+                    f'<div style="font-size:0.72rem;color:{c};font-weight:700;">{comp["provider"]}</div>'
+                    f'<div style="font-size:0.95rem;font-weight:600;margin:4px 0;">{comp["name"].replace("TIGER ","").replace("PLUS ","").replace("ACE ","").replace("SOL ","")}</div>'
+                    f'<div style="font-size:0.68rem;opacity:.5;">{comp["code"]}</div>'
                     f'</div>'
                 )
             cards_html += '</div>'
@@ -807,7 +807,6 @@ if did_results:
     fig_did = go.Figure()
     for name, short, val_raw, val_pct, color in zip(etf_names, short_names, did_vals, did_pct_vals, bar_colors):
         label = f"{val_pct:+.0f}%"
-        # 음수값은 텍스트를 막대 안쪽에, 양수는 바깥쪽에
         tpos = "inside" if val_pct < -20 else "outside"
         fig_did.add_trace(go.Bar(
             y=[short], x=[val_pct],
@@ -816,7 +815,7 @@ if did_results:
             marker_line_width=0,
             text=label,
             textposition=tpos,
-            textfont=dict(size=12, color="white" if tpos=="inside" else "inherit"),
+            textfont=dict(size=12, color="white"),
             hovertemplate=f"<b>{name}</b><br>평소 대비 {val_pct:+.0f}%<br>(DiD={val_raw:+.3f})<extra></extra>",
             showlegend=False,
         ))
@@ -954,7 +953,7 @@ for code, res in did_results.items():
                 cards += (
                     f'<div class="comp-card" style="border-color:{c}50; flex:1; min-width:120px;">'
                     f'<div style="color:{c};font-size:.7rem;font-weight:700;">{comp.provider}</div>'
-                    f'<div style="font-size:.85rem;font-weight:600;">{comp.name.replace("TIGER ","T.").replace("PLUS ","P.").replace("ACE ","A.").replace("SOL ","S.")}</div>'
+                    f'<div style="font-size:.95rem;font-weight:600;">{comp.name.replace("TIGER ","").replace("PLUS ","").replace("ACE ","").replace("SOL ","")}</div>'
                     f'<div style="font-size:1.1rem;font-weight:700;color:{c};">{pct_disp}</div>'
                     f'<div style="font-size:.68rem;opacity:.6;">{cur/1e6:.1f}M 이번주</div>'
                     f'</div>'

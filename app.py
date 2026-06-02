@@ -806,14 +806,17 @@ if did_results:
 
     fig_did = go.Figure()
     for name, short, val_raw, val_pct, color in zip(etf_names, short_names, did_vals, did_pct_vals, bar_colors):
-        label = f"  {val_pct:+.0f}%"
+        label = f"{val_pct:+.0f}%"
+        # 음수값은 텍스트를 막대 안쪽에, 양수는 바깥쪽에
+        tpos = "inside" if val_pct < -20 else "outside"
         fig_did.add_trace(go.Bar(
             y=[short], x=[val_pct],
             orientation="h",
             marker_color=color,
             marker_line_width=0,
             text=label,
-            textposition="outside",
+            textposition=tpos,
+            textfont=dict(size=12, color="white" if tpos=="inside" else "inherit"),
             hovertemplate=f"<b>{name}</b><br>평소 대비 {val_pct:+.0f}%<br>(DiD={val_raw:+.3f})<extra></extra>",
             showlegend=False,
         ))
@@ -830,7 +833,7 @@ if did_results:
         yaxis=dict(title="", autorange="reversed", tickfont=dict(size=12)),
         template="plotly_dark",
         height=max(180, len(did_results) * 72 + 100),
-        margin=dict(t=70, b=40, l=10, r=90),
+        margin=dict(t=70, b=40, l=10, r=120),
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
     )

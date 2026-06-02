@@ -415,6 +415,19 @@ labeled = [_sheet_label(s) for s in sheet_names]
 selected_label = st.selectbox("분석할 주차 시트 선택", labeled, index=len(labeled)-1)
 current_sheet = sheet_names[labeled.index(selected_label)]
 
+# 과거 주차 선택 시 신뢰도 경고
+_sel_start, _ = _parse_sheet_dates(current_sheet)
+if _sel_start:
+    _days = (datetime.now().date() - _sel_start).days
+    if _days > 14:
+        st.markdown(
+            f"<div style='background:rgba(255,200,50,0.08); border:1px solid rgba(255,200,50,0.3); "
+            f"border-radius:6px; padding:8px 12px; font-size:0.85rem; opacity:0.75; margin:4px 0;'>"
+            f"⚠️ <b>{_days}일 전 주차</b> — 과거 채널 데이터(RSS)가 소실됐을 수 있어 마케팅 감지 신뢰도가 낮을 수 있습니다. "
+            f"DiD 계산(순매수)은 정상 수행됩니다.</div>",
+            unsafe_allow_html=True
+        )
+
 with st.expander("📋 선택 시트 미리보기", expanded=False):
     st.dataframe(all_sheets[current_sheet].head(15), use_container_width=True)
 
@@ -827,59 +840,67 @@ if did_results:
     chart_rows = []
     for res in did_results.values():
         short = res.kodex_name.replace("KODEX ", "")
-        chart_rows.append({"ETF": short, "구분": "KODEX", "변화율": res.kodex_change_pct, "order": 0})
-        for i, comp in enumerate(res.competitors):
-            label = comp.provider  # TIGER / ACE / PLUS / SOL 등
-            chart_rows.append({"ETF": short, "구분": label, "변화율": comp.change_pct, "order": i+1})
+        chart_rows.append({"ETF": short, "구분": "KODEX", "변화율": res.kodex_change_pct * 100, "order": 0, "no_comp": res.no_competitors})
+        if res.competitors:
+            for i, comp in enumerate(res.competitors):
+                label = comp.provider
+                chart_rows.append({"ETF": short, "구분": label, "변화율": comp.change_pct * 100, "order": i+1, "no_comp": False})
+        else:
+            # 비교군 없을 때 더미 막대 (0, 빗금 표시용)
+            chart_rows.append({"ETF": short, "구분": "비교군없음", "변화율": 0, "order": 1, "no_comp": True})
 
     if chart_rows:
-        # ETF별 서브플롯 — ETF마다 비교군 수 달라도 균일하게 표시
         provider_colors = {
-            "KODEX": "#4d9fff",
-            "TIGER": "#f4a261",
-            "ACE":   "#e76f51",
-            "PLUS":  "#2a9d8f",
-            "SOL":   "#e9c46a",
+            "KODEX":    "#4d9fff",
+            "TIGER":    "#f4a261",
+            "ACE":      "#e76f51",
+            "PLUS":     "#2a9d8f",
+            "SOL":      "#e9c46a",
+            "비교군없음": "rgba(100,100,100,0.3)",
         }
-        # ETF 목록 (중복 제거, 순서 유지)
         etf_groups = list(dict.fromkeys(r["ETF"] for r in chart_rows))
-        n_etfs = len(etf_groups)
 
         fig_comp = go.Figure()
-        # 구분(KODEX/TIGER 등) 전체 목록
         all_providers = list(dict.fromkeys(r["구분"] for r in chart_rows))
 
         for provider in all_providers:
-            # 이 provider의 값이 없는 ETF는 None으로 채워서 x축 위치 고정
-            y_vals, x_vals, texts = [], [], []
+            y_vals, x_vals, texts, patterns = [], [], [], []
             for etf in etf_groups:
                 match = [r for r in chart_rows if r["ETF"] == etf and r["구분"] == provider]
                 val = match[0]["변화율"] if match else None
-                short = etf.replace("KODEX ", "")
-                x_vals.append(short)
-                y_vals.append(val)
-                texts.append(f"{val:+.3f}" if val is not None else "")
+                x_vals.append(etf)
+                y_vals.append(val if val is not None else 0)
+                if val is None:
+                    texts.append("")
+                elif provider == "비교군없음":
+                    texts.append("비교군 없음")
+                else:
+                    texts.append(f"{val:+.0f}%")
+                patterns.append("/" if provider == "비교군없음" else "")
 
+            is_dummy = provider == "비교군없음"
             fig_comp.add_trace(go.Bar(
                 name=provider,
                 x=x_vals,
                 y=y_vals,
                 marker_color=provider_colors.get(provider, "#adb5bd"),
+                marker_pattern_shape=patterns if is_dummy else None,
                 marker_line_width=0,
                 text=texts,
                 textposition="outside",
-                textfont=dict(size=11),
-                hovertemplate="<b>%{x}</b><br>" + provider + ": %{y:+.4f}<extra></extra>",
+                textfont=dict(size=10),
+                hovertemplate="<b>%{x}</b><br>" + provider + ": %{y:+.0f}%<extra></extra>" if not is_dummy else "<b>%{x}</b><br>비교군 없음<extra></extra>",
+                showlegend=not is_dummy or provider not in [r["구분"] for r in chart_rows if not r.get("no_comp")],
             ))
 
         fig_comp.add_hline(y=0, line_dash="dash", line_color="rgba(200,200,200,0.4)", line_width=1)
         fig_comp.update_layout(
-            title=dict(text="🔵 KODEX vs 비교군 변화율 비교", font_size=15, x=0),
+            title=dict(text="🔵 KODEX vs 비교군 변화율 비교 (평소 대비 %)", font_size=15, x=0),
             barmode="group",
-            bargap=0.3,       # ETF 그룹 간격
-            bargroupgap=0.05, # 같은 그룹 내 막대 간격 최소화
+            bargap=0.3,
+            bargroupgap=0.05,
             xaxis=dict(title="", tickfont=dict(size=12)),
-            yaxis=dict(title="정규화 절대 변화", gridcolor="rgba(255,255,255,0.08)", zeroline=False),
+            yaxis=dict(title="평소 대비 (%)", gridcolor="rgba(255,255,255,0.08)", zeroline=False),
             template="plotly_dark",
             height=420,
             legend=dict(orientation="h", y=-0.18, x=0.5, xanchor="center", font_size=12),
@@ -973,10 +994,22 @@ for code, res in did_results.items():
             )
             st.markdown(f"<div class='formula-box'>{formula}</div>", unsafe_allow_html=True)
 
-        # ── 전체 로그 ──
-        with st.expander("📋 단계별 계산 전체 로그", expanded=False):
+        # ── 전체 로그 (이쁘게) ──
+        with st.expander("📋 단계별 계산 로그", expanded=False):
+            log_html = ""
+            icons = {"[KODEX":"🟦","[베이스라인":"📊","[LP":"🔬","[비교군":"🆚","[DiD":"🧮","[판정":"🏁","[비교군 기준":"⚖️","[비교군 매핑":"🗺️"}
             for line in res.calculation_log:
-                st.text(line)
+                icon = "▸"
+                for k, v in icons.items():
+                    if line.startswith(k):
+                        icon = v
+                        break
+                color = "#4d9fff" if "KODEX" in line[:15] else \
+                        "#f4a261" if "비교군" in line[:10] else \
+                        "#4ec880" if "판정" in line else \
+                        "#e9c46a" if "LP" in line[:5] else "inherit"
+                log_html += f"<div style='padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.04);'><span style='opacity:.5;margin-right:6px;'>{icon}</span><span style='color:{color};font-size:0.82rem;font-family:monospace;'>{line}</span></div>"
+            st.markdown(f"<div style='padding:8px;'>{log_html}</div>", unsafe_allow_html=True)
 
         if res.notes:
             st.warning("  |  ".join(res.notes))

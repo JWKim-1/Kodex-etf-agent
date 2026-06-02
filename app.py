@@ -469,13 +469,11 @@ else:
     # 공룡 달리기 로딩 애니메이션
     dino_ph = st.empty()
     status = st.empty()
-    prog = st.progress(0)
 
     _bull_tick = [0]
 
     def on_prog(idx, total, name):
         pct = idx / total
-        prog.progress(pct)
 
         _bull_tick[0] += 1
         # 불 사이클: 🔥 크기 변화 (작→중→큰)
@@ -521,10 +519,18 @@ else:
     elapsed = time.time() - t0
     ok   = sum(1 for r in collection_results.values() if r.success)
     fail = len(collection_results) - ok
-    prog.progress(1.0)
+    # 완료: 황소가 바 끝(100%)에 서있고 불 꺼짐
     dino_ph.markdown(
-        f"<div style='font-size:1.2rem;'>🦕✅ "
-        f"<span style='font-size:0.9rem;color:#4ec880;'>수집 완료 {elapsed:.1f}초</span></div>",
+        f"""<div style='position:relative; height:64px;
+                        background:rgba(255,255,255,0.03); border-radius:8px; margin:6px 0;'>
+          <div style='position:absolute; left:0; bottom:10px; height:5px; width:100%;
+                      background:linear-gradient(90deg,#4d9fff,#00c6ff); border-radius:3px;'></div>
+          <div style='position:absolute; left:calc(100% - 1.2rem); bottom:32px; font-size:1rem;'>✅</div>
+          <div style='position:absolute; left:calc(100% - 1.4rem); bottom:15px;
+                      font-size:1.8rem; transform:scaleX(-1);'>🐂</div>
+          <div style='position:absolute; bottom:0; left:4px; font-size:0.65rem; opacity:.6; line-height:1.8;'>
+            완료 {elapsed:.1f}초 — 성공 {ok}개 / 실패 {fail}개</div>
+        </div>""",
         unsafe_allow_html=True
     )
     # 채널 결과 pill 형태로 표시

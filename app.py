@@ -471,42 +471,47 @@ else:
     status = st.empty()
     prog = st.progress(0)
 
-    _dino_tick = [0]  # 땀 사이클용 카운터
+    _bull_tick = [0]
 
     def on_prog(idx, total, name):
         pct = idx / total
         prog.progress(pct)
 
-        # 땀방울: 1→2→3→2→1 사이클 (매 호출마다 증가)
-        _dino_tick[0] += 1
-        cycle = _dino_tick[0] % 6  # 0~5
-        sweat_count = [1, 2, 3, 3, 2, 1][cycle]
-        sweat = "💧" * sweat_count
+        _bull_tick[0] += 1
+        # 불 사이클: 🔥 크기 변화 (작→중→큰)
+        fire_cycle = _bull_tick[0] % 3
+        fire_size = ["1rem", "1.3rem", "1.6rem"][fire_cycle]
 
-        # 진행 바 채워지는 비율을 그대로 width로
         bar_w = int(pct * 100)
-        # 공룡은 채워진 바의 오른쪽 끝에 위치
-        # calc(bar_w% - 2rem) 으로 이모지 크기만큼 왼쪽으로
-        dino = "🦕"
 
         dino_ph.markdown(
-            f"""<div style='position:relative; height:46px; background:rgba(255,255,255,0.04);
-                border-radius:8px; margin:6px 0; overflow:visible;'>
-              <!-- 진행 바 -->
-              <div style='position:absolute; left:0; top:50%; transform:translateY(-50%);
-                          height:6px; width:{bar_w}%; background:linear-gradient(90deg,#4d9fff,#00c6ff);
-                          border-radius:3px; transition:width 0.3s;'></div>
-              <!-- 땀 (공룡 왼쪽에 붙음) -->
-              <div style='position:absolute; top:2px;
-                          left:calc({bar_w}% - 3.2rem);
-                          font-size:0.65rem; line-height:1;'>{sweat}</div>
-              <!-- 공룡 (바 오른쪽 끝) -->
-              <div style='position:absolute; top:2px;
-                          left:calc({bar_w}% - 1.6rem);
-                          font-size:1.8rem; transition:left 0.3s;'>{dino}</div>
+            f"""<div style='position:relative; height:64px;
+                            background:rgba(255,255,255,0.03);
+                            border-radius:8px; margin:6px 0;'>
+              <!-- 진행 바 (하단에 위치) -->
+              <div style='position:absolute; left:0; bottom:10px;
+                          height:5px; width:{bar_w}%;
+                          background:linear-gradient(90deg,#4d9fff,#00c6ff);
+                          border-radius:3px; transition:width 0.25s;'></div>
+              <!-- 🔥 불 (황소 바로 위) -->
+              <div style='position:absolute;
+                          left:calc({bar_w}% - 1.2rem);
+                          bottom:32px;
+                          font-size:{fire_size};
+                          transition:left 0.25s, font-size 0.15s;
+                          line-height:1;'>🔥</div>
+              <!-- 🐂 황소 (바 위에 서있음) -->
+              <div style='position:absolute;
+                          left:calc({bar_w}% - 1.4rem);
+                          bottom:15px;
+                          font-size:1.8rem;
+                          transform:scaleX(-1);
+                          transition:left 0.25s;
+                          line-height:1;'>🐂</div>
               <!-- 채널 이름 -->
-              <div style='position:absolute; bottom:3px; left:4px;
-                          font-size:0.68rem; opacity:.5;'>{int(pct*100)}% — {name[:28]}</div>
+              <div style='position:absolute; bottom:0; left:4px;
+                          font-size:0.65rem; opacity:.45;
+                          line-height:1.8;'>{int(pct*100)}% — {name[:30]}</div>
             </div>""",
             unsafe_allow_html=True
         )

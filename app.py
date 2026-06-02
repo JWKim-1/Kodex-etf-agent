@@ -18,10 +18,10 @@ import plotly.express as px
 import streamlit as st
 
 st.set_page_config(
-    page_title="KODEX ETF 마케팅 효과 측정",
+    page_title="ETF 마케팅 효과 측정 AI Agent",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -58,6 +58,93 @@ st.markdown("""
                        font-weight:700; font-size:0.9rem; display:inline-block; }
 </style>
 """, unsafe_allow_html=True)
+
+# ── 모드 선택 랜딩 페이지 ─────────────────────────────────────────────────────
+if "selected_mode" not in st.session_state:
+    st.session_state.selected_mode = None
+
+if st.session_state.selected_mode is None:
+    st.markdown("""
+    <style>
+    .landing-title { font-size:2.2rem; font-weight:800; text-align:center; margin-bottom:0.3rem; }
+    .landing-sub   { font-size:1rem; text-align:center; opacity:.65; margin-bottom:2.5rem; }
+    .mode-card {
+        border:2px solid rgba(255,255,255,0.12);
+        border-radius:16px;
+        padding:2rem 1.5rem;
+        text-align:center;
+        cursor:pointer;
+        transition:all .2s;
+        height:260px;
+        display:flex; flex-direction:column; align-items:center; justify-content:center;
+        gap:0.7rem;
+    }
+    .mode-card:hover { border-color:#4d9fff; background:rgba(77,159,255,0.08); }
+    .mode-card.disabled {
+        opacity:.4;
+        cursor:not-allowed;
+        border-color:rgba(255,255,255,0.06);
+    }
+    .mode-icon  { font-size:3rem; }
+    .mode-title { font-size:1.2rem; font-weight:700; }
+    .mode-desc  { font-size:0.82rem; opacity:.7; line-height:1.5; }
+    .coming-soon{
+        background:rgba(255,200,50,0.15); border:1px solid rgba(255,200,50,0.4);
+        color:#f0c040; border-radius:20px; padding:3px 12px;
+        font-size:0.72rem; font-weight:700; margin-top:0.3rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="landing-title">📊 ETF 마케팅 효과 측정 AI Agent</div>', unsafe_allow_html=True)
+    st.markdown('<div class="landing-sub">채널별 마케팅 활동을 자동 감지하고 이중차분법(DiD)으로 순매수 효과를 정량 측정합니다</div>', unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns(3, gap="large")
+
+    with col1:
+        st.markdown("""
+        <div class="mode-card">
+            <div class="mode-icon">📈</div>
+            <div class="mode-title">증권사 채널</div>
+            <div class="mode-desc">삼성증권 등 증권사의 마케팅 이벤트·유튜브·블로그를 자동 수집하고 KODEX ETF 개인 순매수 DiD를 측정합니다</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("증권사 채널 분석 시작 →", key="btn_securities", use_container_width=True, type="primary"):
+            st.session_state.selected_mode = "securities"
+            st.rerun()
+
+    with col2:
+        st.markdown("""
+        <div class="mode-card disabled">
+            <div class="mode-icon">🏦</div>
+            <div class="mode-title">은행 채널</div>
+            <div class="mode-desc">KB·신한 등 은행의 신탁·퇴직연금 채널에서 ETF 마케팅 활동과 은행 투자자 순매수 효과를 측정합니다</div>
+            <div class="coming-soon">🔒 추후 출시 예정</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.button("은행 채널 (준비 중)", key="btn_bank", use_container_width=True, disabled=True)
+
+    with col3:
+        st.markdown("""
+        <div class="mode-card disabled">
+            <div class="mode-icon">🏢</div>
+            <div class="mode-title">자산운용사 채널</div>
+            <div class="mode-desc">삼성자산운용 직접 마케팅 채널의 효과를 투신·사모 순매수 기준으로 측정하고 개선 방안을 제안합니다</div>
+            <div class="coming-soon">🔒 추후 출시 예정</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.button("자산운용사 채널 (준비 중)", key="btn_amc", use_container_width=True, disabled=True)
+
+    st.markdown("---")
+    st.caption("삼성자산운용 ETF 마케팅 모니터링 AI Agent · Powered by Claude")
+    st.stop()
+
+# 증권사 모드 선택됨 → 사이드바에 뒤로가기 추가
+with st.sidebar:
+    if st.button("← 채널 선택으로 돌아가기"):
+        st.session_state.selected_mode = None
+        st.rerun()
+    st.divider()
 
 # ── 사이드바 ──────────────────────────────────────────────────────────────────
 with st.sidebar:

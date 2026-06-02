@@ -788,13 +788,15 @@ class DataCollector:
         # 구글 뉴스 RSS 대체
         if not articles:
             queries = [
+                "KODEX+이벤트+증권",           # 광범위 — 어느 증권사든 KODEX 이벤트
+                "KODEX+ETF+이벤트",            # KODEX ETF 전반 이벤트
                 "삼성증권+KODEX+이벤트",
-                "삼성증권+ETF+이벤트",
-                "미래에셋증권+ETF+이벤트",
-                "키움증권+ETF+이벤트",
-                "한국투자증권+ETF+이벤트",
-                "증권사+ETF+앱+이벤트",       # 앱 내 이벤트 기사
+                "키움증권+KODEX+이벤트",
+                "미래에셋증권+KODEX+이벤트",
+                "한국투자증권+KODEX+이벤트",
+                "증권+KODEX+앱+이벤트",        # 앱 내 이벤트 기사
                 "KODEX+ETF+신규상장",
+                "KODEX+순자산+돌파",           # AUM 마일스톤 케이스
                 "삼성자산운용+ETF+출시",
             ]
             for q in queries:

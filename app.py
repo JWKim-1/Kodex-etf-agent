@@ -106,7 +106,7 @@ if st.session_state.selected_mode is None:
         <div class="mode-card">
             <div class="mode-icon">📈</div>
             <div class="mode-title">증권사 채널</div>
-            <div class="mode-desc">삼성증권 등 증권사의 마케팅 이벤트·유튜브·블로그를 자동 수집하고 KODEX ETF 개인 순매수 DiD를 측정합니다</div>
+            <div class="mode-desc">증권사의 마케팅 이벤트·유튜브·블로그를 자동 수집하고 KODEX ETF 금융투자 순매수 DiD를 측정합니다</div>
         </div>
         """, unsafe_allow_html=True)
         if st.button("증권사 채널 분석 시작 →", key="btn_securities", use_container_width=True, type="primary"):
@@ -127,9 +127,9 @@ if st.session_state.selected_mode is None:
     with col3:
         st.markdown("""
         <div class="mode-card disabled">
-            <div class="mode-icon">🏢</div>
-            <div class="mode-title">자산운용사 채널</div>
-            <div class="mode-desc">삼성자산운용 직접 마케팅 채널의 효과를 투신·사모 순매수 기준으로 측정하고 개선 방안을 제안합니다</div>
+            <div class="mode-icon">🎯</div>
+            <div class="mode-title">대고객 디지털 마케팅</div>
+            <div class="mode-desc">삼성자산운용의 직접 디지털 마케팅(이벤트·SNS·유튜브) 효과를 개인 순매수 DiD로 측정합니다</div>
             <div class="coming-soon">🔒 추후 출시 예정</div>
         </div>
         """, unsafe_allow_html=True)

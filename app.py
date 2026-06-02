@@ -288,47 +288,60 @@ def keyword_fallback(collection_results, all_kodex_etfs: dict) -> dict:
 st.title("📊 삼성증권 KODEX ETF 마케팅 효과 측정 Agent")
 st.caption("마케팅 활동 감지 → ETF 특정 → 비교군 자동 매핑 → DiD 분석")
 
-# ── 파일 업로드 ───────────────────────────────────────────────────────────────
-st.header("📂 데이터 업로드")
-
-col_hist, col_new = st.columns(2)
-with col_hist:
-    uploaded_hist = st.file_uploader(
-        "📁 누적 데이터 (과거 주차 포함)",
-        type=["xlsx"],
-        help="기존에 쌓아온 엑셀 파일 (여러 시트 포함)",
-    )
-with col_new:
-    uploaded_new = st.file_uploader(
-        "📄 이번 주 신규 파일 (선택)",
-        type=["xlsx"],
-        help="멘토님께 받은 이번 주 단일 파일. 업로드 시 누적 파일에 자동 병합됩니다.",
-    )
-
-if not uploaded_hist:
-    st.info("누적 데이터 엑셀 파일을 업로드하면 분석이 가능합니다.")
-    st.stop()
-
+# ── 데이터 로드 ───────────────────────────────────────────────────────────────
 from analyzer import (ExcelLoader, MarketingAnalyzer, COMPARISON_MAP,
                       auto_map_competitors, extract_keyword,
                       extract_target_etfs_with_llm)
 from collector import DataCollector, CHANNEL_LABELS
 from report import build_report, export_html
 
+DEFAULT_EXCEL = "ETF 순매수 데이터_260529.xlsx"
+
 @st.cache_data(show_spinner=False)
 def load_excel(file_bytes: bytes):
     return ExcelLoader().load(io.BytesIO(file_bytes))
 
-file_bytes = uploaded_hist.read()
-with st.spinner("엑셀 로드 중..."):
-    all_sheets = load_excel(file_bytes)
+@st.cache_data(show_spinner=False)
+def load_excel_path(path: str):
+    return ExcelLoader().load(path)
 
-# 이번 주 신규 파일이 있으면 병합
+# 기본 파일 자동 로드
+if os.path.exists(DEFAULT_EXCEL):
+    with st.spinner("기본 데이터 로드 중..."):
+        all_sheets = load_excel_path(DEFAULT_EXCEL)
+    base_loaded = True
+else:
+    all_sheets = {}
+    base_loaded = False
+
+# 신규 주차 파일 추가 업로드
+st.header("📂 이번 주 신규 데이터 추가")
+
+col_info, col_upload = st.columns([2, 1])
+with col_info:
+    if base_loaded:
+        loaded_weeks = [s for s in all_sheets.keys() if s not in {"참고사항","설명","readme","README"}]
+        st.success(f"✅ 기본 데이터 자동 로드됨 — 시트 {len(loaded_weeks)}개 ({', '.join(loaded_weeks[-3:])} 등)")
+    else:
+        st.warning("기본 엑셀 파일이 없습니다. 아래에서 파일을 업로드하세요.")
+
+with col_upload:
+    uploaded_new = st.file_uploader(
+        "📄 신규 주차 파일 추가 (선택)",
+        type=["xlsx"],
+        help="멘토님께 받은 이번 주 파일. 업로드 시 기존 데이터에 자동 병합됩니다.",
+        label_visibility="collapsed",
+    )
+
+if not base_loaded and not uploaded_new:
+    st.info("엑셀 파일을 업로드하면 분석이 가능합니다.")
+    st.stop()
+
+# 신규 파일 병합
 if uploaded_new:
     new_bytes = uploaded_new.read()
-    with st.spinner("이번 주 신규 파일 병합 중..."):
+    with st.spinner("신규 파일 병합 중..."):
         new_sheets = load_excel(new_bytes)
-    # 기존에 없는 시트만 추가 (중복 방지)
     added = []
     for sname, sdf in new_sheets.items():
         if sname not in all_sheets:

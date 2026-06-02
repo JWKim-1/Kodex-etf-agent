@@ -30,18 +30,25 @@ ERROR_TYPES = {
 }
 
 CHANNEL_LABELS = {
-    "samsung_fund_event": "삼성자산운용 이벤트 페이지",
-    "youtube": "삼성증권 유튜브",
-    "instagram": "삼성증권 인스타그램",
-    "naver_blog": "삼성증권 블로그 (네이버)",
-    "samsung_pop_event": "삼성증권 홈페이지 이벤트",
-    "kakao": "삼성증권 카카오톡 채널",
-    "krx_news": "KRX 보도자료",
-    "krx_trading": "KRX 투자자별 거래실적",
-    "google_trends": "구글 트렌드",
-    "pension_pdf": "퇴직연금 상품가이드 PDF",
-    "news": "네이버/구글 뉴스",
+    # ── 삼성자산운용 / 삼성증권 ──────────────────────
+    "samsung_fund_event":  "삼성자산운용 이벤트 페이지",
+    "samsung_youtube":     "삼성증권 유튜브",
+    "samsung_blog":        "삼성증권 블로그 (네이버)",
+    # ── 미래에셋증권 ─────────────────────────────────
+    "mirae_youtube":       "미래에셋증권 유튜브",
+    # ── 키움증권 ─────────────────────────────────────
+    "kiwoom_youtube":      "키움증권 유튜브",
+    "kiwoom_blog":         "키움증권 블로그 (네이버)",
+    # ── 토스증권 ─────────────────────────────────────
+    "toss_youtube":        "토스증권 유튜브",
+    # ── 공통 채널 ────────────────────────────────────
+    "krx_news":            "KRX 보도자료",
+    "krx_trading":         "KRX 투자자별 거래실적 (수동 엑셀 대체)",
+    "news":                "네이버/구글 뉴스",
 }
+
+# 제거된 채널 (구조적 불가) → 제거된채널목록.md 참조
+# instagram, kakao, google_trends, samsung_pop_event, pension_pdf
 
 
 @dataclass
@@ -132,17 +139,21 @@ class DataCollector:
 
     def collect_all(self, progress_callback=None) -> Dict[str, ChannelResult]:
         channels = [
+            # 삼성자산운용/삼성증권
             ("samsung_fund_event", self._ch_samsung_fund_event),
-            ("youtube", self._ch_youtube),
-            ("instagram", self._ch_instagram),
-            ("naver_blog", self._ch_naver_blog),
-            ("samsung_pop_event", self._ch_samsung_pop_event),
-            ("kakao", self._ch_kakao),
-            ("krx_news", self._ch_krx_news),
-            ("krx_trading", self._ch_krx_trading),
-            ("google_trends", self._ch_google_trends),
-            ("pension_pdf", self._ch_pension_pdf),
-            ("news", self._ch_news),
+            ("samsung_youtube",    self._ch_samsung_youtube),
+            ("samsung_blog",       self._ch_samsung_blog),
+            # 미래에셋증권
+            ("mirae_youtube",      self._ch_mirae_youtube),
+            # 키움증권
+            ("kiwoom_youtube",     self._ch_kiwoom_youtube),
+            ("kiwoom_blog",        self._ch_kiwoom_blog),
+            # 토스증권
+            ("toss_youtube",       self._ch_toss_youtube),
+            # 공통
+            ("krx_news",           self._ch_krx_news),
+            ("krx_trading",        self._ch_krx_trading),
+            ("news",               self._ch_news),
         ]
         results: Dict[str, ChannelResult] = {}
         for idx, (key, func) in enumerate(channels):
@@ -262,10 +273,60 @@ class DataCollector:
         except Exception as e:
             return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
 
+    # ── 유튜브 RSS 공통 헬퍼 ─────────────────────────────────────────────────
+
+    def _fetch_youtube_rss(self, ch: str, name: str, channel_id: str) -> ChannelResult:
+        """유튜브 RSS 공통 수집 로직."""
+        one_week_ago = datetime.utcnow() - timedelta(days=7)
+        if self.youtube_api_key:
+            try:
+                from googleapiclient.discovery import build
+                yt = build("youtube", "v3", developerKey=self.youtube_api_key)
+                pub_after = (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
+                search = yt.search().list(part="id,snippet", channelId=channel_id, type="video",
+                                          publishedAfter=pub_after, maxResults=10, order="date").execute()
+                videos = []
+                for item in search.get("items", []):
+                    vid_id = item["id"].get("videoId", "")
+                    title = item.get("snippet", {}).get("title", "")
+                    pub = item.get("snippet", {}).get("publishedAt", "")
+                    is_etf = bool(re.search(r"ETF|KODEX|TIGER|코덱스|배당|채권|지수|리츠|반도체|AI", title, re.I))
+                    videos.append({"title": title, "published_at": pub, "is_etf_related": is_etf,
+                                   "url": f"https://youtu.be/{vid_id}"})
+                return ChannelResult(ch, name, True, data={"source": "api", "videos": videos})
+            except Exception as e:
+                logger.warning(f"YouTube API 실패 → RSS: {e}")
+        try:
+            rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
+            r = requests.get(rss_url, headers=BROWSER_HEADERS, timeout=15)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "xml")
+            videos = []
+            for entry in soup.find_all("entry")[:30]:
+                title = entry.find("title").get_text(strip=True) if entry.find("title") else ""
+                pub_str = entry.find("published").get_text(strip=True) if entry.find("published") else ""
+                vid_url = entry.find("link")["href"] if entry.find("link") else ""
+                try:
+                    pub_dt = datetime.fromisoformat(pub_str.replace("Z", "+00:00")).replace(tzinfo=None)
+                    if not self._in_range(pub_dt):
+                        continue
+                except Exception:
+                    pass
+                is_etf = bool(re.search(r"ETF|KODEX|TIGER|코덱스|배당|채권|지수|리츠|반도체|AI", title, re.I))
+                videos.append({"title": title, "published_at": pub_str, "is_etf_related": is_etf, "url": vid_url})
+            week_info = f"{self.week_start.strftime('%m/%d')}~{self.week_end.strftime('%m/%d')}" if self.week_start else "최근 7일"
+            return ChannelResult(ch, name, True, data={"source": "rss", "videos": videos,
+                                                        "note": f"RSS ({week_info})"})
+        except requests.HTTPError as e:
+            code = e.response.status_code if e.response else 0
+            return ChannelResult(ch, name, False, error=f"HTTP {code}", error_type="ACCESS_BLOCKED")
+        except Exception as e:
+            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
+
     # ── CH2: 삼성증권 유튜브 ──────────────────────────────────────────────────
 
-    def _ch_youtube(self) -> ChannelResult:
-        ch, name = "youtube", CHANNEL_LABELS["youtube"]
+    def _ch_samsung_youtube(self) -> ChannelResult:
+        ch, name = "samsung_youtube", CHANNEL_LABELS["samsung_youtube"]
         channel_id = "UCq7h8qFlHN5FL_T6waKZllw"
         one_week_ago = datetime.utcnow() - timedelta(days=7)
 
@@ -380,9 +441,12 @@ class DataCollector:
 
     # ── CH4: 삼성증권 블로그 (네이버 RSS) ───────────────────────────────────
 
-    def _ch_naver_blog(self) -> ChannelResult:
-        ch, name = "naver_blog", CHANNEL_LABELS["naver_blog"]
-        rss_url = "https://rss.blog.naver.com/samsung_fn.xml"
+    def _ch_samsung_blog(self) -> ChannelResult:
+        return self._ch_naver_blog_base("samsung_blog", CHANNEL_LABELS["samsung_blog"],
+                                        "https://rss.blog.naver.com/samsung_fn.xml")
+
+    def _ch_naver_blog_base(self, ch: str, name: str, rss_url: str) -> ChannelResult:
+        """네이버 블로그 RSS 공통 수집 로직."""
         try:
             r = requests.get(rss_url, headers=BROWSER_HEADERS, timeout=15)
             if r.status_code == 403:
@@ -752,4 +816,34 @@ class DataCollector:
             ch, name, False,
             error=f"뉴스 수집 실패 ({note}) — 네이버 검색 API 키 설정 권장",
             error_type="API_KEY_REQUIRED" if not self.naver_client_id else "CONNECTION_ERROR",
+        )
+
+    # ── 미래에셋증권 채널 ──────────────────────────────────────────────────────
+
+    def _ch_mirae_youtube(self) -> ChannelResult:
+        return self._fetch_youtube_rss(
+            "mirae_youtube", CHANNEL_LABELS["mirae_youtube"],
+            "UCZS9wEZ4itPbBZk_sqccXfw"
+        )
+
+    # ── 키움증권 채널 ────────────────────────────────────────────────────────
+
+    def _ch_kiwoom_youtube(self) -> ChannelResult:
+        return self._fetch_youtube_rss(
+            "kiwoom_youtube", CHANNEL_LABELS["kiwoom_youtube"],
+            "UCZW1d7B2nYqQUiTiOnkirrQ"
+        )
+
+    def _ch_kiwoom_blog(self) -> ChannelResult:
+        return self._ch_naver_blog_base(
+            "kiwoom_blog", CHANNEL_LABELS["kiwoom_blog"],
+            "https://rss.blog.naver.com/kiwoomhero.xml"
+        )
+
+    # ── 토스증권 채널 ────────────────────────────────────────────────────────
+
+    def _ch_toss_youtube(self) -> ChannelResult:
+        return self._fetch_youtube_rss(
+            "toss_youtube", CHANNEL_LABELS["toss_youtube"],
+            "UCW_P8DTCnlDcUHRfGFwRRLA"
         )

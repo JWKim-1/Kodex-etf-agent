@@ -687,12 +687,14 @@ with st.expander("🔗 비교군 매핑", expanded=True):
             # 그리드 박스 형태 (균일한 비율)
             cards_html = '<div class="comp-grid">'
             for comp in comps:
-                provider_colors = {"TIGER":"#f4a261","ACE":"#e76f51","PLUS":"#2a9d8f","SOL":"#e9c46a"}
+                provider_colors = {"TIGER":"#f4a261","ACE":"#e76f51","PLUS":"#2a9d8f","SOL":"#e9c46a","RISE":"#6b9fff","HANARO":"#a78bfa"}
                 c = provider_colors.get(comp['provider'], "#adb5bd")
+                logo_url = f"https://ssl.pstatic.net/imgstock/fn/real/logo/etf/StockKRETF{comp['provider']}.svg"
+                short_name = comp["name"].replace("TIGER ","").replace("PLUS ","").replace("ACE ","").replace("SOL ","").replace("RISE ","").replace("HANARO ","")
                 cards_html += (
                     f'<div class="comp-card" style="border-color:{c}40; min-width:140px; flex:1;">'
-                    f'<div style="font-size:0.72rem;color:{c};font-weight:700;">{comp["provider"]}</div>'
-                    f'<div style="font-size:0.95rem;font-weight:600;margin:4px 0;">{comp["name"].replace("TIGER ","").replace("PLUS ","").replace("ACE ","").replace("SOL ","")}</div>'
+                    f'<img src="{logo_url}" style="height:22px;margin-bottom:4px;" onerror="this.style.display=\'none\'">'
+                    f'<div style="font-size:0.95rem;font-weight:600;margin:2px 0;">{short_name}</div>'
                     f'<div style="font-size:0.68rem;opacity:.5;">{comp["code"]}</div>'
                     f'</div>'
                 )
@@ -947,10 +949,12 @@ for code, res in did_results.items():
                 c = provider_colors.get(comp.provider, "#adb5bd")
                 pct_disp = f"{int(comp.change_pct*100):+d}%"
                 cur = comp.current_fi if comp.metric_used=="financial" else comp.current_ind
+                logo_url2 = f"https://ssl.pstatic.net/imgstock/fn/real/logo/etf/StockKRETF{comp.provider}.svg"
+                short2 = comp.name.replace("TIGER ","").replace("PLUS ","").replace("ACE ","").replace("SOL ","").replace("RISE ","").replace("HANARO ","")
                 cards += (
                     f'<div class="comp-card" style="border-color:{c}50; flex:1; min-width:120px;">'
-                    f'<div style="color:{c};font-size:.7rem;font-weight:700;">{comp.provider}</div>'
-                    f'<div style="font-size:.95rem;font-weight:600;">{comp.name.replace("TIGER ","").replace("PLUS ","").replace("ACE ","").replace("SOL ","")}</div>'
+                    f'<img src="{logo_url2}" style="height:20px;margin-bottom:3px;" onerror="this.style.display=\'none\'">'
+                    f'<div style="font-size:.95rem;font-weight:600;">{short2}</div>'
                     f'<div style="font-size:1.1rem;font-weight:700;color:{c};">{pct_disp}</div>'
                     f'<div style="font-size:.68rem;opacity:.6;">{cur/1e6:.1f}M 이번주</div>'
                     f'</div>'

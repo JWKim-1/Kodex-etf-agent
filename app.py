@@ -631,7 +631,7 @@ if did_results:
             chart_rows.append({"ETF": short, "구분": label, "변화율": comp.change_pct, "order": i+1})
 
     if chart_rows:
-        df_chart = pd.DataFrame(chart_rows).sort_values(["ETF","order"])
+        # ETF별 서브플롯 — ETF마다 비교군 수 달라도 균일하게 표시
         provider_colors = {
             "KODEX": "#4d9fff",
             "TIGER": "#f4a261",
@@ -639,33 +639,52 @@ if did_results:
             "PLUS":  "#2a9d8f",
             "SOL":   "#e9c46a",
         }
+        # ETF그룹 목록 (중복 제거, 순서 유지)
+        etf_groups = list(dict.fromkeys(r["ETF그룹"] for r in chart_rows))
+        n_etfs = len(etf_groups)
+
         fig_comp = go.Figure()
-        for grp in df_chart["구분"].unique():
-            sub = df_chart[df_chart["구분"] == grp]
+        # 구분(KODEX/TIGER 등) 전체 목록
+        all_providers = list(dict.fromkeys(r["구분"] for r in chart_rows))
+
+        for provider in all_providers:
+            # 이 provider의 값이 없는 ETF는 None으로 채워서 x축 위치 고정
+            y_vals, x_vals, texts = [], [], []
+            for etf in etf_groups:
+                match = [r for r in chart_rows if r["ETF그룹"] == etf and r["구분"] == provider]
+                val = match[0]["변화율"] if match else None
+                short = etf.replace("KODEX ", "")
+                x_vals.append(short)
+                y_vals.append(val)
+                texts.append(f"{val:+.3f}" if val is not None else "")
+
             fig_comp.add_trace(go.Bar(
-                name=grp,
-                x=sub["ETF"],
-                y=sub["변화율"],
-                marker_color=provider_colors.get(grp, "#adb5bd"),
+                name=provider,
+                x=x_vals,
+                y=y_vals,
+                marker_color=provider_colors.get(provider, "#adb5bd"),
                 marker_line_width=0,
-                text=[f"{v:+.3f}" for v in sub["변화율"]],
+                text=texts,
                 textposition="outside",
-                hovertemplate="<b>%{x}</b><br>" + grp + ": %{y:+.4f}<extra></extra>",
+                textfont=dict(size=11),
+                hovertemplate="<b>%{x}</b><br>" + provider + ": %{y:+.4f}<extra></extra>",
             ))
+
         fig_comp.add_hline(y=0, line_dash="dash", line_color="rgba(200,200,200,0.4)", line_width=1)
         fig_comp.update_layout(
             title=dict(text="🔵 KODEX vs 비교군 변화율 비교", font_size=15, x=0),
             barmode="group",
-            bargap=0.25,
-            bargroupgap=0.1,
-            xaxis=dict(title="", tickangle=0),
-            yaxis=dict(title="정규화 절대 변화", gridcolor="rgba(255,255,255,0.08)"),
+            bargap=0.3,       # ETF 그룹 간격
+            bargroupgap=0.05, # 같은 그룹 내 막대 간격 최소화
+            xaxis=dict(title="", tickfont=dict(size=12)),
+            yaxis=dict(title="정규화 절대 변화", gridcolor="rgba(255,255,255,0.08)", zeroline=False),
             template="plotly_dark",
             height=420,
             legend=dict(orientation="h", y=-0.18, x=0.5, xanchor="center", font_size=12),
             margin=dict(t=60, b=90, l=20, r=20),
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
+            uniformtext=dict(mode="hide", minsize=9),
         )
         st.plotly_chart(fig_comp, use_container_width=True)
 

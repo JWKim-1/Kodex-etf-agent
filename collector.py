@@ -352,19 +352,9 @@ class DataCollector:
                         continue
                 except Exception:
                     pass
-                # 영상 description 가져오기 (RSS media:description 또는 summary)
-                desc_tag = entry.find("description") or entry.find("summary")
-                media_desc = entry.find("media:description") or entry.find("group")
-                video_desc = ""
-                if desc_tag:
-                    video_desc = desc_tag.get_text(strip=True)[:500]
-                elif media_desc:
-                    video_desc = media_desc.get_text(strip=True)[:500]
-
-                content = title + " " + video_desc
-                is_etf = bool(re.search(r"ETF|KODEX|TIGER|코덱스|배당|채권|지수|리츠|반도체|AI|이벤트|프로모션", content, re.I))
-                videos.append({"title": title, "description": video_desc,
-                                "published_at": pub_str, "is_etf_related": is_etf, "url": vid_url})
+                # 유튜브는 제목만으로 판단 (description은 해시태그 수준, 자막은 API 필요)
+                is_etf = bool(re.search(r"ETF|KODEX|TIGER|코덱스|배당|채권|지수|리츠|반도체|AI|이벤트|프로모션|커버드콜", title, re.I))
+                videos.append({"title": title, "published_at": pub_str, "is_etf_related": is_etf, "url": vid_url})
             week_info = f"{self.week_start.strftime('%m/%d')}~{self.week_end.strftime('%m/%d')}" if self.week_start else "최근 7일"
             return ChannelResult(ch, name, True, data={"source": "rss", "videos": videos,
                                                         "note": f"RSS ({week_info})"})

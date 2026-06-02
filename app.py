@@ -612,11 +612,9 @@ else:
             if items:
                 non_detected_tabs[r.channel_name] = items
 
-        tab_labels = list(by_channel.keys()) + list(non_detected_tabs.keys())
-        if tab_labels:
-            tabs = st.tabs([f"📡 {t}" for t in tab_labels])
-            for i, (ch_name, evs) in enumerate(by_channel.items()):
-                with tabs[i]:
+        if by_channel:
+            for ch_name, evs in by_channel.items():
+                with st.expander(f"📡 {ch_name}", expanded=True):
                     for ev in evs:
                         title  = ev.get("title", "")
                         url    = ev.get("url", "")
@@ -631,10 +629,9 @@ else:
                             st.caption(f"↳ {reason}")
                         if mkt_reason:
                             st.caption(f"📋 {mkt_reason}")
-            offset = len(by_channel)
-            for i, (ch_name, items) in enumerate(non_detected_tabs.items()):
-                with tabs[offset + i]:
-                    st.caption("콘텐츠 수집됐으나 KODEX ETF 관련 내용 없음")
+            for ch_name, items in non_detected_tabs.items():
+                with st.expander(f"📡 {ch_name} (ETF 미감지)", expanded=False):
+                    st.caption("수집됐으나 KODEX ETF 관련 내용 없음")
                     for it in items:
                         st.markdown(f"• {it}")
         else:

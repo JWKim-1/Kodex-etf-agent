@@ -669,7 +669,7 @@ class MarketingAnalyzer:
                 code=current.code, suspicious=False, z_score=round(z, 2),
                 direction_mismatch=False, use_metric="financial",
                 reliability="high",
-                note=f"정상 (z={z:.2f}) — 금융투자 기준 분석 (증권채널 시그널 포함)",
+                note=f"정상 (z={z:.2f}) — 금융투자 기준 분석",
                 is_estimate=False,
             )
 

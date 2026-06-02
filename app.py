@@ -36,26 +36,53 @@ st.markdown("""
     border:1px solid rgba(128,128,255,0.35); border-radius:6px;
     padding:12px 16px; font-family:monospace; font-size:0.88rem;
     white-space:pre-wrap; margin:8px 0;
-    background:rgba(100,120,255,0.08);
-    color:inherit;
+    background:rgba(100,120,255,0.08); color:inherit;
 }
 .comp-card {
-    border:1px solid rgba(128,128,128,0.3); border-radius:6px;
-    padding:10px 14px; margin:4px 0;
-    background:rgba(128,128,128,0.1);
-    color:inherit;
+    border:1px solid rgba(128,128,128,0.3); border-radius:8px;
+    padding:12px; margin:4px;
+    background:rgba(128,128,128,0.1); color:inherit;
+    text-align:center; min-height:90px;
 }
+.comp-grid { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
 .did-result  { font-size:1.3rem; font-weight:700; padding:8px 0; }
 .badge-lp    { background:rgba(255,200,50,0.25); color:#f0c040; padding:2px 8px;
                border-radius:10px; font-size:0.78rem; font-weight:700; }
 .badge-ok    { background:rgba(50,200,100,0.2); color:#4ec880; padding:2px 8px;
                border-radius:10px; font-size:0.78rem; font-weight:700; }
-.mode-badge-backtest { background:rgba(255,150,50,0.2); border:1px solid rgba(255,150,50,0.5);
-                       color:#ffaa44; padding:4px 12px; border-radius:8px;
-                       font-weight:700; font-size:0.9rem; display:inline-block; }
-.mode-badge-weekly   { background:rgba(50,200,100,0.2); border:1px solid rgba(50,200,100,0.5);
-                       color:#4ec880; padding:4px 12px; border-radius:8px;
-                       font-weight:700; font-size:0.9rem; display:inline-block; }
+.mode-badge-weekly { background:rgba(50,200,100,0.2); border:1px solid rgba(50,200,100,0.5);
+                     color:#4ec880; padding:4px 12px; border-radius:8px;
+                     font-weight:700; font-size:0.9rem; display:inline-block; }
+.ch-pill { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.75rem;
+           font-weight:600; margin:2px; }
+.ch-ok   { background:rgba(50,200,100,0.2); color:#4ec880; border:1px solid rgba(50,200,100,0.4); }
+.ch-fail { background:rgba(220,53,69,0.15); color:#ff6b7a; border:1px solid rgba(220,53,69,0.3); }
+
+/* 공룡 달리기 애니메이션 */
+@keyframes dino-run {
+  0%   { transform: translateX(0) scaleX(1); }
+  49%  { transform: translateX(calc(var(--track-width, 300px) - 48px)) scaleX(1); }
+  50%  { transform: translateX(calc(var(--track-width, 300px) - 48px)) scaleX(-1); }
+  99%  { transform: translateX(0) scaleX(-1); }
+  100% { transform: translateX(0) scaleX(1); }
+}
+@keyframes dino-sweat {
+  0%,100% { opacity:0; transform:translateY(0); }
+  50% { opacity:1; transform:translateY(6px); }
+}
+.dino-track {
+    position:relative; height:52px; overflow:hidden;
+    background:rgba(255,255,255,0.05); border-radius:8px; margin:8px 0;
+}
+.dino-char {
+    position:absolute; font-size:2rem; top:4px; left:0;
+    animation: dino-run 2.4s linear infinite;
+}
+.dino-dust {
+    position:absolute; font-size:0.7rem; top:32px; left:0;
+    animation: dino-run 2.4s linear infinite;
+    opacity:0.5;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -286,8 +313,8 @@ def keyword_fallback(collection_results, all_kodex_etfs: dict) -> dict:
     return {"marketing_detected": False, "etf_codes": [], "summary": "마케팅 활동 미감지 (키워드 방식)", "evidence": []}
 
 # ── 메인 ──────────────────────────────────────────────────────────────────────
-st.title("📊 삼성증권 KODEX ETF 마케팅 효과 측정 Agent")
-st.caption("마케팅 활동 감지 → ETF 특정 → 비교군 자동 매핑 → DiD 분석")
+st.title("📊 증권사 채널 KODEX ETF 마케팅 효과 측정 Agent")
+st.caption("마케팅 활동 감지 → ETF 특정 → 비교군 매핑 → DiD 분석")
 
 # ── 데이터 로드 ───────────────────────────────────────────────────────────────
 from analyzer import (ExcelLoader, MarketingAnalyzer, COMPARISON_MAP,
@@ -316,16 +343,9 @@ else:
     base_loaded = False
 
 # 신규 주차 파일 추가 업로드
-st.header("📂 이번 주 신규 데이터 추가")
+st.header("📂 데이터")
 
-col_info, col_upload = st.columns([2, 1])
-with col_info:
-    if base_loaded:
-        loaded_weeks = [s for s in all_sheets.keys() if s not in {"참고사항","설명","readme","README"}]
-        st.success(f"✅ 기본 데이터 자동 로드됨 — 시트 {len(loaded_weeks)}개 ({', '.join(loaded_weeks[-3:])} 등)")
-    else:
-        st.info("📂 누적 데이터 파일을 업로드하세요 (멘토님 제공 엑셀)")
-
+col_upload = st.container()
 with col_upload:
     if base_loaded:
         uploaded_new = st.file_uploader(
@@ -580,7 +600,7 @@ if not target_codes:
 # ════════════════════════════════════════════════════════════════════
 # STEP 3: 비교군 자동 매핑 (미리보기 + 확인)
 # ════════════════════════════════════════════════════════════════════
-st.markdown('<div class="step-header">Step 3 · 비교군 자동 매핑</div>', unsafe_allow_html=True)
+st.markdown('<div class="step-header">Step 3 · 비교군 매핑</div>', unsafe_allow_html=True)
 
 with st.expander("🔗 비교군 매핑 결과 (클릭해서 확인/수정)", expanded=True):
     analyzer = MarketingAnalyzer()
@@ -910,7 +930,8 @@ report_data = build_report(
     google_trends_data=trends_data,
 )
 
-with st.expander("📌 다음 주 체크포인트", expanded=True):
+with st.expander("💡 마케팅 개선 제안 (추후 LLM 자동화 예정)", expanded=True):
+    st.caption("※ 현재는 DiD 결과 기반 자동 체크포인트 표시. 향후 LLM이 유사 사례·경쟁사 동향 분석 후 구체적 마케팅 제안 자동 생성 예정.")
     for pt in report_data["checkpoints"]:
         st.markdown(f"- {pt}")
 
@@ -933,4 +954,3 @@ with st.expander("🌐 HTML 리포트 미리보기", expanded=False):
         f'style="border:1px solid #ddd;border-radius:6px;"></iframe>',
         unsafe_allow_html=True)
 
-st.success("✅ 분석 완료!")

@@ -753,8 +753,8 @@ if did_results:
             "PLUS":  "#2a9d8f",
             "SOL":   "#e9c46a",
         }
-        # ETF그룹 목록 (중복 제거, 순서 유지)
-        etf_groups = list(dict.fromkeys(r["ETF그룹"] for r in chart_rows))
+        # ETF 목록 (중복 제거, 순서 유지)
+        etf_groups = list(dict.fromkeys(r["ETF"] for r in chart_rows))
         n_etfs = len(etf_groups)
 
         fig_comp = go.Figure()
@@ -765,7 +765,7 @@ if did_results:
             # 이 provider의 값이 없는 ETF는 None으로 채워서 x축 위치 고정
             y_vals, x_vals, texts = [], [], []
             for etf in etf_groups:
-                match = [r for r in chart_rows if r["ETF그룹"] == etf and r["구분"] == provider]
+                match = [r for r in chart_rows if r["ETF"] == etf and r["구분"] == provider]
                 val = match[0]["변화율"] if match else None
                 short = etf.replace("KODEX ", "")
                 x_vals.append(short)

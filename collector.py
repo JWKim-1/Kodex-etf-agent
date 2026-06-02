@@ -30,6 +30,8 @@ ERROR_TYPES = {
 }
 
 CHANNEL_LABELS = {
+    # ── 삼성자산운용 이벤트 (증권채널 이벤트 주 소스) ──
+    "samsung_fund_event":  "삼성자산운용 이벤트 페이지",
     # ── 삼성증권 ─────────────────────────────────────
     "samsung_youtube":     "삼성증권 유튜브",
     "samsung_blog":        "삼성증권 블로그 (네이버)",
@@ -145,6 +147,8 @@ class DataCollector:
 
     def collect_all(self, progress_callback=None) -> Dict[str, ChannelResult]:
         channels = [
+            # 삼성자산운용 이벤트 (증권채널 이벤트 주 소스)
+            ("samsung_fund_event", self._ch_samsung_fund_event),
             # 삼성증권
             ("samsung_youtube",    self._ch_samsung_youtube),
             ("samsung_blog",       self._ch_samsung_blog),

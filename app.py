@@ -915,82 +915,71 @@ st.markdown("---")
 
 # ── ETF별 상세 계산 과정 ──
 for code, res in did_results.items():
+    c_map = {"🟢":"#28a745","🟡":"#ffc107","⚪":"#6c757d","🔴":"#dc3545","⚫":"#343a40"}
+    border_c = c_map.get(res.judgement_emoji, "#6c757d")
+    metric_label = "금융투자" if res.lp.use_metric == "financial" else "개인"
+
     with st.expander(
-        f"🔎 {res.kodex_name} ({code})  |  {did_pct(res.did_value)}  {res.judgement_emoji} {res.judgement}",
+        f"{res.judgement_emoji} {res.kodex_name}  |  {did_pct(res.did_value)}  —  {res.judgement}",
         expanded=True
     ):
-        # LP 감지 배지
-        lp_badge = '<span class="badge-lp">⚠️ LP 개입 의심 — 추정값</span>' if res.lp.suspicious \
-                   else '<span class="badge-ok">✅ 정상</span>'
-        st.markdown(f"**LP 노이즈:** {lp_badge}  {res.lp.note}", unsafe_allow_html=True)
-        metric_label = "금융투자" if res.lp.use_metric == "financial" else "개인"
-        st.markdown(f"**사용 지표:** `{metric_label}`")
-        st.markdown("")
+        # ── 상단: 핵심 수치 3컬럼 ──
+        c1, c2, c3 = st.columns(3)
+        c1.metric("KODEX 변화율", f"{int(res.kodex_change_pct*100):+d}%", help="평소 대비")
+        c2.metric("비교군 평균", f"{int(res.control_avg_pct*100):+d}%" if not res.no_competitors else "N/A")
+        c3.metric("DiD (마케팅 효과)", did_pct(res.did_value),
+                  delta=res.judgement,
+                  delta_color="normal" if res.did_value >= 0.3 else ("off" if res.did_value >= -0.3 else "inverse"))
 
-        # ── 비교군 카드 ──
-        st.markdown("**🆚 비교군**")
+        # ── LP 상태 + 지표 한 줄 ──
+        lp_badge = '<span class="badge-lp">⚠️ LP 의심</span>' if res.lp.suspicious else '<span class="badge-ok">✅ 정상</span>'
+        st.markdown(
+            f"<small>{lp_badge} &nbsp;|&nbsp; 사용 지표: <b>{metric_label}</b> &nbsp;|&nbsp; {res.lp.note}</small>",
+            unsafe_allow_html=True
+        )
+
+        st.divider()
+
+        # ── 비교군 그리드 ──
         if res.competitors:
-            comp_cols = st.columns(len(res.competitors))
-            for ci, comp in enumerate(res.competitors):
-                with comp_cols[ci]:
-                    cur_val = comp.current_fi if comp.metric_used == "financial" else comp.current_ind
-                    base_val = comp.baseline_fi_avg if comp.metric_used == "financial" else comp.baseline_ind_avg
-                    st.markdown(
-                        f"<div class='comp-card'>"
-                        f"<b>{comp.name}</b> <small>({comp.provider})</small><br>"
-                        f"이번주: <b>{cur_val/1e6:.1f}M</b><br>"
-                        f"4주평균: {base_val/1e6:.1f}M<br>"
-                        f"변화율: <b>{comp.change_pct:+.1f}%</b>"
-                        f"</div>", unsafe_allow_html=True)
+            provider_colors = {"TIGER":"#f4a261","ACE":"#e76f51","PLUS":"#2a9d8f","SOL":"#e9c46a"}
+            cards = ""
+            for comp in res.competitors:
+                c = provider_colors.get(comp.provider, "#adb5bd")
+                pct_disp = f"{int(comp.change_pct*100):+d}%"
+                cur = comp.current_fi if comp.metric_used=="financial" else comp.current_ind
+                cards += (
+                    f'<div class="comp-card" style="border-color:{c}50; flex:1; min-width:120px;">'
+                    f'<div style="color:{c};font-size:.7rem;font-weight:700;">{comp.provider}</div>'
+                    f'<div style="font-size:.85rem;font-weight:600;">{comp.name.replace("TIGER ","T.").replace("PLUS ","P.").replace("ACE ","A.").replace("SOL ","S.")}</div>'
+                    f'<div style="font-size:1.1rem;font-weight:700;color:{c};">{pct_disp}</div>'
+                    f'<div style="font-size:.68rem;opacity:.6;">{cur/1e6:.1f}M 이번주</div>'
+                    f'</div>'
+                )
+            st.markdown(f'<div class="comp-grid">{cards}</div>', unsafe_allow_html=True)
             if len(res.competitors) == 1:
-                st.caption(f"※ 동일 유형의 비교 가능한 ETF가 시장에 1개만 존재하여 단일 비교군으로 산출 (÷1 적용)")
+                st.caption("※ 동일 유형 ETF 1종만 존재 — 단일 비교 (÷1)")
         else:
-            st.error(
-                "⚫ **비교군 없음 — DiD 측정 불가**  \n"
-                "TIGER·ACE·PLUS 등 유사 상품을 찾지 못했습니다.  \n"
-                "아래 수치는 KODEX 단독 절대 변화율이며 시장 전체 영향이 제거되지 않은 값입니다.  \n"
-                "마케팅 효과로 해석하지 마세요."
-            )
+            st.warning("⚫ 비교군 없음 — 유사 ETF를 찾지 못했습니다. 아래 수치는 DiD가 아닌 KODEX 단독값입니다.")
 
-        st.markdown("")
-
-        # ── DiD 계산식 ──
-        if res.no_competitors:
-            st.markdown("**⚫ DiD 계산식 — 비교군 없어서 DiD 계산 불가**")
-            st.markdown(
-                f"<div class='formula-box'>"
-                f"KODEX 단독 절대 변화율: {res.kodex_change_pct:+.4f}\n\n"
-                f"※ 이 수치는 DiD가 아닙니다.\n"
-                f"   시장 전반의 영향(금리 변화, 지수 등락 등)이 포함된 값입니다.\n"
-                f"   마케팅 효과로 단독 해석 불가."
-                f"</div>",
-                unsafe_allow_html=True
-            )
-        else:
-            st.markdown("**🧮 DiD 계산식** (정규화 절대 변화 = (이번주 − 4주평균) ÷ 4주절댓값평균)")
+        # ── DiD 계산식 (이쁘게) ──
+        if not res.no_competitors:
             metric = res.lp.use_metric
-            cur_val  = res.current.financial_investment  if metric == "financial" else res.current.individual
-            avg_val  = res.baseline.fi_avg  if metric == "financial" else res.baseline.ind_avg
-            mabs_val = res.baseline.fi_mabs if metric == "financial" else res.baseline.ind_mabs
-            metric_label = "금융투자" if metric == "financial" else "개인"
-            ctrl_parts = " + ".join(f"{c.change_pct:+.4f}" for c in res.competitors)
+            cur_val  = res.current.financial_investment if metric=="financial" else res.current.individual
+            avg_val  = res.baseline.fi_avg  if metric=="financial" else res.baseline.ind_avg
+            mabs_val = res.baseline.fi_mabs if metric=="financial" else res.baseline.ind_mabs
+            ctrl_str = " + ".join(f"{int(c.change_pct*100):+d}%" for c in res.competitors)
             n = len(res.competitors)
-            single_note = "\n\n※ 비교군 1개 — 동일 유형 ETF가 시장에 1종만 존재하여 단일 비교 (÷1 적용)" if n == 1 else ""
+            single_note = f"\n\n  ※ 비교군 1개만 존재 (÷1 적용)" if n == 1 else ""
             formula = (
-                f"사용 지표: {metric_label}\n\n"
-                f"① KODEX 정규화 변화\n"
-                f"   ({cur_val:,.0f} − {avg_val:,.0f}) ÷ {mabs_val:,.0f}\n"
-                f"   = {res.kodex_change_pct:+.4f}\n\n"
-                f"② 비교군 평균 정규화 변화\n"
-                f"   ({ctrl_parts}) ÷ {n} = {res.control_avg_pct:+.4f}\n\n"
-                f"③ DiD = ① − ②\n"
-                f"   {res.kodex_change_pct:+.4f} − ({res.control_avg_pct:+.4f}) = {res.did_value:+.4f}\n\n"
-                f"→ 판정: {res.judgement_emoji} {res.judgement}  ({did_pct(res.did_value)})\n"
-                f"   ≥+100% 강함  /  ≥+30% 효과있음  /  -30%~+30% 불분명  /  <-30% 효과확인어려움\n"
-                f"   ※ % = 평소 변동 크기(4주 평균) 대비 KODEX가 비교군을 얼마나 초과했는지\n"
-                f"   ※ 공식은 정규화 절대 변화 방식으로 설계됨. 단, 판정 임계값(≥1.0/≥0.3)은\n"
-                f"     이론적 설정값으로 주차 데이터 축적 후 실증 재보정 필요"
-                f"{single_note}"
+                f"[ 지표: {metric_label} ]\n\n"
+                f"  ① KODEX = ({cur_val:,.0f} − {avg_val:,.0f}) ÷ {mabs_val:,.0f}\n"
+                f"          = {int(res.kodex_change_pct*100):+d}%\n\n"
+                f"  ② 비교군 = ({ctrl_str}) ÷ {n}\n"
+                f"           = {int(res.control_avg_pct*100):+d}%\n\n"
+                f"  ③ DiD   = ① − ② = {did_pct(res.did_value)}\n\n"
+                f"  판정   {res.judgement_emoji} {res.judgement}\n"
+                f"  기준   ≥+100% 강함 / ≥+30% 효과있음 / ±30% 불분명 / <-30% 확인어려움{single_note}"
             )
             st.markdown(f"<div class='formula-box'>{formula}</div>", unsafe_allow_html=True)
 

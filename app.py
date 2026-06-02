@@ -325,18 +325,30 @@ with col_info:
         loaded_weeks = [s for s in all_sheets.keys() if s not in {"참고사항","설명","readme","README"}]
         st.success(f"✅ 기본 데이터 자동 로드됨 — 시트 {len(loaded_weeks)}개 ({', '.join(loaded_weeks[-3:])} 등)")
     else:
-        st.warning("기본 엑셀 파일이 없습니다. 아래에서 파일을 업로드하세요.")
+        st.info("📂 누적 데이터 파일을 업로드하세요 (멘토님 제공 엑셀)")
 
 with col_upload:
-    uploaded_new = st.file_uploader(
-        "📄 신규 주차 파일 추가 (선택)",
-        type=["xlsx"],
-        help="멘토님께 받은 이번 주 파일. 업로드 시 기존 데이터에 자동 병합됩니다.",
-        label_visibility="collapsed",
-    )
+    if base_loaded:
+        uploaded_new = st.file_uploader(
+            "📄 신규 주차 파일 추가 (선택)",
+            type=["xlsx"],
+            help="멘토님께 받은 이번 주 파일. 업로드 시 기존 데이터에 자동 병합됩니다.",
+            label_visibility="collapsed",
+        )
+    else:
+        uploaded_new = st.file_uploader(
+            "📁 ETF 순매수 엑셀 파일 업로드",
+            type=["xlsx"],
+            help="멘토님께 받은 ETF 순매수 데이터 엑셀 (여러 시트 포함)",
+        )
+        if uploaded_new:
+            file_bytes_base = uploaded_new.read()
+            with st.spinner("파일 로드 중..."):
+                all_sheets = load_excel(file_bytes_base)
+            base_loaded = True
+            uploaded_new = None  # 이미 base로 처리됨
 
 if not base_loaded and not uploaded_new:
-    st.info("엑셀 파일을 업로드하면 분석이 가능합니다.")
     st.stop()
 
 # 신규 파일 병합

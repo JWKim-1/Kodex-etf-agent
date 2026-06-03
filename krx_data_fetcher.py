@@ -182,6 +182,82 @@ def load_cache() -> dict:
         print(f"캐시 로드 실패: {e}")
         return {}
 
+BASELINE_WEEKS = 8  # 베이스라인 윈도우 (변경 시 여기만 수정)
+
+
+def load_cache_recent(n_weeks: int = BASELINE_WEEKS + 1) -> dict:
+    """
+    캐시에서 최근 N주만 로드 (앱 시작 속도 최적화).
+    n_weeks = 8주 베이스라인 + 현재 주 1 = 9주
+    """
+    if not os.path.exists(CACHE_FILE):
+        return {}
+    try:
+        df = pd.read_parquet(CACHE_FILE)
+        # 주차 정렬 (시트명 기준 날짜 파싱)
+        weeks_all = sorted(df["week"].unique(), key=lambda w: _parse_week_label(w) or date.min)
+        weeks_recent = weeks_all[-n_weeks:]
+        df_recent = df[df["week"].isin(weeks_recent)]
+        sheets = {}
+        for week in weeks_recent:
+            sheets[week] = df_recent[df_recent["week"] == week].drop(columns=["week"]).reset_index(drop=True)
+        print(f"캐시 최근 {len(sheets)}주 로드 (전체 {len(weeks_all)}주 중)")
+        return sheets
+    except Exception as e:
+        print(f"캐시 로드 실패: {e}")
+        return {}
+
+
+def _parse_week_label(label: str):
+    """'3.2-3.6' 형태 주차 레이블 → date 변환."""
+    import re
+    m = re.match(r"(\d{1,2})\.(\d{1,2})", label)
+    if m:
+        month, day = int(m.group(1)), int(m.group(2))
+        year = date.today().year if month <= date.today().month else date.today().year - 1
+        try:
+            return date(year, month, day)
+        except Exception:
+            return None
+    return None
+
+
+def fetch_full_history(
+    from_date: date = date(2025, 1, 6),  # 2025년 1월 첫째 주
+    to_date: date = None,
+    progress_callback=None,
+) -> dict:
+    """
+    2025년 1월부터 현재까지 전체 주차 데이터를 수집하고 캐시에 저장.
+    이미 수집된 주차는 스킵.
+    """
+    if to_date is None:
+        to_date = date.today()
+
+    existing = load_cache()
+    missing = get_missing_weeks(existing, from_date, to_date)
+
+    if not missing:
+        print("수집할 새 주차 없음")
+        return existing
+
+    print(f"수집 대상: {len(missing)}주차")
+    for i, (ws, we) in enumerate(missing):
+        label = f"{ws.month}.{ws.day}-{we.month}.{we.day}"
+        if progress_callback:
+            progress_callback(i + 1, len(missing), label)
+        try:
+            df_w = fetch_weekly_etf_data(ws, we)
+            if not df_w.empty:
+                existing[label] = df_w
+        except Exception as e:
+            print(f"  {label} 실패: {e}")
+
+    if existing:
+        save_cache(existing)
+    return existing
+
+
 def get_missing_weeks(sheets: dict, from_date: date, to_date: date) -> list:
     """저장된 시트 중 빠진 주차 목록 반환."""
     existing = set(sheets.keys())

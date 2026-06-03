@@ -562,10 +562,10 @@ class MarketingAnalyzer:
             if row:
                 records.append({"week": sheet_name, "fi": row.financial_investment, "ind": row.individual})
 
-        # 직전 4주 이평선 (주봉 4일 이평선과 동일 개념)
-        # [설계 의도] 월 단위 기준선 — 계절성·단기 노이즈 완화
-        # [한계] 4주가 최적인지 미검증. 이벤트가 4주 이상 지속되면 베이스라인 오염 가능
-        recent = records[-4:] if len(records) >= 4 else records
+        # 직전 8주 이평선 (2개월 기준선)
+        # [설계 의도] 8주 = ETF 이벤트 잔존 효과 충분히 소멸 + 시장 환경 크게 안 변함
+        # 4주: 직전 이벤트 오염 가능 / 20주: 시장 환경 변화 큼 → 8주가 적정
+        recent = records[-8:] if len(records) >= 8 else records
 
         if not recent:
             return Baseline(code, name, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0, [])

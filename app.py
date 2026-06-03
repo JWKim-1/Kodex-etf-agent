@@ -367,17 +367,17 @@ def load_excel_path(path: str):
     return ExcelLoader().load(path)
 
 # ── 데이터 로드 우선순위: KRX 캐시 → 기존 엑셀 ───────────────────────────
-from krx_data_fetcher import load_cache, save_cache
+from krx_data_fetcher import load_cache, load_cache_recent, save_cache, fetch_full_history, BASELINE_WEEKS
 
 all_sheets = {}
 base_loaded = False
 
-# 1순위: KRX 캐시 파일
-krx_cache = load_cache()
+# 1순위: KRX 캐시 최근 (8+1)주만 로드 — 분석에 필요한 만큼만
+krx_cache = load_cache_recent(BASELINE_WEEKS + 1)
 if krx_cache:
     all_sheets = krx_cache
     base_loaded = True
-    st.toast(f"✅ KRX 캐시 로드 — {len(all_sheets)}주차", icon="📊")
+    st.toast(f"✅ 캐시 로드 — 최근 {len(all_sheets)}주차", icon="📊")
 
 # 2순위: 기존 엑셀 파일 (캐시 없을 때)
 elif os.path.exists(DEFAULT_EXCEL):
@@ -418,39 +418,28 @@ if krx_id:
         except Exception as e:
             st.error(f"수집 실패: {e}")
 
-    # 과거 여러 주차 한번에 수집
-    with st.expander("📅 과거 기간 일괄 수집 (베이스라인용)", expanded=not base_loaded):
-        st.caption("처음 사용 시 최근 13주치를 한번에 수집해두면 베이스라인 계산에 사용됩니다.")
-        col_b1, col_b2 = st.columns(2)
-        bulk_start = col_b1.date_input("일괄 시작일", value=today - timedelta(weeks=13))
-        bulk_end   = col_b2.date_input("일괄 종료일", value=today)
-
-        if st.button("📥 기간 전체 주차별 수집", use_container_width=True):
-            from krx_data_fetcher import fetch_multiple_weeks
-            # 주차별로 분리
-            weeks = []
-            cur = bulk_start - timedelta(days=bulk_start.weekday())
-            while cur <= bulk_end:
-                end_w = cur + timedelta(days=4)
-                if cur not in [s for s, _ in weeks]:
-                    weeks.append((cur, min(end_w, bulk_end)))
-                cur += timedelta(weeks=1)
-
+    # 전체 히스토리 수집 (2025년 1월~현재, 약 78주)
+    with st.expander("📅 전체 히스토리 수집 (처음 1회)", expanded=not base_loaded):
+        st.caption(
+            f"2025년 1월부터 현재까지 약 78주치 데이터를 수집합니다. "
+            f"이미 수집된 주차는 스킵됩니다. 처음 실행 시 30~60분 소요될 수 있습니다."
+        )
+        if st.button("🗄️ 전체 히스토리 수집 (2025.1~현재)", use_container_width=True):
             prog = st.progress(0)
-            for i, (ws, we) in enumerate(weeks):
-                lbl = f"{ws.month}.{ws.day}-{we.month}.{we.day}"
-                if lbl not in all_sheets:
-                    try:
-                        df_w = fetch_weekly_etf_data(ws, we)
-                        if not df_w.empty:
-                            all_sheets[lbl] = df_w
-                    except Exception:
-                        pass
-                prog.progress((i+1)/len(weeks))
+            status_ph = st.empty()
 
+            def on_prog(idx, total, label):
+                prog.progress(idx / total)
+                status_ph.caption(f"수집 중 ({idx}/{total}): {label}")
+
+            full_data = fetch_full_history(
+                from_date=date(2025, 1, 6),
+                progress_callback=on_prog,
+            )
+            all_sheets.update(full_data)
             base_loaded = True
-            save_cache(all_sheets)  # 자동 저장
-            st.success(f"✅ {len(weeks)}주차 수집 완료 — 로컬 캐시 저장됨")
+            save_cache(all_sheets)
+            st.success(f"✅ 전체 히스토리 수집 완료 — {len(full_data)}주차 캐시 저장됨")
             st.rerun()
 
 else:

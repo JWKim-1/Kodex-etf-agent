@@ -580,8 +580,11 @@ class MarketingAnalyzer:
             ind_avg=float(np.mean(ind_vals)),
             fi_std=float(np.std(fi_vals, ddof=1)) if len(fi_vals) > 1 else abs(fi_vals[0]) * 0.1 + 1,
             ind_std=float(np.std(ind_vals, ddof=1)) if len(ind_vals) > 1 else abs(ind_vals[0]) * 0.1 + 1,
-            fi_mabs=float(np.mean(np.abs(fi_vals)))   or 1.0,
-            ind_mabs=float(np.mean(np.abs(ind_vals))) or 1.0,
+            # 라플라스 스무딩(α): 소형 ETF 분모 폭발 방지
+            # α = 10억원(10M) — 시장 주간 평균 거래 규모의 최소 단위
+            _ALPHA = 10_000_000
+            fi_mabs=max(float(np.mean(np.abs(fi_vals))), _ALPHA),
+            ind_mabs=max(float(np.mean(np.abs(ind_vals))), _ALPHA),
             weeks_used=len(recent),
             history=recent,
         )

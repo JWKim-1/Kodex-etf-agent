@@ -28,23 +28,35 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 # ── CSS ───────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-/* ── Coinbase-inspired design system ── */
-/* Primary: #0052ff | Dark canvas: #0a0b0d | Elevated: #16181c */
-/* Semantic up: #05b169 | Semantic down: #cf202f */
+/* ── Pretendard 폰트 로드 ── */
+@font-face {
+    font-family: 'Pretendard';
+    src: url('app/static/PretendardVariable.woff2') format('woff2-variations');
+    font-weight: 100 900;
+    font-style: normal;
+}
+/* CDN fallback */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
 
+* {
+    font-family: 'Pretendard', 'Pretendard Variable', -apple-system, BlinkMacSystemFont,
+                 'Segoe UI', sans-serif !important;
+}
+
+/* ── Coinbase-inspired design system ── */
 .step-header {
-    font-size:1rem; font-weight:600; color:#0052ff;
+    font-size:1rem; font-weight:600; color:#ffffff;
     border-left:3px solid #0052ff; padding-left:12px; margin:20px 0 10px;
     letter-spacing:-0.01em;
 }
 .formula-box {
     border:1px solid rgba(0,82,255,0.2); border-radius:12px;
-    padding:16px 20px; font-family:'JetBrains Mono','Courier New',monospace; font-size:0.85rem;
+    padding:16px 20px; font-family:'Pretendard','JetBrains Mono','D2Coding','Courier New',monospace; font-size:0.85rem;
     white-space:pre-wrap; margin:10px 0;
     background:#16181c; color:#e8eaed;
 }
 .comp-grid { display:flex; gap:12px; margin:12px 0; flex-wrap:nowrap; }
-.did-result { font-size:1.4rem; font-weight:700; padding:6px 0; font-family:'JetBrains Mono','Courier New',monospace; }
+.did-result { font-size:1.4rem; font-weight:700; padding:6px 0; font-family:'Pretendard','JetBrains Mono','D2Coding','Courier New',monospace; }
 .badge-lp  { background:rgba(244,176,0,0.15); color:#f4b000; padding:3px 10px;
               border-radius:100px; font-size:0.72rem; font-weight:600; border:1px solid rgba(244,176,0,0.3); }
 .badge-ok  { background:rgba(5,177,105,0.12); color:#05b169; padding:3px 10px;
@@ -60,7 +72,7 @@ st.markdown("""
 }
 .stButton > button[kind="primary"]:hover { background:#003ecc !important; }
 /* Number emphasis */
-.num { font-family:'JetBrains Mono','Courier New',monospace; font-weight:500; }
+.num { font-family:'Pretendard','JetBrains Mono','D2Coding','Courier New',monospace; font-weight:500; }
 /* Provider colored badges */
 .prov-badge {
     display:inline-flex; align-items:center; justify-content:center;

@@ -352,9 +352,28 @@ class DataCollector:
                         continue
                 except Exception:
                     pass
-                # 유튜브는 제목만으로 판단 (description은 해시태그 수준, 자막은 API 필요)
-                is_etf = bool(re.search(r"ETF|KODEX|TIGER|코덱스|배당|채권|지수|리츠|반도체|AI|이벤트|프로모션|커버드콜", title, re.I))
-                videos.append({"title": title, "published_at": pub_str, "is_etf_related": is_etf, "url": vid_url})
+                # 1차: 제목으로 ETF 관련 여부 판단
+                is_etf_title = bool(re.search(r"ETF|KODEX|TIGER|코덱스|배당|채권|지수|리츠|반도체|AI|이벤트|프로모션|커버드콜", title, re.I))
+
+                # 2차: 자막 읽기 (ETF 관련 가능성 있는 영상만)
+                transcript_text = ""
+                if is_etf_title and vid_url:
+                    try:
+                        video_id = vid_url.split("v=")[-1].split("&")[0] if "v=" in vid_url else vid_url.split("/")[-1]
+                        from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
+                        segments = YouTubeTranscriptApi.get_transcript(video_id, languages=["ko", "en"])
+                        transcript_text = " ".join(s["text"] for s in segments[:100])  # 처음 100 세그먼트
+                    except Exception:
+                        pass  # 자막 없으면 제목으로만 판단
+
+                is_etf = is_etf_title
+                videos.append({
+                    "title": title,
+                    "published_at": pub_str,
+                    "is_etf_related": is_etf,
+                    "url": vid_url,
+                    "transcript": transcript_text[:500] if transcript_text else "",
+                })
             week_info = f"{self.week_start.strftime('%m/%d')}~{self.week_end.strftime('%m/%d')}" if self.week_start else "최근 7일"
             return ChannelResult(ch, name, True, data={"source": "rss", "videos": videos,
                                                         "note": f"RSS ({week_info})"})

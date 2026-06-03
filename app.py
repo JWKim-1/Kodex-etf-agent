@@ -295,9 +295,12 @@ def keyword_fallback(collection_results, all_kodex_etfs: dict) -> dict:
         # 채널 유형별 마케팅 분류 근거 명시
         ch = r.channel_name
         for v in d.get("videos", []):
+            # 제목 + 자막(있으면) 합쳐서 판단
+            transcript = v.get("transcript", "")
+            full_text = v.get("title","") + (" " + transcript if transcript else "")
             items.append({"title": v.get("title",""), "url": v.get("url",""),
-                          "text": v.get("title",""),
-                          "channel_reason": "증권사 공식 유튜브 채널에서 해당 ETF 관련 영상 게시 확인"})
+                          "text": full_text,
+                          "channel_reason": "증권사 유튜브 채널 ETF 관련 영상" + (" (자막 포함)" if transcript else " (제목 기준)")})
         for p in d.get("posts", []):
             items.append({"title": p.get("title",""), "url": p.get("link",""),
                           "text": p.get("title","") + " " + p.get("description",""),

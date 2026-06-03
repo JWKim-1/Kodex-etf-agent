@@ -10,7 +10,7 @@ import logging
 import os
 import re
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, date
 
 # .env 파일 로드 (KRX_ID, KRX_PW 등)
 try:

@@ -375,66 +375,89 @@ else:
     all_sheets = {}
     base_loaded = False
 
-# 신규 주차 파일 추가 업로드 또는 KRX 자동 수집
-st.header("📂 추가 데이터 업로드")
+# ── KRX 직접 수집 (파일 업로드 대체) ────────────────────────────────────────
+st.header("📂 데이터 수집")
 
-tab_upload, tab_krx = st.tabs(["📄 엑셀 파일 업로드", "🔄 KRX 자동 수집"])
+krx_id = os.getenv("KRX_ID", "")
 
-uploaded_new = None
-with tab_upload:
-    if base_loaded:
-        uploaded_new = st.file_uploader(
-            "신규 주차 파일 추가 (선택)",
-            type=["xlsx"],
-            help="멘토님께 받은 이번 주 파일. 자동 병합됩니다.",
-            label_visibility="collapsed",
-        )
-    else:
-        uploaded_new = st.file_uploader(
-            "ETF 순매수 엑셀 파일 업로드",
-            type=["xlsx"],
-            help="멘토님께 받은 ETF 순매수 데이터 엑셀",
-        )
-        if uploaded_new:
-            file_bytes_base = uploaded_new.read()
-            with st.spinner("파일 로드 중..."):
-                all_sheets = load_excel(file_bytes_base)
-            base_loaded = True
-            uploaded_new = None
+from krx_data_fetcher import fetch_weekly_etf_data, get_week_dates
 
-with tab_krx:
-    krx_id = os.getenv("KRX_ID", "")
-    if not krx_id:
-        st.warning("`.env` 파일에 `KRX_ID`와 `KRX_PW`를 설정하면 KRX에서 직접 수집 가능합니다.")
-    else:
-        st.caption(f"계정: {krx_id} ✅")
+if krx_id:
+    # KRX 계정 있으면 직접 수집 UI
+    today = datetime.now().date()
+    monday = today - timedelta(days=today.weekday())
+    friday = monday + timedelta(days=4)
 
-    col_d1, col_d2 = st.columns(2)
-    krx_start = col_d1.date_input("수집 시작일", value=datetime.now().date() - timedelta(days=datetime.now().weekday()))
-    krx_end   = col_d2.date_input("수집 종료일", value=datetime.now().date() - timedelta(days=max(0, datetime.now().weekday()-4)))
+    col_d1, col_d2, col_btn = st.columns([1, 1, 1])
+    krx_start = col_d1.date_input("시작일", value=monday)
+    krx_end   = col_d2.date_input("종료일", value=friday)
 
-    if st.button("🔄 KRX에서 이번 주 데이터 수집", disabled=not krx_id, use_container_width=True):
+    if col_btn.button("🔄 KRX 수집", type="primary", use_container_width=True):
         try:
-            from krx_data_fetcher import fetch_weekly_etf_data
-            with st.spinner(f"KRX 수집 중... ({krx_start} ~ {krx_end})"):
+            with st.spinner(f"KRX 수집 중... (종목 수에 따라 수분 소요)"):
                 krx_df = fetch_weekly_etf_data(krx_start, krx_end)
             if not krx_df.empty:
                 week_label = f"{krx_start.month}.{krx_start.day}-{krx_end.month}.{krx_end.day}"
-                if week_label not in all_sheets:
-                    all_sheets[week_label] = krx_df
-                    st.success(f"✅ KRX 수집 완료 — {week_label} 시트 추가됨 ({len(krx_df)}개 종목)")
-                    base_loaded = True
-                else:
-                    st.info(f"'{week_label}' 시트가 이미 있습니다.")
+                all_sheets[week_label] = krx_df
+                base_loaded = True
+                st.success(f"✅ {week_label} 수집 완료 ({len(krx_df)}개 종목)")
+                st.rerun()
             else:
-                st.error("KRX 데이터 없음")
+                st.error("수집된 데이터 없음")
         except Exception as e:
             st.error(f"수집 실패: {e}")
 
-if not base_loaded and not uploaded_new:
+    # 과거 여러 주차 한번에 수집
+    with st.expander("📅 과거 기간 일괄 수집 (베이스라인용)", expanded=not base_loaded):
+        st.caption("처음 사용 시 최근 13주치를 한번에 수집해두면 베이스라인 계산에 사용됩니다.")
+        col_b1, col_b2 = st.columns(2)
+        bulk_start = col_b1.date_input("일괄 시작일", value=today - timedelta(weeks=13))
+        bulk_end   = col_b2.date_input("일괄 종료일", value=today)
+
+        if st.button("📥 기간 전체 주차별 수집", use_container_width=True):
+            from krx_data_fetcher import fetch_multiple_weeks
+            # 주차별로 분리
+            weeks = []
+            cur = bulk_start - timedelta(days=bulk_start.weekday())
+            while cur <= bulk_end:
+                end_w = cur + timedelta(days=4)
+                if cur not in [s for s, _ in weeks]:
+                    weeks.append((cur, min(end_w, bulk_end)))
+                cur += timedelta(weeks=1)
+
+            prog = st.progress(0)
+            for i, (ws, we) in enumerate(weeks):
+                lbl = f"{ws.month}.{ws.day}-{we.month}.{we.day}"
+                if lbl not in all_sheets:
+                    try:
+                        df_w = fetch_weekly_etf_data(ws, we)
+                        if not df_w.empty:
+                            all_sheets[lbl] = df_w
+                    except Exception:
+                        pass
+                prog.progress((i+1)/len(weeks))
+
+            base_loaded = True
+            st.success(f"✅ {len(weeks)}주차 수집 완료!")
+            st.rerun()
+
+else:
+    # KRX 계정 없으면 파일 업로드 fallback
+    st.warning("KRX 계정 없음 — `.env`에 `KRX_ID`/`KRX_PW` 설정하면 자동 수집 가능")
+    uploaded_new = st.file_uploader("엑셀 파일 업로드 (임시)", type=["xlsx"])
+    if uploaded_new:
+        file_bytes_base = uploaded_new.read()
+        all_sheets = load_excel(file_bytes_base)
+        base_loaded = True
+
+uploaded_new = None  # 파일 업로드 비활성화
+
+if not base_loaded:
+    if not krx_id:
+        st.info("KRX 계정 설정 또는 파일 업로드 후 분석 가능합니다.")
     st.stop()
 
-# 신규 파일 병합
+# 기존 파일 병합 (호환성 유지)
 if uploaded_new:
     new_bytes = uploaded_new.read()
     with st.spinner("신규 파일 병합 중..."):

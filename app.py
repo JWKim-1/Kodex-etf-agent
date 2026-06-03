@@ -12,6 +12,13 @@ import re
 import time
 from datetime import datetime
 
+# .env 파일 로드 (KRX_ID, KRX_PW 등)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
+
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
@@ -38,7 +45,9 @@ st.markdown("""
 /* CDN fallback */
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
 
-* {
+body, p, div, span, h1, h2, h3, h4, h5, h6,
+.stMarkdown, .stText, .stCaption,
+button, input, select, label, .stButton {
     font-family: 'Pretendard', 'Pretendard Variable', -apple-system, BlinkMacSystemFont,
                  'Segoe UI', sans-serif !important;
 }

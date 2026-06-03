@@ -45,9 +45,9 @@ st.markdown("""
 /* CDN fallback */
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
 
-body, p, div, span, h1, h2, h3, h4, h5, h6,
+body, p, h1, h2, h3, h4, h5, h6,
 .stMarkdown, .stText, .stCaption,
-button, input, select, label, .stButton {
+.stButton > button, input, select, label {
     font-family: 'Pretendard', 'Pretendard Variable', -apple-system, BlinkMacSystemFont,
                  'Segoe UI', sans-serif !important;
 }
@@ -166,6 +166,18 @@ if st.session_state.selected_mode is None:
     with col1:
         st.markdown("""
         <div class="mode-card">
+            <div class="mode-icon">🏦</div>
+            <div class="mode-title">은행 채널</div>
+            <div class="mode-desc">KB·신한 등 은행의 순매수 이상 감지 + 뉴스/유튜브 수집으로 은행 채널 ETF 유입 효과를 측정합니다</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("은행 채널 →", key="btn_bank", use_container_width=True, type="primary"):
+            st.session_state.selected_mode = "bank"
+            st.rerun()
+
+    with col2:
+        st.markdown("""
+        <div class="mode-card">
             <div class="mode-icon">📈</div>
             <div class="mode-title">증권사 채널</div>
             <div class="mode-desc">증권사의 마케팅 이벤트·유튜브·블로그를 자동 수집하고 KODEX ETF 금융투자 순매수 DiD를 측정합니다</div>
@@ -175,17 +187,6 @@ if st.session_state.selected_mode is None:
             st.session_state.selected_mode = "securities"
             st.session_state["analysis_run"] = False
             st.rerun()
-
-    with col2:
-        st.markdown("""
-        <div class="mode-card disabled">
-            <div class="mode-icon">🏦</div>
-            <div class="mode-title">은행 채널</div>
-            <div class="mode-desc">KB·신한 등 은행의 신탁·퇴직연금 채널에서 ETF 마케팅 활동과 은행 투자자 순매수 효과를 측정합니다</div>
-            <div class="coming-soon">🔒 추후 출시 예정</div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.button("은행 채널 (준비 중)", key="btn_bank", use_container_width=True, disabled=True)
 
     with col3:
         st.markdown("""
@@ -200,6 +201,15 @@ if st.session_state.selected_mode is None:
 
     st.markdown("---")
     st.caption("삼성자산운용 ETF 마케팅 모니터링 AI Agent · Powered by Claude")
+    st.stop()
+
+# 은행 모드
+if st.session_state.selected_mode == "bank":
+    with st.sidebar:
+        if st.button("← 채널 선택", key="back_bank"):
+            st.session_state.selected_mode = None
+            st.rerun()
+    exec(open(os.path.join(os.path.dirname(__file__), "agents/bank/app_bank.py"), encoding="utf-8").read())
     st.stop()
 
 # 증권사 모드 선택됨 → 사이드바에 뒤로가기 추가
@@ -450,7 +460,7 @@ if krx_id:
             )
             all_sheets.update(full_data)
             base_loaded = True
-            save_cache(all_sheets)
+            # save_cache는 fetch_full_history 내부에서 이미 호출됨 — 중복 저장 방지
             st.success(f"✅ 전체 히스토리 수집 완료 — {len(full_data)}주차 캐시 저장됨")
             st.rerun()
 
@@ -489,6 +499,12 @@ if uploaded_new:
 SKIP_SHEETS = {"참고사항", "설명", "readme", "README", "시트설명"}
 sheet_names = [s for s in all_sheets.keys()
                if s not in SKIP_SHEETS and not s.lower().startswith("sheet")]
+
+# 미래 주차 제외
+from krx_data_fetcher import _parse_week_label
+_today = datetime.now().date()
+sheet_names = [s for s in sheet_names
+               if (_parse_week_label(s) is None or _parse_week_label(s) <= _today)]
 if not sheet_names:
     st.error("유효한 데이터 시트를 찾지 못했습니다.")
     st.stop()
@@ -505,7 +521,12 @@ def _sheet_label(name: str) -> str:
     return f"{name}  ({days}일 전)"
 
 labeled = [_sheet_label(s) for s in sheet_names]
-selected_label = st.selectbox("분석할 주차 시트 선택", labeled, index=len(labeled)-1)
+_is_friday = datetime.now().weekday() == 4
+_default_idx = len(labeled) - 1
+if not _is_friday and len(labeled) >= 2:
+    _default_idx = len(labeled) - 2
+    st.caption("💡 금요일 장 마감 후 이번 주 데이터가 완성됩니다.")
+selected_label = st.selectbox("분석할 주차 시트 선택", labeled, index=_default_idx)
 current_sheet = sheet_names[labeled.index(selected_label)]
 
 # 과거 주차 선택 시 신뢰도 경고
@@ -522,7 +543,11 @@ if _sel_start:
         )
 
 with st.expander("📋 선택 시트 미리보기", expanded=False):
-    st.dataframe(all_sheets[current_sheet].head(15), use_container_width=True)
+    _preview_df = all_sheets[current_sheet]
+    _code_col_p = "단축코드" if "단축코드" in _preview_df.columns else "종목코드"
+    _kodex_rows = _preview_df[_preview_df["종목명"].str.contains("KODEX", na=False)]
+    _preview = _kodex_rows.head(15) if len(_kodex_rows) >= 5 else _preview_df.head(15)
+    st.dataframe(_preview, use_container_width=True)
 
 st.header("🚀 분석 실행")
 
@@ -657,7 +682,9 @@ st.markdown('<div class="step-header">Step 2 · 마케팅 활동 감지 & 대상
 
 # 엑셀 전체 KODEX ETF 목록 (코드 → 이름) — Step 2, 3에서 모두 사용
 current_df = all_sheets[current_sheet]
-etf_universe = current_df[["종목코드","종목명"]].dropna(subset=["종목명"])
+# 컬럼명 통일: KRX캐시는 '단축코드', 멘토님 엑셀은 '종목코드'
+_code_col = "단축코드" if "단축코드" in current_df.columns else "종목코드"
+etf_universe = current_df[[_code_col,"종목명"]].dropna(subset=["종목명"]).rename(columns={_code_col:"종목코드"})
 all_kodex_etfs = {
     str(row["종목코드"]): str(row["종목명"])
     for _, row in etf_universe[etf_universe["종목명"].str.contains("KODEX", na=False)].iterrows()

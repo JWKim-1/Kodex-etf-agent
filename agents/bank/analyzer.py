@@ -181,7 +181,7 @@ ALL_KNOWN_CODES = set(COMPARISON_MAP.keys()) | {
 class ETFWeekData:
     code: str
     name: str
-    financial_investment: float  # 금융투자 순매수
+    financial_investment: float  # 은행 순매수
     individual: float            # 개인 순매수
     week_label: str = ""
 
@@ -190,11 +190,11 @@ class ETFWeekData:
 class Baseline:
     code: str
     name: str
-    fi_avg: float      # 금융투자 4주 평균
+    fi_avg: float      # 은행 4주 평균
     ind_avg: float     # 개인 4주 평균
-    fi_std: float      # 금융투자 표준편차 (LP 감지용)
+    fi_std: float      # 은행 표준편차
     ind_std: float     # 개인 표준편차
-    fi_mabs: float     # 금융투자 평균절댓값 (정규화 분모)
+    fi_mabs: float     # 은행 평균절댓값 (정규화 분모)
     ind_mabs: float    # 개인 평균절댓값 (정규화 분모)
     weeks_used: int
     history: List[Dict] = field(default_factory=list)
@@ -262,7 +262,7 @@ class ExcelLoader:
     COL_MAP = {
         "종목코드": ["단축코드", "종목코드", "code", "Code", "ticker", "ETF코드", "종목 코드"],
         "종목명":   ["종목명", "name", "Name", "ETF명", "종목", "펀드명", "상품명"],
-        "금융투자": ["금융투자", "금융투자합", "금투", "증권", "금융투자(순매수)"],
+        "은행": ["은행", "금융투자합", "금투", "증권", "금융투자(순매수)"],
         "개인":     ["개인", "개인합", "개인투자자", "개인(순매수)"],
     }
 
@@ -280,7 +280,7 @@ class ExcelLoader:
         # 먼저 header=0으로 시도 (일반적 구조)
         df_raw = pd.read_excel(xl, sheet_name=sheet_name, header=None)
 
-        # 헤더 행 탐지: '금융투자' 또는 '단축코드'가 있는 첫 번째 행
+        # 헤더 행 탐지: '은행' 또는 '단축코드'가 있는 첫 번째 행
         header_row = None
         for i, row in df_raw.iterrows():
             row_str = " ".join(str(v) for v in row.values)
@@ -312,7 +312,7 @@ class ExcelLoader:
         data = data.rename(columns=rename)
 
         # 숫자 변환
-        for col in ["금융투자", "개인"]:
+        for col in ["은행", "개인"]:
             if col in data.columns:
                 data[col] = (
                     data[col].astype(str)
@@ -337,11 +337,12 @@ class ExcelLoader:
         if df is None or df.empty:
             return None
 
-        # 코드로 검색
-        if "종목코드" in df.columns:
-            mask = df["종목코드"] == code.zfill(6)
-            if mask.any():
-                return self._row_to_etf(df[mask].iloc[0], code, name)
+        # 코드로 검색 — KRX캐시(단축코드) / 엑셀(종목코드) 둘 다 지원
+        for col in ["종목코드", "단축코드"]:
+            if col in df.columns:
+                mask = df[col].astype(str).str.replace("*001","").str.strip() == code.replace("*001","").strip()
+                if mask.any():
+                    return self._row_to_etf(df[mask].iloc[0], code, name)
 
         # 종목명으로 검색 (부분 일치)
         if "종목명" in df.columns:
@@ -372,7 +373,7 @@ class ExcelLoader:
                 return 0.0 if pd.isna(f) else f
             except (TypeError, ValueError):
                 return 0.0
-        fi = _safe(row.get("금융투자", 0))
+        fi = _safe(row.get("은행", 0))
         ind = _safe(row.get("개인", 0))
         nm = str(row.get("종목명", name))
         return ETFWeekData(code=code, name=nm, financial_investment=fi, individual=ind)
@@ -401,12 +402,12 @@ class MarketingAnalyzer:
         history_names = sheet_names[:current_idx]          # 현재 이전만
         history_sheets = {k: all_sheets[k] for k in history_names}
 
-        # 전체 ETF 유니버스 (자동 매핑용)
-        etf_universe = current_df[["종목코드", "종목명"]].dropna(subset=["종목명"])
+        # 전체 ETF 유니버스 (자동 매핑용) — KRX캐시=단축코드, 엑셀=종목코드
+        _code_col = "단축코드" if "단축코드" in current_df.columns else "종목코드"
+        etf_universe = current_df[[_code_col, "종목명"]].rename(columns={_code_col: "종목코드"}).dropna(subset=["종목명"])
 
         results = {}
         for code in target_etf_codes:
-            # 종목명 확인
             row = self.loader.get_etf_row(current_df, code, code)
             kodex_name = row.name if row else COMPARISON_MAP.get(code, {}).get("name", code)
 
@@ -415,6 +416,48 @@ class MarketingAnalyzer:
                 current_sheet_name, etf_universe
             )
             if result:
+                # ── 2단계: DiD 값 자체의 8주 이동평균 이상지수 계산 ──
+                # 비교군 없는 경우는 1단계 DiD 자체가 의미없으므로 2단계 건너뜀
+                if not result.no_competitors and result.competitors:
+                    WINDOW_2ND = 16  # 16주 — CLT(n≥30)와 시계열 시의성 타협점
+                    did_history = []
+                    for hw in history_names[-WINDOW_2ND:]:
+                        hdf = all_sheets[hw]
+                        hidx = history_names.index(hw)
+                        hhistory = {k: all_sheets[k] for k in history_names[:hidx]}
+                        hres = self._analyze_one(code, kodex_name, hhistory, hdf, hw, etf_universe)
+                        if hres and not hres.no_competitors and hres.competitors:
+                            did_history.append(hres.did_value)
+
+                    if len(did_history) >= 4:  # 최소 4주는 있어야 σ 의미있음
+                        import numpy as _np
+                        did_avg = float(_np.mean(did_history))
+                        did_std = float(_np.std(did_history, ddof=1))  # 표본표준편차
+                        ALPHA_STD = 0.01  # σ=0일 때 분모 보호 (1%p)
+                        # Z-score: 평소 변동성 대비 이번 주 DiD가 얼마나 튀었나
+                        z_score = (result.did_value - did_avg) / (did_std + ALPHA_STD)
+                        result.notes.append(
+                            f"[2단계 Z-score] DiD={result.did_value*100:+.1f}%p | "
+                            f"{WINDOW_2ND}주평균={did_avg*100:+.1f}%p | "
+                            f"σ={did_std*100:.1f}%p | Z={z_score:+.2f}"
+                        )
+                        result = ETFDiDResult(
+                            kodex_code=result.kodex_code,
+                            kodex_name=result.kodex_name,
+                            current=result.current,
+                            baseline=result.baseline,
+                            lp=result.lp,
+                            kodex_change_pct=result.kodex_change_pct,
+                            control_avg_pct=result.control_avg_pct,
+                            did_value=z_score,  # 2단계 Z-score
+                            judgement=result.judgement,
+                            judgement_emoji=result.judgement_emoji,
+                            competitors=result.competitors,
+                            mapping_source=result.mapping_source,
+                            notes=result.notes,
+                            calculation_log=result.calculation_log,
+                        )
+
                 results[code] = result
 
         return results
@@ -466,7 +509,7 @@ class MarketingAnalyzer:
 
         # ── Step D: Kodex 변화율 ──
         kodex_chg = self._change_rate(current_kodex, baseline, lp)
-        metric_label = "금융투자" if lp.use_metric == "financial" else "개인"
+        metric_label = "은행" if lp.use_metric == "financial" else "개인"
         cur_val = current_kodex.financial_investment if lp.use_metric == "financial" else current_kodex.individual
         base_val = baseline.fi_avg if lp.use_metric == "financial" else baseline.ind_avg
         log.append(
@@ -580,7 +623,7 @@ class MarketingAnalyzer:
             ind_avg=float(np.mean(ind_vals)),
             fi_std=float(np.std(fi_vals, ddof=1)) if len(fi_vals) > 1 else abs(fi_vals[0]) * 0.1 + 1,
             ind_std=float(np.std(ind_vals, ddof=1)) if len(ind_vals) > 1 else abs(ind_vals[0]) * 0.1 + 1,
-            fi_mabs=float(np.mean(np.abs(fi_vals))) + 1000000000,   # 라플라스 α=10억 (+로 항상 분모에 포함)
+            fi_mabs=float(np.mean(np.abs(fi_vals))) + 1000000000,   # 라플라스 α=10억 (+로 항상 분모에 포함) (은행컬럼용)
             ind_mabs=float(np.mean(np.abs(ind_vals))) + 1000000000,
             weeks_used=len(recent),
             history=recent,
@@ -702,16 +745,21 @@ class MarketingAnalyzer:
 
     def _judge(self, did: float):
         # 단위: 정규화 절대 변화값 (= 평소 변동 크기 대비 초과분)
-        # [설계 의도] 1.0 = 평소 변동 크기만큼 초과, 0.3 = 30% 초과
-        # [한계] 임계값(1.0/0.3/-0.3)은 이론적 설정 — 실증 데이터 기반 보정 필요
-        if did >= 1.0:
-            return "마케팅 효과 강함", "🟢"
-        elif did >= 0.3:
-            return "마케팅 효과 있음", "🟡"
-        elif did >= -0.3:
-            return "효과 불분명", "⚪"
+        # ── 2단계 Z-score 임계값 ──────────────────────────────────────────────────
+        # 은행 채널은 평소 마케팅이 거의 없어 σ 자체가 작음
+        # → Z=1.0이 일반 통계의 Z=2.0과 동일한 실질적 의미를 가짐
+        # Z ≥ 2.0: 상위 2.5% — 보이지 않는 이벤트 거의 확실
+        # Z ≥ 1.0: 상위 16% — 은행 채널 특성상 역추적 필요
+        # |Z| < 1.0: 정상 변동 범위
+        # Z < -1.0: 경쟁사 우위 구간
+        if did >= 2.0:
+            return "강한 이상 감지 — 은행 마케팅 거의 확실", "🟢"
+        elif did >= 1.0:
+            return "이상 감지 — 역추적 권고", "🟡"
+        elif did >= -1.0:
+            return "정상 변동 범위", "⚪"
         else:
-            return "유의미한 효과 확인 어려움", "🔴"
+            return "경쟁사 우위 — 경쟁 마케팅 의심", "🔴"
 
 
 # ── LLM ETF 추출 ──────────────────────────────────────────────────────────────
@@ -762,19 +810,19 @@ def extract_target_etfs_with_llm(collection_results: Dict, anthropic_api_key: st
     if not marketing_texts:
         return {"marketing_detected": False, "etf_codes": [], "summary": "수집된 마케팅 텍스트 없음"}
 
-    prompt = f"""다음은 삼성증권 마케팅 채널(유튜브, 블로그, 뉴스 등)에서 수집된 텍스트입니다.
+    prompt = f"""다음은 KB국민은행·신한은행·하나은행·우리은행·농협은행의 채널(유튜브, 블로그, 뉴스)에서 수집된 텍스트입니다.
 
 {chr(10).join(marketing_texts)}
 
 [분석 기준 — 반드시 준수]
-- '삼성증권' 채널에서 직접 진행한 마케팅 활동만 감지합니다
-- 타사 증권사(미래에셋, KB, 한국투자 등)가 KODEX ETF를 판매하는 내용은 제외
-- 삼성자산운용의 자체 이벤트도 삼성증권 채널을 통한 경우에만 포함
-- 단순 시세 정보, 리서치 보고서, 일반 뉴스 기사, ETF 교육/분석 콘텐츠는 마케팅 활동 아님
-- 유튜브 영상의 경우: "ETF 전망 분석", "ETF란 무엇인가" 등 교육/분석은 제외. "지금 사면 혜택", "이벤트 신청", "수수료 무료" 등 매수 유도만 포함
+- 은행이 고객에게 KODEX ETF 상품을 직접 마케팅/판매 유도한 활동만 감지
+- 반드시 ETF 상품명이 텍스트에 명시적으로 언급된 경우만 추출 (추론 금지)
+- 단순 시황 분석, 경제 교육, 적금/예금 상품은 제외
+- "IRP ETF 이벤트", "ETF 수수료 면제", "KODEX ETF 판매" 등 은행의 ETF 직접 판매/이벤트만 해당
+- 뉴스의 경우 은행이 주체가 된 ETF 마케팅 이벤트 보도만 해당
 
-감지 대상: 이벤트, 프로모션, 수수료 혜택, 매수 유도 CTA, 특정 ETF 직접 추천 등
-비감지 대상: 시황 분석, ETF 교육, 종목 분석, 단순 ETF 언급
+감지 대상: 은행 ETF 판매 이벤트, IRP ETF 프로모션, 수수료 혜택, ETF 직접 추천
+비감지 대상: 시황 분석, 금리 뉴스, 적금 상품, 일반 경제 콘텐츠, ETF 단순 언급
 
 마케팅 활동이 없거나 삼성증권 채널과 무관하면 marketing_detected: false, etf_codes: []
 

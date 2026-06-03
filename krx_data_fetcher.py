@@ -152,6 +152,50 @@ def fetch_multiple_weeks(
     return results
 
 
+CACHE_FILE = "krx_data_cache.parquet"
+
+def save_cache(sheets: dict):
+    """수집된 데이터를 로컬 parquet에 저장."""
+    if not sheets:
+        return
+    rows = []
+    for week_label, df in sheets.items():
+        df = df.copy()
+        df["week"] = week_label
+        rows.append(df)
+    combined = pd.concat(rows, ignore_index=True)
+    combined.to_parquet(CACHE_FILE, index=False)
+    print(f"캐시 저장: {CACHE_FILE} ({len(combined)}행, {len(sheets)}주차)")
+
+def load_cache() -> dict:
+    """저장된 캐시에서 데이터 로드."""
+    if not os.path.exists(CACHE_FILE):
+        return {}
+    try:
+        df = pd.read_parquet(CACHE_FILE)
+        sheets = {}
+        for week in df["week"].unique():
+            sheets[week] = df[df["week"] == week].drop(columns=["week"]).reset_index(drop=True)
+        print(f"캐시 로드: {len(sheets)}주차")
+        return sheets
+    except Exception as e:
+        print(f"캐시 로드 실패: {e}")
+        return {}
+
+def get_missing_weeks(sheets: dict, from_date: date, to_date: date) -> list:
+    """저장된 시트 중 빠진 주차 목록 반환."""
+    existing = set(sheets.keys())
+    missing = []
+    cur = from_date - timedelta(days=from_date.weekday())
+    while cur <= to_date:
+        end_w = cur + timedelta(days=4)
+        label = f"{cur.month}.{cur.day}-{end_w.month}.{end_w.day}"
+        if label not in existing:
+            missing.append((cur, min(end_w, to_date)))
+        cur += timedelta(weeks=1)
+    return missing
+
+
 if __name__ == "__main__":
     import sys, io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')

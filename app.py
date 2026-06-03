@@ -366,14 +366,24 @@ def load_excel(file_bytes: bytes):
 def load_excel_path(path: str):
     return ExcelLoader().load(path)
 
-# 기본 파일 자동 로드
-if os.path.exists(DEFAULT_EXCEL):
+# ── 데이터 로드 우선순위: KRX 캐시 → 기존 엑셀 ───────────────────────────
+from krx_data_fetcher import load_cache, save_cache
+
+all_sheets = {}
+base_loaded = False
+
+# 1순위: KRX 캐시 파일
+krx_cache = load_cache()
+if krx_cache:
+    all_sheets = krx_cache
+    base_loaded = True
+    st.toast(f"✅ KRX 캐시 로드 — {len(all_sheets)}주차", icon="📊")
+
+# 2순위: 기존 엑셀 파일 (캐시 없을 때)
+elif os.path.exists(DEFAULT_EXCEL):
     with st.spinner("기본 데이터 로드 중..."):
         all_sheets = load_excel_path(DEFAULT_EXCEL)
     base_loaded = True
-else:
-    all_sheets = {}
-    base_loaded = False
 
 # ── KRX 직접 수집 (파일 업로드 대체) ────────────────────────────────────────
 st.header("📂 데이터 수집")
@@ -400,7 +410,8 @@ if krx_id:
                 week_label = f"{krx_start.month}.{krx_start.day}-{krx_end.month}.{krx_end.day}"
                 all_sheets[week_label] = krx_df
                 base_loaded = True
-                st.success(f"✅ {week_label} 수집 완료 ({len(krx_df)}개 종목)")
+                save_cache(all_sheets)  # 자동 저장
+                st.success(f"✅ {week_label} 수집 완료 ({len(krx_df)}개 종목) — 로컬 캐시 저장됨")
                 st.rerun()
             else:
                 st.error("수집된 데이터 없음")
@@ -438,7 +449,8 @@ if krx_id:
                 prog.progress((i+1)/len(weeks))
 
             base_loaded = True
-            st.success(f"✅ {len(weeks)}주차 수집 완료!")
+            save_cache(all_sheets)  # 자동 저장
+            st.success(f"✅ {len(weeks)}주차 수집 완료 — 로컬 캐시 저장됨")
             st.rerun()
 
 else:

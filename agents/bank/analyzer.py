@@ -406,6 +406,41 @@ class MarketingAnalyzer:
         _code_col = "단축코드" if "단축코드" in current_df.columns else "종목코드"
         etf_universe = current_df[[_code_col, "종목명"]].rename(columns={_code_col: "종목코드"}).dropna(subset=["종목명"])
 
+        # etf_mapping.json 로드 (사전 빌드된 매핑 캐시) — 인스턴스에 캐싱
+        if not hasattr(self, '_etf_mapping'):
+            import json as _json, os as _os
+            _mapping_path = _os.path.join(_os.path.dirname(__file__), "../../etf_mapping.json")
+            try:
+                with open(_mapping_path, encoding="utf-8") as _f:
+                    self._etf_mapping = _json.load(_f)
+            except Exception:
+                self._etf_mapping = {}
+
+        # 3번 fallback용 — 비KODEX ETF 전체 변화율 (시장 평균)
+        def _market_avg_change(df, history_sheets_):
+            """비KODEX ETF 은행순매수 정규화 변화율 중앙값 — 시장 공통 효과"""
+            TARGET = "은행"
+            if TARGET not in df.columns:
+                return 0.0
+            non_kodex = df[~df["종목명"].str.contains("KODEX", na=False)]
+            norms = []
+            for _, row in non_kodex.iterrows():
+                c = str(row[_code_col])
+                cur = pd.to_numeric(row.get(TARGET, 0), errors="coerce")
+                if pd.isna(cur): continue
+                hist_vals = []
+                for hw in list(history_sheets_.keys())[-8:]:
+                    hdf = history_sheets_.get(hw)
+                    if hdf is None or TARGET not in hdf.columns: continue
+                    hrow = hdf[hdf[_code_col] == c]
+                    if hrow.empty: continue
+                    v = pd.to_numeric(hrow[TARGET].iloc[0], errors="coerce")
+                    if not pd.isna(v): hist_vals.append(float(v))
+                if len(hist_vals) >= 2:
+                    avg = float(np.mean(hist_vals))
+                    norms.append((float(cur) - avg) / (abs(avg) + 1_000_000_000))
+            return float(np.median(norms)) if norms else 0.0
+
         results = {}
         for code in target_etf_codes:
             row = self.loader.get_etf_row(current_df, code, code)
@@ -419,14 +454,22 @@ class MarketingAnalyzer:
                 # ── 2단계: DiD 값 자체의 8주 이동평균 이상지수 계산 ──
                 # 비교군 없는 경우는 1단계 DiD 자체가 의미없으므로 2단계 건너뜀
                 if not result.no_competitors and result.competitors:
-                    WINDOW_2ND = 16  # 16주 — CLT(n≥30)와 시계열 시의성 타협점
+                    WINDOW_2ND = 16
                     did_history = []
+                    # 캐시 활용: 이미 계산된 주차는 재사용
+                    if not hasattr(self, '_did_cache'):
+                        self._did_cache = {}
                     for hw in history_names[-WINDOW_2ND:]:
+                        cache_key = f"{code}_{hw}"
+                        if cache_key in self._did_cache:
+                            did_history.append(self._did_cache[cache_key])
+                            continue
                         hdf = all_sheets[hw]
                         hidx = history_names.index(hw)
                         hhistory = {k: all_sheets[k] for k in history_names[:hidx]}
                         hres = self._analyze_one(code, kodex_name, hhistory, hdf, hw, etf_universe)
                         if hres and not hres.no_competitors and hres.competitors:
+                            self._did_cache[cache_key] = hres.did_value
                             did_history.append(hres.did_value)
 
                     if len(did_history) >= 4:  # 최소 4주는 있어야 σ 의미있음
@@ -489,13 +532,24 @@ class MarketingAnalyzer:
             f"개인 4주평균={baseline.ind_avg:,.0f} ({baseline.weeks_used}주 사용)"
         )
 
-        # ── Step B-1: 비교군 정의 (LP 감지 전에 필요) ──
-        if kodex_code in COMPARISON_MAP:
-            comp_defs = COMPARISON_MAP[kodex_code]["competitors"]
+        # ── Step B-1: 비교군 정의 ──
+        # 우선순위: ① etf_mapping.json ② COMPARISON_MAP ③ auto_map ④ 시장평균 fallback
+        _mapping = getattr(self, '_etf_mapping', {})
+        _code_short = kodex_code.replace("*001","").strip()
+
+        if kodex_code in _mapping and _mapping[kodex_code].get("competitors"):
+            _map_entry = _mapping[kodex_code]
+            comp_defs = [{"code": c["code"], "name": c["name"]}
+                         for c in _map_entry["competitors"]]
+            _sim = _map_entry["competitors"][0].get("similarity", 0)
+            _idx = "기초지수일치" if _map_entry["competitors"][0].get("index_matched") else "이름유사도"
+            mapping_source = f"매핑캐시 ({_sim}% {_idx})"
+        elif _code_short in COMPARISON_MAP:
+            comp_defs = COMPARISON_MAP[_code_short]["competitors"]
             mapping_source = "하드코딩 매핑"
         else:
-            comp_defs = auto_map_competitors(kodex_name, kodex_code, etf_universe)
-            mapping_source = f"자동 매핑 (키워드: '{extract_keyword(kodex_name)}')"
+            comp_defs = auto_map_competitors(kodex_name, _code_short, etf_universe)
+            mapping_source = f"자동매핑 (키워드:'{extract_keyword(kodex_name)}')" if comp_defs else "시장평균 fallback"
 
         # ── Step C: LP 노이즈 감지 (비교군도 함께 확인 → 장세 전환 오탐 방지) ──
         first_comp_data, first_comp_baseline = None, None
@@ -564,16 +618,39 @@ class MarketingAnalyzer:
                 f"= {kodex_chg:+.4f} - {control_avg:+.4f} = {did:+.4f}"
             )
         else:
-            notes.append(
-                "⚠️ 비교군 없음 — DiD 측정 불가 | "
-                "유사 상품(TIGER·ACE·PLUS 등)을 찾지 못했습니다. | "
-                "아래 수치는 KODEX 단독 변화율이며 시장 전체 영향이 제거되지 않았습니다. 해석에 주의하세요."
-            )
-            control_avg = 0.0
-            did = kodex_chg
-            log.append(f"[DiD] 비교군 없음 → KODEX 절대 변화율 {did:+.4f} (DiD 아님, 해석 주의)")
+            # 3번 fallback: 비KODEX 전체 ETF 은행순매수 중앙값으로 시장평균 대체
+            _mkt_norm = getattr(self, '_market_avg_cache', {}).get(week_label)
+            if _mkt_norm is None:
+                TARGET_COL = "은행"
+                _code_col_fb = "단축코드" if "단축코드" in current_df.columns else "종목코드"
+                non_kodex = current_df[~current_df["종목명"].str.contains("KODEX", na=False)]
+                _norms = []
+                if TARGET_COL in current_df.columns:
+                    for _, _r in non_kodex.iterrows():
+                        _c = str(_r[_code_col_fb])
+                        _cur = pd.to_numeric(_r.get(TARGET_COL, 0), errors="coerce")
+                        if pd.isna(_cur): continue
+                        _hist = [pd.to_numeric(history[hw][history[hw][_code_col_fb]==_c][TARGET_COL].iloc[0], errors="coerce")
+                                 for hw in list(history.keys())[-8:]
+                                 if hw in history and not history[hw][history[hw][_code_col_fb]==_c].empty
+                                 and TARGET_COL in history[hw].columns]
+                        _hist = [v for v in _hist if not pd.isna(v)]
+                        if len(_hist) >= 2:
+                            _avg = float(np.mean(_hist))
+                            _norms.append((float(_cur) - _avg) / (abs(_avg) + 1_000_000_000))
+                _mkt_norm = float(np.median(_norms)) if _norms else 0.0
+                if not hasattr(self, '_market_avg_cache'):
+                    self._market_avg_cache = {}
+                self._market_avg_cache[week_label] = _mkt_norm
 
-        judgement, emoji = self._judge(did) if not no_competitors else ("비교군 없음 — DiD 불가", "⚫")
+            control_avg = _mkt_norm
+            did = kodex_chg - control_avg
+            no_competitors = False  # fallback이지만 DiD는 계산됨
+            mapping_source = "시장평균 fallback (비교군 없음)"
+            notes.append(f"⚠️ 개별 비교군 없음 → 비KODEX ETF 전체 중앙값({_mkt_norm*100:+.2f}%)으로 시장효과 제거")
+            log.append(f"[DiD] 시장평균 fallback: KODEX {kodex_chg:+.4f} - 시장평균 {control_avg:+.4f} = {did:+.4f}")
+
+        judgement, emoji = self._judge(did)
         log.append(f"[판정] {emoji} {judgement}  ({'DiD = ' + f'{did:+.4f}' if not no_competitors else '절대 변화율만 표시'})")
 
         return ETFDiDResult(

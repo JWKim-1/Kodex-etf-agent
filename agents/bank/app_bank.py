@@ -255,7 +255,8 @@ else:
         current_df_bank["종목명"].str.contains("KODEX", na=False)
     ][_code_col].tolist()
 
-summary = analyzer.analyze(all_sheets, bank_target_codes, selected)
+with st.spinner(f"KODEX ETF {len(bank_target_codes)}개 은행 순매수 DiD 분석 중..."):
+    summary = analyzer.analyze(all_sheets, bank_target_codes, selected)
 did_results = list(summary.values()) if summary else []
 
 if not did_results:
@@ -287,10 +288,11 @@ else:
                 "판정": f"{r.judgement_emoji} {r.judgement}",
                 "KODEX ETF": r.kodex_name,
                 "KODEX 은행변화율": f"{r.kodex_change_pct*100:+.1f}%",
-                "경쟁사": comp_names,
-                "경쟁사 변화율": comp_norms,
-                "DiD": f"{r.did_value*100:+.1f}%p",
-                "⚡": "⚡" if abs(r.did_value) >= 0.5 else "",
+                "비교군": comp_names if comp_names else "시장평균",
+                "비교군 변화율": comp_norms if comp_norms else f"{r.control_avg_pct*100:+.1f}%",
+                "DiD(Z)": f"{r.did_value:+.2f}",
+                "매핑출처": r.mapping_source,
+                "⚡": "⚡" if abs(r.did_value) >= 1.0 else "",
             })
         st.dataframe(pd.DataFrame(rows), use_container_width=True)
 

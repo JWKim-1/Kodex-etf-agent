@@ -121,8 +121,30 @@ if not is_friday and len(sheet_names) >= 2:
     default_idx = len(sheet_names) - 2  # 전주 완성된 주차
     st.caption("💡 금요일 장 마감 후 이번 주 데이터가 완성됩니다.")
 
-selected = st.selectbox("분석할 주차", sheet_names,
-                        index=default_idx, key="bank_week")
+def _krx_label(w: str) -> str:
+    """KRX 캐시 주차 라벨 표시용 변환.
+    멘토님 엑셀은 목요일까지만 있어 '5.25-5.28',
+    KRX 직접 수집분은 월~금 5일치라 끝날을 금요일로 표시."""
+    import re as _re
+    m = _re.match(r"(\d{1,2})\.(\d{1,2})-(\d{1,2})\.(\d{1,2})", w)
+    if m:
+        sm, sd, em, ed = int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4))
+        # 끝날이 목요일(28일처럼 짝수-1)이면 +1해서 금요일로 보정
+        try:
+            from datetime import date as _d
+            end_date = _d(2026, em, ed)
+            if end_date.weekday() == 3:  # 목요일이면
+                end_date = _d(2026, em, ed + 1)
+                return f"{sm}.{sd}-{end_date.month}.{end_date.day}"
+        except Exception:
+            pass
+    return w
+
+labeled_weeks = {_krx_label(s): s for s in sheet_names}  # 표시라벨 → 실제키
+label_list = list(labeled_weeks.keys())
+selected_label = st.selectbox("분석할 주차", label_list,
+                               index=default_idx, key="bank_week")
+selected = labeled_weeks[selected_label]  # 실제 캐시 키
 
 with st.expander("📋 미리보기", expanded=False):
     df_prev = all_sheets[selected]
@@ -218,7 +240,11 @@ if "bank_collect_results" in st.session_state:
                 for item in items[:3]:
                     title = item.get("title", "")
                     link  = item.get("link", item.get("url", ""))
-                    link_md = f"[{title}]({link})" if link and link.startswith("http") else title
+                    # 링크 있으면 링크, 없으면 제목만 (글 내용 전체 표시 방지)
+                    if link and link.startswith("http"):
+                        link_md = f"[{title[:60]}]({link})"
+                    else:
+                        link_md = title[:60]  # 최대 60자로 제한
                     st.caption(f"  · {link_md}")
 
 analyzer = BankAnalyzer()
@@ -259,19 +285,28 @@ if "bank_collect_results" in st.session_state:
     detected_etf_codes = list(set(detected_etf_codes))
 
 # DiD는 항상 실행 — Step 2 감지 여부 무관
-# Step 2에서 특정 ETF 감지됐으면 해당 ETF만, 없으면 전체 KODEX(레버리지 제외)
+all_kodex = current_df_bank[current_df_bank["종목명"].str.contains("KODEX", na=False)]
+bank_active_cnt = all_kodex[all_kodex["은행"].notna() & (all_kodex["은행"] != 0.0)].shape[0]
+st.caption(f"KODEX {len(all_kodex)}개 중 은행 거래 있는 ETF: {bank_active_cnt}개")
+
 llm_etf_codes = st.session_state.get("bank_llm_result", {}).get("etf_codes", [])
 if llm_etf_codes:
     st.info(f"📡 채널 감지 ETF {len(llm_etf_codes)}개 기준 분석")
     bank_target_codes = llm_etf_codes
 else:
     st.caption("채널 감지 없음 — 전체 KODEX ETF 기준 DiD")
-    bank_target_codes = current_df_bank[
-        current_df_bank["종목명"].str.contains("KODEX", na=False)
-    ][_code_col].tolist()
+    bank_target_codes = all_kodex[_code_col].tolist()
 
-with st.spinner(f"KODEX ETF {len(bank_target_codes)}개 은행 순매수 DiD 분석 중..."):
-    summary = analyzer.analyze(all_sheets, bank_target_codes, selected)
+# 분석 결과 캐시 — 같은 주차+대상이면 재실행해도 다시 계산 안 함
+_cache_key = f"bank_did_{selected}_{len(bank_target_codes)}"
+if st.session_state.get("bank_did_key") != _cache_key:
+    with st.spinner(f"KODEX ETF {len(bank_target_codes)}개 은행 순매수 DiD 분석 중... (첫 실행만 오래 걸림)"):
+        summary = analyzer.analyze(all_sheets, bank_target_codes, selected)
+    st.session_state["bank_did_result"] = summary
+    st.session_state["bank_did_key"] = _cache_key
+else:
+    summary = st.session_state.get("bank_did_result", {})
+
 did_results = list(summary.values()) if summary else []
 
 if not did_results:
@@ -280,47 +315,52 @@ else:
     c_map = {"🟢":"#28a745","🟡":"#ffc107","⚪":"#6c757d","🔴":"#dc3545","⚫":"#343a40"}
     provider_colors = {"TIGER":"#f4a261","ACE":"#e76f51","PLUS":"#2a9d8f","SOL":"#e9c46a","RISE":"#6b9fff","HANARO":"#a78bfa"}
 
-    # ── 판정 카드 요약 ──
-    spikes = [r for r in did_results if abs(r.did_value) >= 1.0]
+    sorted_results = sorted(did_results, key=lambda x: abs(x.did_value), reverse=True)
+    spikes    = [r for r in sorted_results if abs(r.did_value) >= 1.0]
+    normals   = [r for r in sorted_results if abs(r.did_value) < 1.0]
+
+    def _z_label(z: float) -> str:
+        """Z-score → 직관적 설명"""
+        if z >= 2.0:   return f"평소보다 {z:.1f}배 급변 🔺"
+        elif z >= 1.0: return f"평소보다 {z:.1f}배 변동 ⚠️"
+        elif z <= -2.0: return f"경쟁사 대비 {abs(z):.1f}배 부진 🔻"
+        elif z <= -1.0: return f"경쟁사 대비 소폭 부진"
+        else:           return f"정상 범위"
+
+    # ── 이상 감지 ETF 카드 ──
     if spikes:
-        st.markdown(f"**⚡ Z-score 이상 감지: {len(spikes)}개**")
+        st.markdown(f"**⚡ 이상 감지: {len(spikes)}개** (평소 변동의 1배 이상)")
         cols = st.columns(min(len(spikes), 4))
-        for col, r in zip(cols, sorted(spikes, key=lambda x: abs(x.did_value), reverse=True)):
+        for col, r in zip(cols, spikes):
             c = c_map.get(r.judgement_emoji, "#6c757d")
             with col:
                 st.markdown(
                     f"<div style='border:2px solid {c};border-radius:8px;padding:14px;text-align:center;'>"
                     f"<div style='font-size:2rem;'>{r.judgement_emoji}</div>"
                     f"<div style='font-weight:700;font-size:0.85rem;'>{r.kodex_name}</div>"
-                    f"<div class='did-result' style='color:{c};'>Z={r.did_value:+.2f}</div>"
-                    f"<div style='font-size:0.78rem;color:#555;'>{r.judgement}</div>"
+                    f"<div class='did-result' style='color:{c};font-size:1rem;'>{_z_label(r.did_value)}</div>"
                     f"</div>", unsafe_allow_html=True)
     else:
-        st.info("이번 주 Z-score 이상 없음 — 평상 범위 내 은행 채널 거래")
+        st.info("이번 주 이상 변동 없음 — 모든 KODEX ETF 정상 범위")
 
     st.divider()
 
-    # ── ETF별 상세 ──
-    for r in sorted(did_results, key=lambda x: abs(x.did_value), reverse=True):
+    # ── 이상 ETF 상세 expander ──
+    for r in spikes:
         border_c = c_map.get(r.judgement_emoji, "#6c757d")
         with st.expander(
-            f"{r.judgement_emoji} {r.kodex_name}  |  Z={r.did_value:+.2f}  —  {r.judgement}",
+            f"{r.judgement_emoji} {r.kodex_name}  |  {_z_label(r.did_value)}  —  {r.judgement}",
             expanded=False
         ):
-            # 핵심 수치 3컬럼
             c1, c2, c3 = st.columns(3)
-            c1.metric("KODEX 은행 변화율", f"{int(r.kodex_change_pct*100):+d}%", help="평소 대비")
-            c2.metric("비교군 평균",        f"{int(r.control_avg_pct*100):+d}%" if not r.no_competitors else "N/A")
-            c3.metric("Z-score (이상지수)", f"{r.did_value:+.2f}",
-                      delta=r.judgement,
+            c1.metric("KODEX 은행 변화율", f"{int(r.kodex_change_pct*100):+d}%")
+            c2.metric("비교군 평균", f"{int(r.control_avg_pct*100):+d}%" if not r.no_competitors else "N/A")
+            c3.metric("평소 대비 이상 정도", _z_label(r.did_value),
                       delta_color="normal" if r.did_value >= 1.0 else ("off" if r.did_value >= -1.0 else "inverse"))
 
-            # Z-score 설명
-            st.markdown(
-                f"<small>📐 Z-score = (이번주 DiD − 16주평균) ÷ 16주σ &nbsp;|&nbsp; "
-                f"≥2.0 강한이상 / ≥1.0 이상감지 / ±1.0 정상 / &lt;-1.0 경쟁사우위</small>",
-                unsafe_allow_html=True
-            )
+            bw = r.baseline.weeks_used
+            if bw < 4:
+                st.warning(f"⚠️ 베이스라인 {bw}주만 확보 — 신규 상장 ETF. {4-bw}주 더 쌓이면 정상화됩니다.")
 
             st.divider()
 
@@ -329,46 +369,40 @@ else:
                 cards = ""
                 for comp in r.competitors:
                     c = provider_colors.get(comp.provider, "#adb5bd")
-                    pct_disp = f"{int(comp.change_pct*100):+d}%"
                     short2 = comp.name
-                    for pfx in ["TIGER ","PLUS ","ACE ","SOL ","RISE ","HANARO "]:
-                        short2 = short2.replace(pfx, "")
-                    initial2 = comp.provider[0] if comp.provider else "?"
+                    for pfx in ["TIGER ","PLUS ","ACE ","SOL ","RISE ","HANARO "]: short2 = short2.replace(pfx,"")
                     cards += (
                         f'<div style="flex:1;min-width:110px;border:2px solid {c};border-radius:24px;'
                         f'padding:14px 10px;text-align:center;background:#16181c;">'
-                        f'<div style="width:32px;height:32px;border-radius:9999px;background:{c}20;color:{c};'
-                        f'display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;'
-                        f'margin:0 auto 6px;">{initial2}</div>'
                         f'<div style="font-size:.68rem;color:{c};font-weight:700;">{comp.provider}</div>'
                         f'<div style="font-size:.95rem;font-weight:700;color:#e8eaed;">{short2}</div>'
-                        f'<div style="font-size:1.1rem;font-weight:700;color:{c};font-family:monospace;">{pct_disp}</div>'
-                        f'</div>'
+                        f'<div style="font-size:1.1rem;font-weight:700;color:{c};font-family:monospace;">'
+                        f'{int(comp.change_pct*100):+d}%</div></div>'
                     )
                 st.markdown(f'<div class="comp-grid">{cards}</div>', unsafe_allow_html=True)
-                if len(r.competitors) == 1:
-                    st.caption("※ 동일 유형 ETF 1종만 존재 — 단일 비교 (÷1)")
 
-            # DiD/Z-score 계산식
+            # 계산 결과 (식이 아닌 숫자)
             if not r.no_competitors:
                 ctrl_str = " + ".join(f"{int(c.change_pct*100):+d}%" for c in r.competitors)
                 n = len(r.competitors)
+                raw_did = r.kodex_change_pct - r.control_avg_pct
                 formula = (
-                    f"[ 은행 컬럼 기준, {r.mapping_source} ]\n\n"
-                    f"  ① KODEX 은행변화율  = {int(r.kodex_change_pct*100):+d}%\n"
-                    f"  ② 비교군 평균        = ({ctrl_str}) ÷ {n} = {int(r.control_avg_pct*100):+d}%\n\n"
-                    f"  ③ DiD(t)             = ① − ② = {_did_pct(r.did_value - 0)}\n\n"
-                    f"  ④ Z-score           = (DiD(t) − 16주평균) ÷ 16주σ = {r.did_value:+.2f}\n\n"
-                    f"  판정  {r.judgement_emoji} {r.judgement}\n"
-                    f"  기준  Z≥2.0: 강한이상 / Z≥1.0: 이상감지 / Z±1.0: 정상 / Z<-1.0: 경쟁사우위"
+                    f"[ 은행 컬럼 · {r.mapping_source} ]\n\n"
+                    f"  ① KODEX 은행변화율   = {int(r.kodex_change_pct*100):+d}%\n"
+                    f"  ② 비교군 {n}개 평균  = ({ctrl_str}) ÷ {n} = {int(r.control_avg_pct*100):+d}%\n\n"
+                    f"  ③ 이번주 초과분       = {int(r.kodex_change_pct*100):+d}% − {int(r.control_avg_pct*100):+d}% = {int(raw_did*100):+d}%\n\n"
+                    f"  ④ 평소 변동 대비      = {r.did_value:+.2f}배  ({_z_label(r.did_value)})\n"
+                    f"     (이번주 초과분이 과거 16주 평균 대비 {abs(r.did_value):.1f}배 {'크다' if r.did_value > 0 else '작다'})\n\n"
+                    f"  판정  {r.judgement_emoji} {r.judgement}"
                 )
                 st.markdown(f"<div class='formula-box'>{formula}</div>", unsafe_allow_html=True)
 
-            # 단계별 계산 로그
+            # 단계별 계산 로그 (LP 관련 제외)
             with st.expander("📋 단계별 계산 로그", expanded=False):
                 log_html = ""
                 icons = {"[KODEX":"🟦","[베이스라인":"📊","[비교군":"🆚","[DiD":"🧮","[Z-score":"📐","[판정":"🏁"}
                 for line in r.calculation_log:
+                    if "[LP" in line or "LP 감지" in line: continue  # 은행은 LP 불필요
                     icon = "▸"
                     for k, v in icons.items():
                         if line.startswith(k): icon = v; break
@@ -381,21 +415,38 @@ else:
                                  f"<span style='color:{color};font-size:0.82rem;font-family:monospace;'>{line}</span></div>")
                 st.markdown(f"<div style='padding:8px;'>{log_html}</div>", unsafe_allow_html=True)
 
-            # 기저효과·경고 메시지
             if r.notes:
                 st.warning("  |  ".join(r.notes))
+
+    # ── 정상 범위 ETF 한곳에 테이블로 ──
+    if normals:
+        with st.expander(f"📋 정상 범위 ETF {len(normals)}개 (이상 없음)", expanded=False):
+            rows = []
+            for r in normals:
+                comp_names = " / ".join(c.name for c in r.competitors)
+                rows.append({
+                    "판정": f"{r.judgement_emoji} {r.judgement}",
+                    "KODEX ETF": r.kodex_name,
+                    "KODEX 변화율": f"{int(r.kodex_change_pct*100):+d}%",
+                    "비교군": comp_names if comp_names else "없음",
+                    "비교군 변화율": f"{int(r.control_avg_pct*100):+d}%",
+                    "이상 정도": _z_label(r.did_value),
+                    "매핑": r.mapping_source,
+                })
+            st.dataframe(pd.DataFrame(rows), use_container_width=True)
 
 # ══════════════════════════════════════════════════════════════════
 # Step 5 · 요약
 # ══════════════════════════════════════════════════════════════════
 st.markdown('<div class="step-header">Step 5 · 주간 요약</div>', unsafe_allow_html=True)
 
-spikes = [r for r in did_results if abs(r.did_value) >= 0.5]
+spikes = [r for r in did_results if abs(r.did_value) >= 1.0]  # 카드/테이블과 동일 기준
 spike_names = [r.kodex_name for r in sorted(spikes, key=lambda x: abs(x.did_value), reverse=True)[:3]]
 
 st.markdown(f"**분석 주차:** {selected}")
 st.markdown(f"**분석 ETF 수:** {len(did_results)}개")
-st.markdown(f"**스파이크 ETF:** {', '.join(spike_names) if spike_names else '없음'}")
+st.markdown(f"**이상 감지 ETF (Z≥1.0):** {len(spikes)}개")
+st.markdown(f"**상위 3개:** {', '.join(spike_names) if spike_names else '없음'}")
 
 if spike_names:
     st.info("💡 은행 채널 유입 이상 감지 — 해당 주 KB/신한/하나/우리/농협 이벤트 역추적 권고")

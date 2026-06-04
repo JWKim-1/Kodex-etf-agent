@@ -161,6 +161,8 @@ class CompetitorResult:
     baseline_fi_avg: float
     baseline_ind_avg: float
     metric_used: str
+    fi_mabs: float = 0.0    # 계산식 표시용
+    ind_mabs: float = 0.0   # 계산식 표시용
 
 
 @dataclass

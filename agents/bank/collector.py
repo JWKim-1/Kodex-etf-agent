@@ -195,11 +195,17 @@ class BankChannelCollector:
             soup = BeautifulSoup(r.text, "lxml")
             etf_kws = ["ETF", "KODEX", "코덱스", "IRP", "연금저축펀드"]
             posts = []
+            base_url = "https://blog.hanabank.com"
             for a in soup.select("a"):
                 title = a.get_text(strip=True)
                 if len(title) < 10:
                     continue
                 href = a.get("href", "")
+                # 상대경로 → 절대경로 변환
+                if href and href.startswith("/"):
+                    href = base_url + href
+                elif href and not href.startswith("http"):
+                    href = ""
                 is_relevant = any(k in title for k in etf_kws)
                 posts.append({"title": title, "link": href, "relevant": is_relevant})
 

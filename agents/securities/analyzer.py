@@ -190,6 +190,7 @@ class MarketingAnalyzer(MarketingAnalyzerBase):
                 current_fi=cdata.financial_investment, current_ind=cdata.individual,
                 baseline_fi_avg=cb.fi_avg, baseline_ind_avg=cb.ind_avg,
                 metric_used=force_metric,
+                fi_mabs=cb.fi_mabs, ind_mabs=cb.ind_mabs,
             ))
 
         # 호환성: TIGER/ACE 별도 추출

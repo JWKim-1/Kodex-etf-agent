@@ -192,8 +192,8 @@ if st.session_state.selected_mode is None:
         st.markdown("""
         <div class="mode-card disabled">
             <div class="mode-icon">🎯</div>
-            <div class="mode-title">대고객 디지털 마케팅</div>
-            <div class="mode-desc">삼성자산운용의 직접 디지털 마케팅(이벤트·SNS·유튜브) 효과를 개인 순매수 DiD로 측정합니다</div>
+            <div class="mode-title">개인 채널</div>
+            <div class="mode-desc">자산운용사 직접 채널(이벤트·SNS·유튜브)의 마케팅 효과를 개인 순매수 DiD로 측정합니다</div>
             <div class="coming-soon">🔒 추후 출시 예정</div>
         </div>
         """, unsafe_allow_html=True)
@@ -1037,6 +1037,24 @@ if did_results:
 
 st.markdown("---")
 
+# ── LP 감지 & Z-score 설명 (1회 표시) ──
+with st.expander("🔬 LP 노이즈 감지 & 지표 전환 기준", expanded=False):
+    st.markdown("""
+**LP(유동성공급자)란?**
+ETF 시장에서 설정·해지 헤징을 위해 기계적으로 매수·매도하는 증권사 트레이더.
+마케팅과 무관한 거래라 DiD 왜곡 원인이 됩니다.
+
+**감지 조건 (둘 다 해당 시 의심):**
+- z > 2.0 : 이번 주 금융투자 값이 4주 평균에서 표준편차 2배 이상 벗어남
+- 부호 반전 : 4주 평균은 음수인데 이번 주는 양수 (또는 반대)
+
+단, 비교군(TIGER 등)도 같은 패턴이면 → LP 아닌 **장세 전환**으로 처리
+
+**감지 시 조치:** 금융투자 → 개인 컬럼으로 전환 후 DiD 재계산 (추정값 표시)
+
+> ※ z=2.0 임계값은 통계적 관례(95% 신뢰구간). 금리인하·지정학 이슈 등 장세 전반 전환 시 오탐 가능 — 당일 시장 상황 병행 확인 권장
+""")
+
 # ── ETF별 상세 계산 과정 ──
 for code, res in did_results.items():
     c_map = {"🟢":"#28a745","🟡":"#ffc107","⚪":"#6c757d","🔴":"#dc3545","⚫":"#343a40"}
@@ -1054,6 +1072,14 @@ for code, res in did_results.items():
         c3.metric("DiD (마케팅 효과)", did_pct(res.did_value),
                   delta=res.judgement,
                   delta_color="normal" if res.did_value >= 0.3 else ("off" if res.did_value >= -0.3 else "inverse"))
+
+        # ── 베이스라인 부족 경고 ──
+        bw = res.baseline.weeks_used
+        if bw < 4:
+            st.warning(
+                f"⚠️ 베이스라인 {bw}주만 확보 (4주 미만) — 신규 상장 ETF로 데이터 부족. "
+                f"DiD 신뢰도 낮음. {4 - bw}주 더 쌓이면 정상화됩니다."
+            )
 
         # ── LP 상태 + 지표 한 줄 ──
         lp_badge = '<span class="badge-lp">⚠️ LP 의심</span>' if res.lp.suspicious else '<span class="badge-ok">✅ 정상</span>'
@@ -1095,15 +1121,25 @@ for code, res in did_results.items():
             cur_val  = res.current.financial_investment if metric=="financial" else res.current.individual
             avg_val  = res.baseline.fi_avg  if metric=="financial" else res.baseline.ind_avg
             mabs_val = res.baseline.fi_mabs if metric=="financial" else res.baseline.ind_mabs
-            ctrl_str = " + ".join(f"{int(c.change_pct*100):+d}%" for c in res.competitors)
             n = len(res.competitors)
             single_note = f"\n\n  ※ 비교군 1개만 존재 (÷1 적용)" if n == 1 else ""
+            # 비교군 각각 중간 계산 표시
+            comp_lines = ""
+            for comp in res.competitors:
+                c_cur  = comp.current_fi   if metric=="financial" else comp.current_ind
+                c_avg  = comp.baseline_fi_avg  if metric=="financial" else comp.baseline_ind_avg
+                c_mabs = comp.fi_mabs if metric=="financial" else comp.ind_mabs
+                comp_lines += (
+                    f"     · {comp.name}: ({c_cur:,.0f} − {c_avg:,.0f}) ÷ {c_mabs:,.0f} = {int(comp.change_pct*100):+d}%\n"
+                )
+            ctrl_str = " + ".join(f"{int(c.change_pct*100):+d}%" for c in res.competitors)
             formula = (
                 f"[ 지표: {metric_label} ]\n\n"
                 f"  ① KODEX = ({cur_val:,.0f} − {avg_val:,.0f}) ÷ {mabs_val:,.0f}\n"
                 f"          = {int(res.kodex_change_pct*100):+d}%\n\n"
-                f"  ② 비교군 = ({ctrl_str}) ÷ {n}\n"
-                f"           = {int(res.control_avg_pct*100):+d}%\n\n"
+                f"  ② 비교군 (각 ETF):\n"
+                f"{comp_lines}"
+                f"     평균  = ({ctrl_str}) ÷ {n} = {int(res.control_avg_pct*100):+d}%\n\n"
                 f"  ③ DiD   = ① − ② = {did_pct(res.did_value)}\n\n"
                 f"  판정   {res.judgement_emoji} {res.judgement}\n"
                 f"  기준   >+100%: 강함 / >+30%: 효과있음 / <-30%: 불분명 / <-100%: 확인어려움{single_note}"

@@ -1,0 +1,2801 @@
+{
+  "494310*001": {
+    "kodex_name": "KODEX 반도체레버리지",
+    "competitors": []
+  },
+  "122630*001": {
+    "kodex_name": "KODEX 레버리지",
+    "competitors": [
+      {
+        "code": "123320*001",
+        "name": "TIGER 레버리지",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 200 레버리지지수",
+        "corr": 0.999
+      },
+      {
+        "code": "152500*001",
+        "name": "ACE 레버리지",
+        "provider": "ACE",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 200 레버리지지수",
+        "corr": 0.999
+      }
+    ]
+  },
+  "069500*001": {
+    "kodex_name": "KODEX 200",
+    "competitors": [
+      {
+        "code": "102110*001",
+        "name": "TIGER 200",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 200",
+        "corr": 1.0
+      },
+      {
+        "code": "105190*001",
+        "name": "ACE 200",
+        "provider": "ACE",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 200",
+        "corr": 0.999
+      }
+    ]
+  },
+  "144600*001": {
+    "kodex_name": "KODEX 은선물(H)",
+    "competitors": [
+      {
+        "code": "139320*001",
+        "name": "TIGER 금은선물(H)",
+        "provider": "TIGER",
+        "corr": 0.917
+      }
+    ]
+  },
+  "448330*001": {
+    "kodex_name": "KODEX 삼성전자채권혼합",
+    "competitors": [
+      {
+        "code": "0162Z0*001",
+        "name": "RISE 삼성전자SK하이닉스채권혼합50",
+        "provider": "RISE",
+        "corr": 0.935
+      }
+    ]
+  },
+  "314250*001": {
+    "kodex_name": "KODEX 미국빅테크10(H)",
+    "competitors": [
+      {
+        "code": "465610*001",
+        "name": "ACE 미국빅테크TOP7 Plus레버리지(합성)",
+        "provider": "ACE",
+        "corr": 0.846
+      }
+    ]
+  },
+  "0064K0*001": {
+    "kodex_name": "KODEX 금액티브",
+    "competitors": []
+  },
+  "487230*001": {
+    "kodex_name": "KODEX 미국AI전력핵심인프라",
+    "competitors": [
+      {
+        "code": "0123G0*001",
+        "name": "TIGER 미국AI전력SMR",
+        "provider": "TIGER",
+        "corr": 0.844
+      },
+      {
+        "code": "0118Z0*001",
+        "name": "ACE 미국AI테크핵심산업액티브",
+        "provider": "ACE",
+        "corr": 0.8
+      }
+    ]
+  },
+  "487240*001": {
+    "kodex_name": "KODEX AI전력핵심설비",
+    "competitors": [
+      {
+        "code": "0117V0*001",
+        "name": "TIGER 코리아AI전력기기TOP3플러스",
+        "provider": "TIGER",
+        "corr": 0.992
+      },
+      {
+        "code": "0101N0*001",
+        "name": "RISE AI전력인프라",
+        "provider": "RISE",
+        "corr": 0.953
+      }
+    ]
+  },
+  "229200*001": {
+    "kodex_name": "KODEX 코스닥150",
+    "competitors": [
+      {
+        "code": "232080*001",
+        "name": "TIGER 코스닥150",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스닥 150",
+        "corr": 0.999
+      },
+      {
+        "code": "354500*001",
+        "name": "ACE 코스닥150",
+        "provider": "ACE",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스닥 150",
+        "corr": 0.997
+      }
+    ]
+  },
+  "462330*001": {
+    "kodex_name": "KODEX 2차전지산업레버리지",
+    "competitors": [
+      {
+        "code": "305540*001",
+        "name": "TIGER 2차전지테마",
+        "provider": "TIGER",
+        "corr": 0.993
+      },
+      {
+        "code": "385600*001",
+        "name": "ACE 2차전지&친환경차액티브",
+        "provider": "ACE",
+        "corr": 0.85
+      }
+    ]
+  },
+  "385510*001": {
+    "kodex_name": "KODEX 신재생에너지액티브",
+    "competitors": [
+      {
+        "code": "377990*001",
+        "name": "TIGER Fn신재생에너지",
+        "provider": "TIGER",
+        "corr": 0.961
+      }
+    ]
+  },
+  "237370*001": {
+    "kodex_name": "KODEX 코리아배당성장채권혼합",
+    "competitors": [
+      {
+        "code": "0052D0*001",
+        "name": "TIGER 코리아배당다우존스",
+        "provider": "TIGER",
+        "corr": 0.927
+      }
+    ]
+  },
+  "0100K0*001": {
+    "kodex_name": "KODEX 방산TOP10레버리지",
+    "competitors": []
+  },
+  "251340*001": {
+    "kodex_name": "KODEX 코스닥150선물인버스",
+    "competitors": [
+      {
+        "code": "250780*001",
+        "name": "TIGER 코스닥150선물인버스",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "F-코스닥150 인버스지수",
+        "corr": 0.991
+      },
+      {
+        "code": "301410*001",
+        "name": "PLUS 코스닥150선물인버스",
+        "provider": "PLUS",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "F-코스닥150 인버스지수",
+        "corr": 0.965
+      }
+    ]
+  },
+  "138910*001": {
+    "kodex_name": "KODEX 구리선물(H)",
+    "competitors": []
+  },
+  "305720*001": {
+    "kodex_name": "KODEX 2차전지산업",
+    "competitors": [
+      {
+        "code": "305540*001",
+        "name": "TIGER 2차전지테마",
+        "provider": "TIGER",
+        "corr": 0.99
+      },
+      {
+        "code": "385600*001",
+        "name": "ACE 2차전지&친환경차액티브",
+        "provider": "ACE",
+        "corr": 0.848
+      }
+    ]
+  },
+  "0098F0*001": {
+    "kodex_name": "KODEX 원자력SMR",
+    "competitors": [
+      {
+        "code": "0092B0*001",
+        "name": "SOL 한국원자력SMR",
+        "provider": "SOL",
+        "corr": 0.989
+      }
+    ]
+  },
+  "132030*001": {
+    "kodex_name": "KODEX 골드선물(H)",
+    "competitors": [
+      {
+        "code": "319640*001",
+        "name": "TIGER 골드선물(H)",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "S&P GSCI Gold Index(TR)",
+        "corr": 0.999
+      }
+    ]
+  },
+  "372330*001": {
+    "kodex_name": "KODEX 차이나항셍테크",
+    "competitors": [
+      {
+        "code": "371160*001",
+        "name": "TIGER 차이나항셍테크",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "Hang Seng TECH Index",
+        "corr": 0.993
+      },
+      {
+        "code": "371870*001",
+        "name": "ACE 차이나항셍테크",
+        "provider": "ACE",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "Hang Seng TECH Index",
+        "corr": 0.962
+      }
+    ]
+  },
+  "204450*001": {
+    "kodex_name": "KODEX 차이나H레버리지(H)",
+    "competitors": [
+      {
+        "code": "245360*001",
+        "name": "TIGER 차이나HSCEI",
+        "provider": "TIGER",
+        "corr": 0.73
+      },
+      {
+        "code": "250730*001",
+        "name": "RISE 차이나HSCEI(H)",
+        "provider": "RISE",
+        "corr": 0.895
+      }
+    ]
+  },
+  "0132H0*001": {
+    "kodex_name": "KODEX 미국원자력SMR",
+    "competitors": [
+      {
+        "code": "0051G0*001",
+        "name": "SOL 미국원자력SMR",
+        "provider": "SOL",
+        "similarity": 58,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "KEDI 미국원자력 SMR 지수(PR)",
+        "corr": 0.934
+      }
+    ]
+  },
+  "102780*001": {
+    "kodex_name": "KODEX 삼성그룹",
+    "competitors": [
+      {
+        "code": "138520*001",
+        "name": "TIGER 삼성그룹",
+        "provider": "TIGER",
+        "corr": 0.992
+      },
+      {
+        "code": "108450*001",
+        "name": "ACE 삼성그룹섹터가중",
+        "provider": "ACE",
+        "corr": 0.985
+      }
+    ]
+  },
+  "0167Z0*001": {
+    "kodex_name": "KODEX 미국우주항공",
+    "competitors": [
+      {
+        "code": "0183J0*001",
+        "name": "TIGER 미국우주테크",
+        "provider": "TIGER",
+        "corr": 0.96
+      },
+      {
+        "code": "0180V0*001",
+        "name": "ACE 미국우주테크액티브",
+        "provider": "ACE",
+        "corr": 0.949
+      }
+    ]
+  },
+  "0173Y0*001": {
+    "kodex_name": "KODEX 미국AI광통신네트워크",
+    "competitors": [
+      {
+        "code": "0176E0*001",
+        "name": "RISE 미국AI전력인프라액티브",
+        "provider": "RISE",
+        "corr": 0.73
+      }
+    ]
+  },
+  "279530*001": {
+    "kodex_name": "KODEX 고배당주",
+    "competitors": [
+      {
+        "code": "0139P0*001",
+        "name": "ACE 고배당주",
+        "provider": "ACE",
+        "corr": 0.95
+      },
+      {
+        "code": "161510*001",
+        "name": "PLUS 고배당주",
+        "provider": "PLUS",
+        "corr": 0.98
+      }
+    ]
+  },
+  "278530*001": {
+    "kodex_name": "KODEX 200TR",
+    "competitors": [
+      {
+        "code": "310960*001",
+        "name": "TIGER 200TR",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 200 TR지수",
+        "corr": 0.998
+      },
+      {
+        "code": "332500*001",
+        "name": "ACE 200TR",
+        "provider": "ACE",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 200 TR지수",
+        "corr": 0.998
+      }
+    ]
+  },
+  "117700*001": {
+    "kodex_name": "KODEX 건설",
+    "competitors": [
+      {
+        "code": "139220*001",
+        "name": "TIGER 200 건설",
+        "provider": "TIGER",
+        "corr": 0.975
+      }
+    ]
+  },
+  "483280*001": {
+    "kodex_name": "KODEX 미국AI테크TOP10타겟커버드콜",
+    "competitors": [
+      {
+        "code": "493810*001",
+        "name": "TIGER 미국AI빅테크10타겟데일리커버드콜",
+        "provider": "TIGER",
+        "corr": 0.94
+      },
+      {
+        "code": "485690*001",
+        "name": "RISE 미국AI밸류체인TOP3Plus",
+        "provider": "RISE",
+        "corr": 0.812
+      }
+    ]
+  },
+  "244580*001": {
+    "kodex_name": "KODEX 바이오",
+    "competitors": [
+      {
+        "code": "0168K0*001",
+        "name": "TIGER 기술이전바이오액티브",
+        "provider": "TIGER",
+        "corr": 0.941
+      },
+      {
+        "code": "498050*001",
+        "name": "HANARO 바이오코리아액티브",
+        "provider": "HANARO",
+        "corr": 0.953
+      }
+    ]
+  },
+  "117680*001": {
+    "kodex_name": "KODEX 철강",
+    "competitors": [
+      {
+        "code": "139240*001",
+        "name": "TIGER 200 철강소재",
+        "provider": "TIGER",
+        "corr": 0.981
+      }
+    ]
+  },
+  "461950*001": {
+    "kodex_name": "KODEX 2차전지핵심소재10",
+    "competitors": [
+      {
+        "code": "462010*001",
+        "name": "TIGER 2차전지소재Fn",
+        "provider": "TIGER",
+        "corr": 0.988
+      },
+      {
+        "code": "385600*001",
+        "name": "ACE 2차전지&친환경차액티브",
+        "provider": "ACE",
+        "corr": 0.805
+      }
+    ]
+  },
+  "0048J0*001": {
+    "kodex_name": "KODEX 미국머니마켓액티브",
+    "competitors": []
+  },
+  "214980*001": {
+    "kodex_name": "KODEX 단기채권PLUS",
+    "competitors": []
+  },
+  "315930*001": {
+    "kodex_name": "KODEX Top5PlusTR",
+    "competitors": []
+  },
+  "213610*001": {
+    "kodex_name": "KODEX 삼성그룹밸류",
+    "competitors": [
+      {
+        "code": "138520*001",
+        "name": "TIGER 삼성그룹",
+        "provider": "TIGER",
+        "corr": 0.986
+      },
+      {
+        "code": "108450*001",
+        "name": "ACE 삼성그룹섹터가중",
+        "provider": "ACE",
+        "corr": 0.978
+      }
+    ]
+  },
+  "390390*001": {
+    "kodex_name": "KODEX 미국반도체",
+    "competitors": [
+      {
+        "code": "480040*001",
+        "name": "ACE 미국반도체데일리타겟커버드콜(합성)",
+        "provider": "ACE",
+        "corr": 0.919
+      },
+      {
+        "code": "469060*001",
+        "name": "RISE 미국반도체NYSE",
+        "provider": "RISE",
+        "corr": 0.964
+      }
+    ]
+  },
+  "434060*001": {
+    "kodex_name": "KODEX TDF2050액티브 적격",
+    "competitors": [
+      {
+        "code": "0025N0*001",
+        "name": "TIGER TDF2045 적격",
+        "provider": "TIGER",
+        "corr": 0.759
+      },
+      {
+        "code": "433880*001",
+        "name": "PLUS TDF2060액티브 적격",
+        "provider": "PLUS",
+        "corr": 0.778
+      }
+    ]
+  },
+  "102960*001": {
+    "kodex_name": "KODEX 기계장비",
+    "competitors": []
+  },
+  "409820*001": {
+    "kodex_name": "KODEX 미국나스닥100레버리지(합성 H)",
+    "competitors": [
+      {
+        "code": "448300*001",
+        "name": "TIGER 미국나스닥100(H)",
+        "provider": "TIGER",
+        "corr": 0.997
+      },
+      {
+        "code": "367380*001",
+        "name": "ACE 미국나스닥100",
+        "provider": "ACE",
+        "corr": 0.826
+      }
+    ]
+  },
+  "266420*001": {
+    "kodex_name": "KODEX 헬스케어",
+    "competitors": [
+      {
+        "code": "143860*001",
+        "name": "TIGER 헬스케어",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "KRX 헬스케어",
+        "corr": 0.992
+      }
+    ]
+  },
+  "461450*001": {
+    "kodex_name": "KODEX 코스닥글로벌",
+    "competitors": [
+      {
+        "code": "461580*001",
+        "name": "TIGER 코스닥글로벌",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스닥 글로벌 지수",
+        "corr": 0.985
+      }
+    ]
+  },
+  "411420*001": {
+    "kodex_name": "KODEX 미국나스닥AI테크액티브",
+    "competitors": [
+      {
+        "code": "448300*001",
+        "name": "TIGER 미국나스닥100(H)",
+        "provider": "TIGER",
+        "corr": 0.741
+      }
+    ]
+  },
+  "441640*001": {
+    "kodex_name": "KODEX 미국배당커버드콜액티브",
+    "competitors": [
+      {
+        "code": "0046Y0*001",
+        "name": "ACE 미국배당퀄리티",
+        "provider": "ACE",
+        "corr": 0.821
+      },
+      {
+        "code": "494420*001",
+        "name": "PLUS 미국배당증가성장주데일리커버드콜",
+        "provider": "PLUS",
+        "corr": 0.713
+      }
+    ]
+  },
+  "261240*001": {
+    "kodex_name": "KODEX 미국달러선물",
+    "competitors": [
+      {
+        "code": "456610*001",
+        "name": "TIGER 미국달러SOFR금리액티브(합성)",
+        "provider": "TIGER",
+        "corr": 0.995
+      },
+      {
+        "code": "440650*001",
+        "name": "ACE 미국달러단기채권액티브",
+        "provider": "ACE",
+        "corr": 0.992
+      }
+    ]
+  },
+  "252650*001": {
+    "kodex_name": "KODEX 200동일가중",
+    "competitors": [
+      {
+        "code": "252000*001",
+        "name": "TIGER 200동일가중",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 200 동일가중지수",
+        "corr": 0.973
+      }
+    ]
+  },
+  "117460*001": {
+    "kodex_name": "KODEX 에너지화학",
+    "competitors": [
+      {
+        "code": "139250*001",
+        "name": "TIGER 200 에너지화학",
+        "provider": "TIGER",
+        "corr": 0.97
+      }
+    ]
+  },
+  "485540*001": {
+    "kodex_name": "KODEX 미국AI테크TOP10",
+    "competitors": [
+      {
+        "code": "490090*001",
+        "name": "TIGER 미국AI빅테크10",
+        "provider": "TIGER",
+        "corr": 0.964
+      },
+      {
+        "code": "485690*001",
+        "name": "RISE 미국AI밸류체인TOP3Plus",
+        "provider": "RISE",
+        "corr": 0.838
+      }
+    ]
+  },
+  "308620*001": {
+    "kodex_name": "KODEX 미국10년국채선물",
+    "competitors": [
+      {
+        "code": "0085P0*001",
+        "name": "ACE 미국10년국채액티브",
+        "provider": "ACE",
+        "corr": 0.981
+      }
+    ]
+  },
+  "415340*001": {
+    "kodex_name": "KODEX 차이나과창판STAR50(합성)",
+    "competitors": [
+      {
+        "code": "414780*001",
+        "name": "TIGER 차이나과창판STAR50(합성)",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "STAR 50 Index(Price Return)",
+        "corr": 0.973
+      }
+    ]
+  },
+  "445150*001": {
+    "kodex_name": "KODEX 친환경조선해운액티브",
+    "competitors": []
+  },
+  "439870*001": {
+    "kodex_name": "KODEX 국고채30년액티브",
+    "competitors": [
+      {
+        "code": "451530*001",
+        "name": "TIGER 국고채30년스트립액티브",
+        "provider": "TIGER",
+        "corr": 0.993
+      },
+      {
+        "code": "114460*001",
+        "name": "ACE 국고채3년",
+        "provider": "ACE",
+        "corr": 0.823
+      }
+    ]
+  },
+  "271060*001": {
+    "kodex_name": "KODEX 3대농산물선물(H)",
+    "competitors": []
+  },
+  "0119H0*001": {
+    "kodex_name": "KODEX 28-12 회사채(AA-이상)액티브",
+    "competitors": [
+      {
+        "code": "0094K0*001",
+        "name": "TIGER 28-04 회사채(A+이상)액티브",
+        "provider": "TIGER",
+        "corr": 0.741
+      },
+      {
+        "code": "0099L0*001",
+        "name": "ACE 우량회사채(AA-이상)액티브",
+        "provider": "ACE",
+        "corr": 0.726
+      }
+    ]
+  },
+  "468370*001": {
+    "kodex_name": "KODEX iShares미국인플레이션국채액티브",
+    "competitors": []
+  },
+  "0007F0*001": {
+    "kodex_name": "KODEX 27-12 회사채(AA-이상)액티브",
+    "competitors": [
+      {
+        "code": "0094K0*001",
+        "name": "TIGER 28-04 회사채(A+이상)액티브",
+        "provider": "TIGER",
+        "corr": 0.717
+      }
+    ]
+  },
+  "489250*001": {
+    "kodex_name": "KODEX 미국배당다우존스",
+    "competitors": [
+      {
+        "code": "458730*001",
+        "name": "TIGER 미국배당다우존스",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "Dow Jones U.S. Dividend 100 Price Return Index",
+        "corr": 0.977
+      },
+      {
+        "code": "402970*001",
+        "name": "ACE 미국배당다우존스",
+        "provider": "ACE",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "Dow Jones U.S. Dividend 100 Price Return Index",
+        "corr": 0.979
+      }
+    ]
+  },
+  "261250*001": {
+    "kodex_name": "KODEX 미국달러선물레버리지",
+    "competitors": [
+      {
+        "code": "261110*001",
+        "name": "TIGER 미국달러선물레버리지",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "미국달러 선물 레버리지지수",
+        "corr": 0.989
+      }
+    ]
+  },
+  "385520*001": {
+    "kodex_name": "KODEX 자율주행액티브",
+    "competitors": [
+      {
+        "code": "394660*001",
+        "name": "TIGER 글로벌자율주행&전기차SOLACTIVE",
+        "provider": "TIGER",
+        "corr": 0.721
+      }
+    ]
+  },
+  "468380*001": {
+    "kodex_name": "KODEX iShares미국하이일드액티브",
+    "competitors": []
+  },
+  "298770*001": {
+    "kodex_name": "KODEX 한국대만IT프리미어",
+    "competitors": []
+  },
+  "433980*001": {
+    "kodex_name": "KODEX TDF2040액티브 적격",
+    "competitors": [
+      {
+        "code": "0025N0*001",
+        "name": "TIGER TDF2045 적격",
+        "provider": "TIGER",
+        "corr": 0.826
+      },
+      {
+        "code": "433880*001",
+        "name": "PLUS TDF2060액티브 적격",
+        "provider": "PLUS",
+        "corr": 0.829
+      }
+    ]
+  },
+  "475080*001": {
+    "kodex_name": "KODEX 테슬라커버드콜채권혼합액티브",
+    "competitors": []
+  },
+  "223190*001": {
+    "kodex_name": "KODEX 200가치저변동",
+    "competitors": []
+  },
+  "453650*001": {
+    "kodex_name": "KODEX 미국S&P500금융",
+    "competitors": [
+      {
+        "code": "488500*001",
+        "name": "TIGER 미국S&P500동일가중",
+        "provider": "TIGER",
+        "corr": 0.725
+      }
+    ]
+  },
+  "483290*001": {
+    "kodex_name": "KODEX 미국배당다우존스타겟커버드콜",
+    "competitors": [
+      {
+        "code": "458760*001",
+        "name": "TIGER 미국배당다우존스타겟커버드콜2호",
+        "provider": "TIGER",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "DowJones U.S. Dividend 100 7% Premium Covered Call 지수 (TR)",
+        "corr": 0.963
+      }
+    ]
+  },
+  "494300*001": {
+    "kodex_name": "KODEX 미국나스닥100데일리커버드콜OTM",
+    "competitors": [
+      {
+        "code": "486290*001",
+        "name": "TIGER 미국나스닥100타겟데일리커버드콜",
+        "provider": "TIGER",
+        "corr": 0.86
+      },
+      {
+        "code": "367380*001",
+        "name": "ACE 미국나스닥100",
+        "provider": "ACE",
+        "corr": 0.781
+      }
+    ]
+  },
+  "352540*001": {
+    "kodex_name": "KODEX 일본부동산리츠(H)",
+    "competitors": []
+  },
+  "395150*001": {
+    "kodex_name": "KODEX 웹툰&드라마",
+    "competitors": []
+  },
+  "101280*001": {
+    "kodex_name": "KODEX 일본TOPIX100",
+    "competitors": [
+      {
+        "code": "195920*001",
+        "name": "TIGER 일본TOPIX(합성 H)",
+        "provider": "TIGER",
+        "corr": 0.83
+      },
+      {
+        "code": "196030*001",
+        "name": "ACE 일본TOPIX레버리지(H)",
+        "provider": "ACE",
+        "corr": 0.845
+      }
+    ]
+  },
+  "219480*001": {
+    "kodex_name": "KODEX 미국S&P500선물(H)",
+    "competitors": [
+      {
+        "code": "143850*001",
+        "name": "TIGER 미국S&P500선물(H)",
+        "provider": "TIGER",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "S&P 500 Futures Index(ER)",
+        "corr": 0.991
+      }
+    ]
+  },
+  "275280*001": {
+    "kodex_name": "KODEX 모멘텀주",
+    "competitors": []
+  },
+  "185680*001": {
+    "kodex_name": "KODEX 미국S&P바이오(합성)",
+    "competitors": []
+  },
+  "476070*001": {
+    "kodex_name": "KODEX 글로벌비만치료제TOP2 Plus",
+    "competitors": [
+      {
+        "code": "476690*001",
+        "name": "TIGER 글로벌비만치료제TOP2Plus",
+        "provider": "TIGER",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "Indxx Global Obesity Treatment Top 2 Plus 지수 (시장가격)",
+        "corr": 0.915
+      }
+    ]
+  },
+  "0041E0*001": {
+    "kodex_name": "KODEX 미국S&P500액티브",
+    "competitors": [
+      {
+        "code": "360750*001",
+        "name": "TIGER 미국S&P500",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "S&P 500",
+        "corr": 0.783
+      },
+      {
+        "code": "360200*001",
+        "name": "ACE 미국S&P500",
+        "provider": "ACE",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "S&P 500",
+        "corr": 0.785
+      }
+    ]
+  },
+  "433970*001": {
+    "kodex_name": "KODEX TDF2030액티브 적격",
+    "competitors": [
+      {
+        "code": "0025N0*001",
+        "name": "TIGER TDF2045 적격",
+        "provider": "TIGER",
+        "corr": 0.75
+      },
+      {
+        "code": "0021E0*001",
+        "name": "ACE TDF2050액티브 적격",
+        "provider": "ACE",
+        "corr": 0.705
+      }
+    ]
+  },
+  "491090*001": {
+    "kodex_name": "KODEX 미국테크TOP3플러스",
+    "competitors": [
+      {
+        "code": "381170*001",
+        "name": "TIGER 미국테크TOP10 INDXX",
+        "provider": "TIGER",
+        "corr": 0.915
+      },
+      {
+        "code": "461900*001",
+        "name": "PLUS 미국테크TOP10",
+        "provider": "PLUS",
+        "corr": 0.883
+      }
+    ]
+  },
+  "360140*001": {
+    "kodex_name": "KODEX 200롱코스닥150숏선물",
+    "competitors": []
+  },
+  "0151S0*001": {
+    "kodex_name": "KODEX 미국AI반도체TOP3플러스",
+    "competitors": [
+      {
+        "code": "491830*001",
+        "name": "TIGER 미국AI반도체팹리스",
+        "provider": "TIGER",
+        "corr": 0.851
+      },
+      {
+        "code": "0118Z0*001",
+        "name": "ACE 미국AI테크핵심산업액티브",
+        "provider": "ACE",
+        "corr": 0.716
+      }
+    ]
+  },
+  "459560*001": {
+    "kodex_name": "KODEX 테슬라밸류체인FactSet",
+    "competitors": []
+  },
+  "446690*001": {
+    "kodex_name": "KODEX 아시아AI반도체exChina액티브",
+    "competitors": []
+  },
+  "200030*001": {
+    "kodex_name": "KODEX 미국S&P500산업재(합성)",
+    "competitors": [
+      {
+        "code": "488500*001",
+        "name": "TIGER 미국S&P500동일가중",
+        "provider": "TIGER",
+        "corr": 0.729
+      }
+    ]
+  },
+  "0082V0*001": {
+    "kodex_name": "KODEX TDF2060액티브 적격",
+    "competitors": [
+      {
+        "code": "0025N0*001",
+        "name": "TIGER TDF2045 적격",
+        "provider": "TIGER",
+        "corr": 0.834
+      },
+      {
+        "code": "433880*001",
+        "name": "PLUS TDF2060액티브 적격",
+        "provider": "PLUS",
+        "corr": 0.753
+      }
+    ]
+  },
+  "373490*001": {
+    "kodex_name": "KODEX 코리아혁신성장액티브",
+    "competitors": []
+  },
+  "261260*001": {
+    "kodex_name": "KODEX 미국달러선물인버스2X",
+    "competitors": [
+      {
+        "code": "261120*001",
+        "name": "TIGER 미국달러선물인버스2X",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "미국달러 선물 인버스-2X지수",
+        "corr": 0.988
+      }
+    ]
+  },
+  "0041D0*001": {
+    "kodex_name": "KODEX 미국AI소프트웨어TOP10",
+    "competitors": [
+      {
+        "code": "0102A0*001",
+        "name": "TIGER 미국AI소프트웨어TOP4Plus",
+        "provider": "TIGER",
+        "corr": 0.952
+      },
+      {
+        "code": "0050E0*001",
+        "name": "PLUS 미국AI에이전트",
+        "provider": "PLUS",
+        "corr": 0.819
+      }
+    ]
+  },
+  "360150*001": {
+    "kodex_name": "KODEX 코스닥150롱코스피200숏선물",
+    "competitors": []
+  },
+  "304940*001": {
+    "kodex_name": "KODEX 미국나스닥100선물(H)",
+    "competitors": [
+      {
+        "code": "448300*001",
+        "name": "TIGER 미국나스닥100(H)",
+        "provider": "TIGER",
+        "corr": 0.997
+      },
+      {
+        "code": "367380*001",
+        "name": "ACE 미국나스닥100",
+        "provider": "ACE",
+        "corr": 0.824
+      }
+    ]
+  },
+  "0005A0*001": {
+    "kodex_name": "KODEX 미국S&P500데일리커버드콜OTM",
+    "competitors": [
+      {
+        "code": "482730*001",
+        "name": "TIGER 미국S&P500타겟데일리커버드콜",
+        "provider": "TIGER",
+        "corr": 0.894
+      },
+      {
+        "code": "360200*001",
+        "name": "ACE 미국S&P500",
+        "provider": "ACE",
+        "corr": 0.858
+      }
+    ]
+  },
+  "468630*001": {
+    "kodex_name": "KODEX iShares미국투자등급회사채액티브",
+    "competitors": []
+  },
+  "269420*001": {
+    "kodex_name": "KODEX S&P글로벌인프라(합성)",
+    "competitors": []
+  },
+  "0089C0*001": {
+    "kodex_name": "KODEX 미국S&P500변동성확대시커버드콜",
+    "competitors": [
+      {
+        "code": "360750*001",
+        "name": "TIGER 미국S&P500",
+        "provider": "TIGER",
+        "corr": 0.838
+      },
+      {
+        "code": "360200*001",
+        "name": "ACE 미국S&P500",
+        "provider": "ACE",
+        "corr": 0.833
+      }
+    ]
+  },
+  "153130*001": {
+    "kodex_name": "KODEX 단기채권",
+    "competitors": []
+  },
+  "0028X0*001": {
+    "kodex_name": "KODEX 미국금융테크액티브",
+    "competitors": []
+  },
+  "453640*001": {
+    "kodex_name": "KODEX 미국S&P500헬스케어",
+    "competitors": []
+  },
+  "477730*001": {
+    "kodex_name": "KODEX 인도타타그룹",
+    "competitors": []
+  },
+  "280930*001": {
+    "kodex_name": "KODEX 미국러셀2000(H)",
+    "competitors": []
+  },
+  "276990*001": {
+    "kodex_name": "KODEX 글로벌로봇(합성)",
+    "competitors": []
+  },
+  "428510*001": {
+    "kodex_name": "KODEX 차이나AI테크액티브",
+    "competitors": [
+      {
+        "code": "0087F0*001",
+        "name": "ACE 차이나AI빅테크TOP2+액티브",
+        "provider": "ACE",
+        "corr": 0.835
+      },
+      {
+        "code": "0164G0*001",
+        "name": "RISE 차이나AI반도체TOP4Plus",
+        "provider": "RISE",
+        "corr": 0.775
+      }
+    ]
+  },
+  "450190*001": {
+    "kodex_name": "KODEX 한중반도체(합성)",
+    "competitors": [
+      {
+        "code": "449690*001",
+        "name": "TIGER 한중반도체(합성)",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "KRX CSI 한·중 반도체 지수",
+        "corr": 0.98
+      }
+    ]
+  },
+  "0144M0*001": {
+    "kodex_name": "KODEX 미국드론UAM TOP10",
+    "competitors": [
+      {
+        "code": "0155M0*001",
+        "name": "ACE 미국SMR원자력TOP10",
+        "provider": "ACE",
+        "corr": 0.739
+      },
+      {
+        "code": "0118S0*001",
+        "name": "SOL 미국넥스트테크TOP10액티브",
+        "provider": "SOL",
+        "corr": 0.763
+      }
+    ]
+  },
+  "0026E0*001": {
+    "kodex_name": "KODEX 미국S&P500버퍼3월액티브",
+    "competitors": [
+      {
+        "code": "438080*001",
+        "name": "ACE 미국S&P500미국채혼합50액티브",
+        "provider": "ACE",
+        "corr": 0.705
+      },
+      {
+        "code": "0057H0*001",
+        "name": "PLUS 미국S&P500미국채혼합50액티브",
+        "provider": "PLUS",
+        "corr": 0.7
+      }
+    ]
+  },
+  "459580*001": {
+    "kodex_name": "KODEX CD금리액티브(합성)",
+    "competitors": [
+      {
+        "code": "499660*001",
+        "name": "TIGER CD금리플러스액티브(합성)",
+        "provider": "TIGER",
+        "corr": 1.0
+      },
+      {
+        "code": "497880*001",
+        "name": "SOL CD금리&머니마켓액티브",
+        "provider": "SOL",
+        "corr": 0.908
+      }
+    ]
+  },
+  "0091C0*001": {
+    "kodex_name": "KODEX 미국10년국채액티브(H)",
+    "competitors": [
+      {
+        "code": "0085N0*001",
+        "name": "ACE 미국10년국채액티브(H)",
+        "provider": "ACE",
+        "similarity": 50,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "ICE U.S. Treasury 7-10 Year Bond Index (Total Return)",
+        "corr": 0.917
+      }
+    ]
+  },
+  "473460*001": {
+    "kodex_name": "KODEX 미국서학개미",
+    "competitors": []
+  },
+  "404260*001": {
+    "kodex_name": "KODEX 기후변화솔루션",
+    "competitors": [
+      {
+        "code": "404540*001",
+        "name": "TIGER KRX기후변화솔루션",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "KRX 기후변화 솔루션지수",
+        "corr": 0.989
+      },
+      {
+        "code": "404650*001",
+        "name": "SOL KRX기후변화솔루션",
+        "provider": "SOL",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "KRX 기후변화 솔루션지수",
+        "corr": 0.984
+      }
+    ]
+  },
+  "457690*001": {
+    "kodex_name": "KODEX 33-06 국고채액티브",
+    "competitors": [
+      {
+        "code": "451530*001",
+        "name": "TIGER 국고채30년스트립액티브",
+        "provider": "TIGER",
+        "corr": 0.899
+      },
+      {
+        "code": "365780*001",
+        "name": "ACE 국고채10년",
+        "provider": "ACE",
+        "corr": 0.961
+      }
+    ]
+  },
+  "456250*001": {
+    "kodex_name": "KODEX 유럽명품TOP10 STOXX",
+    "competitors": []
+  },
+  "352560*001": {
+    "kodex_name": "KODEX 미국부동산리츠(H)",
+    "competitors": [
+      {
+        "code": "181480*001",
+        "name": "ACE 미국부동산리츠(합성 H)",
+        "provider": "ACE",
+        "similarity": 53,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "Dow Jones U.S. Real Estate Index",
+        "corr": 0.908
+      }
+    ]
+  },
+  "390400*001": {
+    "kodex_name": "KODEX 미국스마트모빌리티S&P",
+    "competitors": []
+  },
+  "0162M0*001": {
+    "kodex_name": "KODEX 금융채1~2년(AA-이상)PLUS액티브",
+    "competitors": []
+  },
+  "368680*001": {
+    "kodex_name": "KODEX K-뉴딜디지털플러스",
+    "competitors": [
+      {
+        "code": "368190*001",
+        "name": "HANARO Fn K-뉴딜디지털플러스",
+        "provider": "HANARO",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "FnGuide K-뉴딜 디지털 플러스 지수",
+        "corr": 0.974
+      }
+    ]
+  },
+  "488770*001": {
+    "kodex_name": "KODEX 머니마켓액티브",
+    "competitors": []
+  },
+  "273140*001": {
+    "kodex_name": "KODEX 단기변동금리부채권액티브",
+    "competitors": []
+  },
+  "409810*001": {
+    "kodex_name": "KODEX 미국나스닥100선물인버스(H)",
+    "competitors": []
+  },
+  "439860*001": {
+    "kodex_name": "KODEX ESG종합채권(A-이상)액티브",
+    "competitors": [
+      {
+        "code": "451540*001",
+        "name": "TIGER 종합채권(AA-이상)액티브",
+        "provider": "TIGER",
+        "corr": 0.924
+      },
+      {
+        "code": "356540*001",
+        "name": "ACE 종합채권(AA-이상)액티브",
+        "provider": "ACE",
+        "corr": 0.918
+      }
+    ]
+  },
+  "0117L0*001": {
+    "kodex_name": "KODEX 26-12 금융채(AA-이상)액티브",
+    "competitors": []
+  },
+  "138920*001": {
+    "kodex_name": "KODEX 콩선물(H)",
+    "competitors": []
+  },
+  "176950*001": {
+    "kodex_name": "KODEX 국채선물10년인버스",
+    "competitors": [
+      {
+        "code": "295020*001",
+        "name": "RISE 국채선물10년인버스",
+        "provider": "RISE",
+        "corr": 0.959
+      }
+    ]
+  },
+  "244660*001": {
+    "kodex_name": "KODEX 퀄리티Plus",
+    "competitors": []
+  },
+  "279540*001": {
+    "kodex_name": "KODEX 최소변동성",
+    "competitors": []
+  },
+  "280940*001": {
+    "kodex_name": "KODEX 골드선물인버스(H)",
+    "competitors": []
+  },
+  "291890*001": {
+    "kodex_name": "KODEX MSCI EM선물(H)",
+    "competitors": [
+      {
+        "code": "289250*001",
+        "name": "TIGER MSCI KOREA ESG유니버설",
+        "provider": "TIGER",
+        "corr": 0.872
+      },
+      {
+        "code": "195980*001",
+        "name": "PLUS 신흥국MSCI(합성 H)",
+        "provider": "PLUS",
+        "corr": 0.85
+      }
+    ]
+  },
+  "292770*001": {
+    "kodex_name": "KODEX 국채선물3년인버스",
+    "competitors": [
+      {
+        "code": "295020*001",
+        "name": "RISE 국채선물10년인버스",
+        "provider": "RISE",
+        "corr": 0.833
+      }
+    ]
+  },
+  "304670*001": {
+    "kodex_name": "KODEX 미국30년국채울트라선물인버스(H)",
+    "competitors": []
+  },
+  "321410*001": {
+    "kodex_name": "KODEX 멀티에셋하이인컴(H)",
+    "competitors": []
+  },
+  "337120*001": {
+    "kodex_name": "KODEX 멀티팩터",
+    "competitors": []
+  },
+  "423160*001": {
+    "kodex_name": "KODEX KOFR금리액티브(합성)",
+    "competitors": []
+  },
+  "437070*001": {
+    "kodex_name": "KODEX 아시아달러채권ESG플러스액티브",
+    "competitors": []
+  },
+  "450180*001": {
+    "kodex_name": "KODEX 한중전기차(합성)",
+    "competitors": [
+      {
+        "code": "449680*001",
+        "name": "TIGER 한중전기차(합성)",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "KRX CSI 한·중 전기차 지수",
+        "corr": 0.92
+      }
+    ]
+  },
+  "453660*001": {
+    "kodex_name": "KODEX 미국S&P500경기소비재",
+    "competitors": [
+      {
+        "code": "360750*001",
+        "name": "TIGER 미국S&P500",
+        "provider": "TIGER",
+        "corr": 0.706
+      },
+      {
+        "code": "360200*001",
+        "name": "ACE 미국S&P500",
+        "provider": "ACE",
+        "corr": 0.704
+      }
+    ]
+  },
+  "457700*001": {
+    "kodex_name": "KODEX 53-09 국고채액티브",
+    "competitors": [
+      {
+        "code": "451530*001",
+        "name": "TIGER 국고채30년스트립액티브",
+        "provider": "TIGER",
+        "corr": 0.979
+      },
+      {
+        "code": "365780*001",
+        "name": "ACE 국고채10년",
+        "provider": "ACE",
+        "corr": 0.918
+      }
+    ]
+  },
+  "481050*001": {
+    "kodex_name": "KODEX CD1년금리플러스액티브(합성)",
+    "competitors": []
+  },
+  "463690*001": {
+    "kodex_name": "KODEX 미국S&P500커뮤니케이션",
+    "competitors": []
+  },
+  "169950*001": {
+    "kodex_name": "KODEX 차이나A50",
+    "competitors": []
+  },
+  "463640*001": {
+    "kodex_name": "KODEX 미국S&P500유틸리티",
+    "competitors": []
+  },
+  "363570*001": {
+    "kodex_name": "KODEX 장기종합채권(AA-이상)액티브",
+    "competitors": [
+      {
+        "code": "451540*001",
+        "name": "TIGER 종합채권(AA-이상)액티브",
+        "provider": "TIGER",
+        "corr": 0.967
+      },
+      {
+        "code": "356540*001",
+        "name": "ACE 종합채권(AA-이상)액티브",
+        "provider": "ACE",
+        "corr": 0.953
+      }
+    ]
+  },
+  "428560*001": {
+    "kodex_name": "KODEX 미국ETF산업Top10 Indxx",
+    "competitors": []
+  },
+  "419420*001": {
+    "kodex_name": "KODEX 미국클린에너지나스닥",
+    "competitors": []
+  },
+  "273130*001": {
+    "kodex_name": "KODEX 종합채권(AA-이상)액티브",
+    "competitors": [
+      {
+        "code": "451540*001",
+        "name": "TIGER 종합채권(AA-이상)액티브",
+        "provider": "TIGER",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "KIS 종합채권 AA-이상 총수익 지수(Total return Index)",
+        "corr": 0.974
+      },
+      {
+        "code": "356540*001",
+        "name": "ACE 종합채권(AA-이상)액티브",
+        "provider": "ACE",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "KIS 종합채권 AA-이상 총수익 지수(Total return Index)",
+        "corr": 0.965
+      }
+    ]
+  },
+  "375770*001": {
+    "kodex_name": "KODEX 탄소효율그린뉴딜",
+    "competitors": [
+      {
+        "code": "376410*001",
+        "name": "TIGER 탄소효율그린뉴딜",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "KRX/S&P 탄소효율 그린뉴딜지수",
+        "corr": 0.99
+      },
+      {
+        "code": "375760*001",
+        "name": "HANARO 탄소효율그린뉴딜",
+        "provider": "HANARO",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "KRX/S&P 탄소효율 그린뉴딜지수",
+        "corr": 0.976
+      }
+    ]
+  },
+  "0068M0*001": {
+    "kodex_name": "KODEX 미국S&P500버퍼6월액티브",
+    "competitors": []
+  },
+  "463680*001": {
+    "kodex_name": "KODEX 미국S&P500테크놀로지",
+    "competitors": []
+  },
+  "251350*001": {
+    "kodex_name": "KODEX MSCI선진국",
+    "competitors": []
+  },
+  "364690*001": {
+    "kodex_name": "KODEX 혁신기술테마액티브",
+    "competitors": []
+  },
+  "304660*001": {
+    "kodex_name": "KODEX 미국30년국채울트라선물(H)",
+    "competitors": [
+      {
+        "code": "458250*001",
+        "name": "TIGER 미국30년국채스트립액티브(합성 H)",
+        "provider": "TIGER",
+        "corr": 0.924
+      },
+      {
+        "code": "453850*001",
+        "name": "ACE 미국30년국채액티브(H)",
+        "provider": "ACE",
+        "corr": 0.924
+      }
+    ]
+  },
+  "337150*001": {
+    "kodex_name": "KODEX 200exTOP",
+    "competitors": []
+  },
+  "419430*001": {
+    "kodex_name": "KODEX 차이나2차전지MSCI(합성)",
+    "competitors": []
+  },
+  "306950*001": {
+    "kodex_name": "KODEX KRX300레버리지",
+    "competitors": [
+      {
+        "code": "292160*001",
+        "name": "TIGER KRX300",
+        "provider": "TIGER",
+        "corr": 0.978
+      },
+      {
+        "code": "292500*001",
+        "name": "SOL KRX300",
+        "provider": "SOL",
+        "corr": 0.981
+      }
+    ]
+  },
+  "0038A0*001": {
+    "kodex_name": "KODEX 미국휴머노이드로봇",
+    "competitors": [
+      {
+        "code": "0036R0*001",
+        "name": "RISE 미국휴머노이드로봇",
+        "provider": "RISE",
+        "corr": 0.805
+      }
+    ]
+  },
+  "453630*001": {
+    "kodex_name": "KODEX 미국S&P500필수소비재",
+    "competitors": [
+      {
+        "code": "460660*001",
+        "name": "RISE 미국S&P배당킹",
+        "provider": "RISE",
+        "corr": 0.721
+      }
+    ]
+  },
+  "471230*001": {
+    "kodex_name": "KODEX 국고채10년액티브",
+    "competitors": [
+      {
+        "code": "365780*001",
+        "name": "ACE 국고채10년",
+        "provider": "ACE",
+        "corr": 0.994
+      },
+      {
+        "code": "461460*001",
+        "name": "PLUS 국고채10년액티브",
+        "provider": "PLUS",
+        "corr": 0.979
+      }
+    ]
+  },
+  "226980*001": {
+    "kodex_name": "KODEX 200 중소형",
+    "competitors": [
+      {
+        "code": "252000*001",
+        "name": "TIGER 200동일가중",
+        "provider": "TIGER",
+        "corr": 0.953
+      },
+      {
+        "code": "105190*001",
+        "name": "ACE 200",
+        "provider": "ACE",
+        "corr": 0.82
+      }
+    ]
+  },
+  "276970*001": {
+    "kodex_name": "KODEX 미국S&P500배당귀족커버드콜(합성 H)",
+    "competitors": []
+  },
+  "473290*001": {
+    "kodex_name": "KODEX 26-12 회사채(AA-이상)액티브",
+    "competitors": []
+  },
+  "275290*001": {
+    "kodex_name": "KODEX 가치주",
+    "competitors": [
+      {
+        "code": "395750*001",
+        "name": "PLUS ESG가치주액티브",
+        "provider": "PLUS",
+        "corr": 0.966
+      }
+    ]
+  },
+  "271050*001": {
+    "kodex_name": "KODEX WTI원유선물인버스(H)",
+    "competitors": []
+  },
+  "453820*001": {
+    "kodex_name": "KODEX 인도Nifty50레버리지(합성)",
+    "competitors": []
+  },
+  "453810*001": {
+    "kodex_name": "KODEX 인도Nifty50",
+    "competitors": []
+  },
+  "0000H0*001": {
+    "kodex_name": "KODEX 인도Nifty미드캡100",
+    "competitors": []
+  },
+  "256750*001": {
+    "kodex_name": "KODEX 차이나심천ChiNext(합성)",
+    "competitors": []
+  },
+  "484790*001": {
+    "kodex_name": "KODEX 미국30년국채액티브(H)",
+    "competitors": [
+      {
+        "code": "453850*001",
+        "name": "ACE 미국30년국채액티브(H)",
+        "provider": "ACE",
+        "similarity": 50,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "Bloomberg U.S Treasury 20+ Year Total Return Index",
+        "corr": 0.979
+      },
+      {
+        "code": "461600*001",
+        "name": "SOL 미국30년국채액티브(H)",
+        "provider": "SOL",
+        "similarity": 50,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "KAP 미국채 20Y+ 지수(시장가격)",
+        "corr": 0.938
+      }
+    ]
+  },
+  "218420*001": {
+    "kodex_name": "KODEX 미국S&P500에너지(합성)",
+    "competitors": [
+      {
+        "code": "219390*001",
+        "name": "RISE 미국S&P원유생산기업(합성 H)",
+        "provider": "RISE",
+        "corr": 0.866
+      }
+    ]
+  },
+  "487950*001": {
+    "kodex_name": "KODEX 대만테크고배당다우존스",
+    "competitors": []
+  },
+  "244670*001": {
+    "kodex_name": "KODEX 밸류Plus",
+    "competitors": [
+      {
+        "code": "234310*001",
+        "name": "RISE V&S셀렉트밸류",
+        "provider": "RISE",
+        "corr": 0.737
+      }
+    ]
+  },
+  "329670*001": {
+    "kodex_name": "KODEX TRF7030",
+    "competitors": []
+  },
+  "329660*001": {
+    "kodex_name": "KODEX TRF5050",
+    "competitors": []
+  },
+  "400570*001": {
+    "kodex_name": "KODEX 유럽탄소배출권선물ICE(H)",
+    "competitors": [
+      {
+        "code": "400580*001",
+        "name": "SOL 유럽탄소배출권선물S&P(H)",
+        "provider": "SOL",
+        "corr": 0.967
+      }
+    ]
+  },
+  "325020*001": {
+    "kodex_name": "KODEX 배당가치",
+    "competitors": []
+  },
+  "359210*001": {
+    "kodex_name": "KODEX 코스피TR",
+    "competitors": [
+      {
+        "code": "328370*001",
+        "name": "PLUS 코스피TR",
+        "provider": "PLUS",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 TR",
+        "corr": 0.99
+      }
+    ]
+  },
+  "0162L0*001": {
+    "kodex_name": "KODEX 차이나AI반도체TOP10",
+    "competitors": [
+      {
+        "code": "0087F0*001",
+        "name": "ACE 차이나AI빅테크TOP2+액티브",
+        "provider": "ACE",
+        "corr": 0.717
+      },
+      {
+        "code": "0164G0*001",
+        "name": "RISE 차이나AI반도체TOP4Plus",
+        "provider": "RISE",
+        "corr": 0.95
+      }
+    ]
+  },
+  "229720*001": {
+    "kodex_name": "KODEX KTOP30",
+    "competitors": [
+      {
+        "code": "228820*001",
+        "name": "TIGER KTOP30",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "KTOP 30",
+        "corr": 0.987
+      }
+    ]
+  },
+  "152380*001": {
+    "kodex_name": "KODEX 국채선물10년",
+    "competitors": [
+      {
+        "code": "289670*001",
+        "name": "PLUS 국채선물10년",
+        "provider": "PLUS",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "10년국채선물지수",
+        "corr": 0.968
+      }
+    ]
+  },
+  "156080*001": {
+    "kodex_name": "KODEX MSCI Korea",
+    "competitors": [
+      {
+        "code": "310970*001",
+        "name": "TIGER MSCI Korea TR",
+        "provider": "TIGER",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "MSCI Korea TR Index",
+        "corr": 0.991
+      },
+      {
+        "code": "332940*001",
+        "name": "HANARO MSCI Korea TR",
+        "provider": "HANARO",
+        "similarity": 68,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "MSCI Korea TR Index",
+        "corr": 0.978
+      }
+    ]
+  },
+  "140700*001": {
+    "kodex_name": "KODEX 보험",
+    "competitors": []
+  },
+  "283580*001": {
+    "kodex_name": "KODEX 차이나CSI300",
+    "competitors": [
+      {
+        "code": "192090*001",
+        "name": "TIGER 차이나CSI300",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "CSI 300",
+        "corr": 0.892
+      }
+    ]
+  },
+  "289040*001": {
+    "kodex_name": "KODEX MSCI KOREA ESG유니버설",
+    "competitors": [
+      {
+        "code": "289250*001",
+        "name": "TIGER MSCI KOREA ESG유니버설",
+        "provider": "TIGER",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "MSCI Korea ESG Universal Index",
+        "corr": 0.984
+      }
+    ]
+  },
+  "261270*001": {
+    "kodex_name": "KODEX 미국달러선물인버스",
+    "competitors": [
+      {
+        "code": "261120*001",
+        "name": "TIGER 미국달러선물인버스2X",
+        "provider": "TIGER",
+        "corr": 0.984
+      },
+      {
+        "code": "469530*001",
+        "name": "RISE 미국달러선물인버스",
+        "provider": "RISE",
+        "corr": 0.905
+      }
+    ]
+  },
+  "455030*001": {
+    "kodex_name": "KODEX 미국달러SOFR금리액티브(합성)",
+    "competitors": [
+      {
+        "code": "456610*001",
+        "name": "TIGER 미국달러SOFR금리액티브(합성)",
+        "provider": "TIGER",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "Solactive SOFR Daily Total Return Index",
+        "corr": 0.989
+      },
+      {
+        "code": "456200*001",
+        "name": "PLUS 미국달러SOFR금리액티브(합성)",
+        "provider": "PLUS",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "Solactive SOFR Daily Total Return Index",
+        "corr": 0.913
+      }
+    ]
+  },
+  "329650*001": {
+    "kodex_name": "KODEX TRF3070",
+    "competitors": []
+  },
+  "0190G0*001": {
+    "kodex_name": "KODEX 반도체타겟위클리커버드콜",
+    "competitors": []
+  },
+  "292190*001": {
+    "kodex_name": "KODEX KRX300",
+    "competitors": [
+      {
+        "code": "292160*001",
+        "name": "TIGER KRX300",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "KRX 300",
+        "corr": 0.987
+      },
+      {
+        "code": "292500*001",
+        "name": "SOL KRX300",
+        "provider": "SOL",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "KRX 300",
+        "corr": 0.985
+      }
+    ]
+  },
+  "211900*001": {
+    "kodex_name": "KODEX 코리아배당성장",
+    "competitors": [
+      {
+        "code": "0052D0*001",
+        "name": "TIGER 코리아배당다우존스",
+        "provider": "TIGER",
+        "corr": 0.941
+      }
+    ]
+  },
+  "481060*001": {
+    "kodex_name": "KODEX 미국30년국채타겟커버드콜(합성 H)",
+    "competitors": [
+      {
+        "code": "476550*001",
+        "name": "TIGER 미국30년국채커버드콜액티브(H)",
+        "provider": "TIGER",
+        "corr": 0.879
+      },
+      {
+        "code": "453850*001",
+        "name": "ACE 미국30년국채액티브(H)",
+        "provider": "ACE",
+        "corr": 0.902
+      }
+    ]
+  },
+  "0144L0*001": {
+    "kodex_name": "KODEX 미국성장커버드콜액티브",
+    "competitors": []
+  },
+  "140710*001": {
+    "kodex_name": "KODEX 운송",
+    "competitors": []
+  },
+  "244620*001": {
+    "kodex_name": "KODEX 모멘텀Plus",
+    "competitors": [
+      {
+        "code": "147970*001",
+        "name": "TIGER 모멘텀",
+        "provider": "TIGER",
+        "corr": 0.917
+      }
+    ]
+  },
+  "278540*001": {
+    "kodex_name": "KODEX MSCI Korea TR",
+    "competitors": [
+      {
+        "code": "310970*001",
+        "name": "TIGER MSCI Korea TR",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "MSCI Korea TR Index",
+        "corr": 0.992
+      },
+      {
+        "code": "332940*001",
+        "name": "HANARO MSCI Korea TR",
+        "provider": "HANARO",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "MSCI Korea TR Index",
+        "corr": 0.972
+      }
+    ]
+  },
+  "099140*001": {
+    "kodex_name": "KODEX 차이나H",
+    "competitors": [
+      {
+        "code": "245360*001",
+        "name": "TIGER 차이나HSCEI",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "HSCEI (Hang Seng China Enterprise Index)",
+        "corr": 0.937
+      }
+    ]
+  },
+  "337140*001": {
+    "kodex_name": "KODEX 코스피대형주",
+    "competitors": [
+      {
+        "code": "277640*001",
+        "name": "TIGER 코스피대형주",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 대형주 지수",
+        "corr": 0.995
+      }
+    ]
+  },
+  "275300*001": {
+    "kodex_name": "KODEX 우량주",
+    "competitors": []
+  },
+  "363580*001": {
+    "kodex_name": "KODEX 200IT TR",
+    "competitors": [
+      {
+        "code": "139260*001",
+        "name": "TIGER 200 IT",
+        "provider": "TIGER",
+        "corr": 0.994
+      },
+      {
+        "code": "326240*001",
+        "name": "RISE IT플러스",
+        "provider": "RISE",
+        "corr": 0.96
+      }
+    ]
+  },
+  "114260*001": {
+    "kodex_name": "KODEX 국고채3년",
+    "competitors": [
+      {
+        "code": "451530*001",
+        "name": "TIGER 국고채30년스트립액티브",
+        "provider": "TIGER",
+        "corr": 0.823
+      },
+      {
+        "code": "114460*001",
+        "name": "ACE 국고채3년",
+        "provider": "ACE",
+        "corr": 0.974
+      }
+    ]
+  },
+  "498410*001": {
+    "kodex_name": "KODEX 금융고배당TOP10타겟위클리커버드콜",
+    "competitors": [
+      {
+        "code": "498860*001",
+        "name": "RISE 코리아금융고배당",
+        "provider": "RISE",
+        "corr": 0.856
+      }
+    ]
+  },
+  "437080*001": {
+    "kodex_name": "KODEX 미국종합채권ESG액티브(H)",
+    "competitors": []
+  },
+  "266410*001": {
+    "kodex_name": "KODEX 필수소비재",
+    "competitors": []
+  },
+  "325010*001": {
+    "kodex_name": "KODEX 성장주",
+    "competitors": [
+      {
+        "code": "395760*001",
+        "name": "PLUS ESG성장주액티브",
+        "provider": "PLUS",
+        "corr": 0.969
+      }
+    ]
+  },
+  "284430*001": {
+    "kodex_name": "KODEX 200미국채혼합",
+    "competitors": []
+  },
+  "266390*001": {
+    "kodex_name": "KODEX 경기소비재",
+    "competitors": []
+  },
+  "494890*001": {
+    "kodex_name": "KODEX 200액티브",
+    "competitors": [
+      {
+        "code": "102110*001",
+        "name": "TIGER 200",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 200",
+        "corr": 0.999
+      },
+      {
+        "code": "105190*001",
+        "name": "ACE 200",
+        "provider": "ACE",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 200",
+        "corr": 0.999
+      }
+    ]
+  },
+  "395170*001": {
+    "kodex_name": "KODEX Top10동일가중",
+    "competitors": [
+      {
+        "code": "411540*001",
+        "name": "SOL 200 Top10",
+        "provider": "SOL",
+        "corr": 0.981
+      }
+    ]
+  },
+  "300950*001": {
+    "kodex_name": "KODEX 게임산업",
+    "competitors": []
+  },
+  "449190*001": {
+    "kodex_name": "KODEX 미국나스닥100(H)",
+    "competitors": [
+      {
+        "code": "133690*001",
+        "name": "TIGER 미국나스닥100",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "NASDAQ 100",
+        "corr": 0.83
+      },
+      {
+        "code": "367380*001",
+        "name": "ACE 미국나스닥100",
+        "provider": "ACE",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "NASDAQ 100",
+        "corr": 0.828
+      }
+    ]
+  },
+  "091180*001": {
+    "kodex_name": "KODEX 자동차",
+    "competitors": [
+      {
+        "code": "466930*001",
+        "name": "SOL 자동차TOP3플러스",
+        "provider": "SOL",
+        "corr": 0.966
+      }
+    ]
+  },
+  "266360*001": {
+    "kodex_name": "KODEX K콘텐츠",
+    "competitors": []
+  },
+  "237350*001": {
+    "kodex_name": "KODEX 코스피100",
+    "competitors": []
+  },
+  "0153K0*001": {
+    "kodex_name": "KODEX 주주환원고배당주",
+    "competitors": [
+      {
+        "code": "447430*001",
+        "name": "ACE 주주환원가치주액티브",
+        "provider": "ACE",
+        "corr": 0.726
+      }
+    ]
+  },
+  "401470*001": {
+    "kodex_name": "KODEX 메타버스액티브",
+    "competitors": [
+      {
+        "code": "400970*001",
+        "name": "TIGER Fn메타버스",
+        "provider": "TIGER",
+        "corr": 0.902
+      },
+      {
+        "code": "402460*001",
+        "name": "HANARO Fn K-메타버스MZ",
+        "provider": "HANARO",
+        "corr": 0.842
+      }
+    ]
+  },
+  "0080G0*001": {
+    "kodex_name": "KODEX 방산TOP10",
+    "competitors": []
+  },
+  "0065G0*001": {
+    "kodex_name": "KODEX 차이나테크TOP10",
+    "competitors": [
+      {
+        "code": "0047A0*001",
+        "name": "TIGER 차이나테크TOP10",
+        "provider": "TIGER",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "Mirae Asset China Tech Top 10 지수 (Price Return)",
+        "corr": 0.795
+      }
+    ]
+  },
+  "0089D0*001": {
+    "kodex_name": "KODEX 금융고배당TOP10",
+    "competitors": [
+      {
+        "code": "498860*001",
+        "name": "RISE 코리아금융고배당",
+        "provider": "RISE",
+        "corr": 0.895
+      }
+    ]
+  },
+  "495850*001": {
+    "kodex_name": "KODEX 코리아밸류업",
+    "competitors": [
+      {
+        "code": "496080*001",
+        "name": "TIGER 코리아밸류업",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코리아 밸류업 지수",
+        "corr": 0.995
+      },
+      {
+        "code": "496120*001",
+        "name": "ACE 코리아밸류업",
+        "provider": "ACE",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코리아 밸류업 지수",
+        "corr": 0.993
+      }
+    ]
+  },
+  "091170*001": {
+    "kodex_name": "KODEX 은행",
+    "competitors": [
+      {
+        "code": "091220*001",
+        "name": "TIGER 은행",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "KRX 은행",
+        "corr": 0.98
+      }
+    ]
+  },
+  "0048K0*001": {
+    "kodex_name": "KODEX 차이나휴머노이드로봇",
+    "competitors": [
+      {
+        "code": "0053L0*001",
+        "name": "TIGER 차이나휴머노이드로봇",
+        "provider": "TIGER",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "Mirae Asset China Humanoid Robot 지수(PR)",
+        "corr": 0.892
+      }
+    ]
+  },
+  "337160*001": {
+    "kodex_name": "KODEX 200ESG",
+    "competitors": [
+      {
+        "code": "289250*001",
+        "name": "TIGER MSCI KOREA ESG유니버설",
+        "provider": "TIGER",
+        "corr": 0.982
+      },
+      {
+        "code": "385590*001",
+        "name": "ACE ESG액티브",
+        "provider": "ACE",
+        "corr": 0.971
+      }
+    ]
+  },
+  "266370*001": {
+    "kodex_name": "KODEX IT",
+    "competitors": [
+      {
+        "code": "139260*001",
+        "name": "TIGER 200 IT",
+        "provider": "TIGER",
+        "corr": 0.976
+      },
+      {
+        "code": "326240*001",
+        "name": "RISE IT플러스",
+        "provider": "RISE",
+        "corr": 0.981
+      }
+    ]
+  },
+  "0115E0*001": {
+    "kodex_name": "KODEX 코리아소버린AI",
+    "competitors": []
+  },
+  "471990*001": {
+    "kodex_name": "KODEX AI반도체핵심장비",
+    "competitors": [
+      {
+        "code": "471760*001",
+        "name": "TIGER AI반도체핵심공정",
+        "provider": "TIGER",
+        "corr": 0.968
+      },
+      {
+        "code": "469150*001",
+        "name": "ACE AI반도체TOP3+",
+        "provider": "ACE",
+        "corr": 0.924
+      }
+    ]
+  },
+  "445290*001": {
+    "kodex_name": "KODEX 로봇액티브",
+    "competitors": [
+      {
+        "code": "0148J0*001",
+        "name": "TIGER 코리아휴머노이드로봇산업",
+        "provider": "TIGER",
+        "corr": 0.96
+      },
+      {
+        "code": "0177X0*001",
+        "name": "ACE K휴머노이드로봇산업TOP2+",
+        "provider": "ACE",
+        "corr": 0.952
+      }
+    ]
+  },
+  "102970*001": {
+    "kodex_name": "KODEX 증권",
+    "competitors": [
+      {
+        "code": "157500*001",
+        "name": "TIGER 증권",
+        "provider": "TIGER",
+        "corr": 0.996
+      },
+      {
+        "code": "0111J0*001",
+        "name": "HANARO 증권고배당TOP3플러스",
+        "provider": "HANARO",
+        "corr": 0.996
+      }
+    ]
+  },
+  "476800*001": {
+    "kodex_name": "KODEX 한국부동산리츠인프라",
+    "competitors": []
+  },
+  "0177N0*001": {
+    "kodex_name": "KODEX 삼성전자SK하이닉스채권혼합50",
+    "competitors": [
+      {
+        "code": "0162Z0*001",
+        "name": "RISE 삼성전자SK하이닉스채권혼합50",
+        "provider": "RISE",
+        "corr": 0.998
+      }
+    ]
+  },
+  "0193W0*001": {
+    "kodex_name": "KODEX 삼성전자단일종목레버리지",
+    "competitors": [
+      {
+        "code": "0195R0*001",
+        "name": "TIGER 삼성전자단일종목레버리지",
+        "provider": "TIGER",
+        "corr": null
+      },
+      {
+        "code": "0194M0*001",
+        "name": "ACE 삼성전자단일종목레버리지",
+        "provider": "ACE",
+        "corr": null
+      }
+    ]
+  },
+  "498400*001": {
+    "kodex_name": "KODEX 200타겟위클리커버드콜",
+    "competitors": [
+      {
+        "code": "0104N0*001",
+        "name": "TIGER 200타겟위클리커버드콜",
+        "provider": "TIGER",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "코스피 200 타겟 7% 위클리 커버드콜 지수(Price Return)",
+        "corr": 0.995
+      },
+      {
+        "code": "0167B0*001",
+        "name": "SOL 200타겟위클리커버드콜",
+        "provider": "SOL",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 200 타겟 15% 위클리 커버드콜 지수",
+        "corr": 0.972
+      }
+    ]
+  },
+  "449180*001": {
+    "kodex_name": "KODEX 미국S&P500(H)",
+    "competitors": [
+      {
+        "code": "448290*001",
+        "name": "TIGER 미국S&P500(H)",
+        "provider": "TIGER",
+        "corr": 0.998
+      },
+      {
+        "code": "269540*001",
+        "name": "PLUS 미국S&P500(H)",
+        "provider": "PLUS",
+        "corr": 0.99
+      }
+    ]
+  },
+  "226490*001": {
+    "kodex_name": "KODEX 코스피",
+    "competitors": [
+      {
+        "code": "277630*001",
+        "name": "TIGER 코스피",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피지수",
+        "corr": 0.997
+      },
+      {
+        "code": "305050*001",
+        "name": "ACE 코스피",
+        "provider": "ACE",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피지수",
+        "corr": 0.995
+      }
+    ]
+  },
+  "379810*001": {
+    "kodex_name": "KODEX 미국나스닥100",
+    "competitors": [
+      {
+        "code": "133690*001",
+        "name": "TIGER 미국나스닥100",
+        "provider": "TIGER",
+        "similarity": 64,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "NASDAQ 100",
+        "corr": 0.999
+      },
+      {
+        "code": "367380*001",
+        "name": "ACE 미국나스닥100",
+        "provider": "ACE",
+        "similarity": 58,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "NASDAQ 100",
+        "corr": 0.998
+      }
+    ]
+  },
+  "379800*001": {
+    "kodex_name": "KODEX 미국S&P500",
+    "competitors": [
+      {
+        "code": "360750*001",
+        "name": "TIGER 미국S&P500",
+        "provider": "TIGER",
+        "similarity": 80,
+        "index_matched": false,
+        "index_partial": true,
+        "tracking_index": "S&P 500",
+        "corr": 0.994
+      },
+      {
+        "code": "360200*001",
+        "name": "ACE 미국S&P500",
+        "provider": "ACE",
+        "similarity": 80,
+        "index_matched": false,
+        "index_partial": true,
+        "tracking_index": "S&P 500",
+        "corr": 0.997
+      }
+    ]
+  },
+  "0115D0*001": {
+    "kodex_name": "KODEX 조선TOP10",
+    "competitors": [
+      {
+        "code": "494670*001",
+        "name": "TIGER 조선TOP10",
+        "provider": "TIGER",
+        "similarity": 56,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "iSelect 조선TOP10 Index(PR)",
+        "corr": 0.996
+      }
+    ]
+  },
+  "261220*001": {
+    "kodex_name": "KODEX WTI원유선물(H)",
+    "competitors": []
+  },
+  "0193T0*001": {
+    "kodex_name": "KODEX SK하이닉스단일종목레버리지",
+    "competitors": [
+      {
+        "code": "0195S0*001",
+        "name": "TIGER SK하이닉스단일종목레버리지",
+        "provider": "TIGER",
+        "corr": null
+      },
+      {
+        "code": "0194T0*001",
+        "name": "ACE SK하이닉스단일종목레버리지",
+        "provider": "ACE",
+        "corr": null
+      }
+    ]
+  },
+  "395160*001": {
+    "kodex_name": "KODEX AI반도체TOP2플러스",
+    "competitors": [
+      {
+        "code": "0167A0*001",
+        "name": "SOL AI반도체TOP2플러스",
+        "provider": "SOL",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": false,
+        "tracking_index": "FnGuide AI반도체 TOP2 플러스 지수(PR)",
+        "corr": 0.966
+      }
+    ]
+  },
+  "114800*001": {
+    "kodex_name": "KODEX 인버스",
+    "competitors": [
+      {
+        "code": "123310*001",
+        "name": "TIGER 인버스",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 200 선물인버스 지수",
+        "corr": 0.997
+      },
+      {
+        "code": "145670*001",
+        "name": "ACE 인버스",
+        "provider": "ACE",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 200 선물인버스 지수",
+        "corr": 0.991
+      }
+    ]
+  },
+  "091160*001": {
+    "kodex_name": "KODEX 반도체",
+    "competitors": [
+      {
+        "code": "091230*001",
+        "name": "TIGER 반도체",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "KRX 반도체",
+        "corr": 0.993
+      }
+    ]
+  },
+  "233740*001": {
+    "kodex_name": "KODEX 코스닥150레버리지",
+    "competitors": [
+      {
+        "code": "233160*001",
+        "name": "TIGER 코스닥150 레버리지",
+        "provider": "TIGER",
+        "corr": 0.999
+      },
+      {
+        "code": "354500*001",
+        "name": "ACE 코스닥150",
+        "provider": "ACE",
+        "corr": 0.995
+      }
+    ]
+  },
+  "252670*001": {
+    "kodex_name": "KODEX 200선물인버스2X",
+    "competitors": [
+      {
+        "code": "252710*001",
+        "name": "TIGER 200선물인버스2X",
+        "provider": "TIGER",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 200 선물인버스 -2X 지수",
+        "corr": 0.991
+      },
+      {
+        "code": "253160*001",
+        "name": "PLUS 200선물인버스2X",
+        "provider": "PLUS",
+        "similarity": 95,
+        "index_matched": true,
+        "index_partial": false,
+        "tracking_index": "코스피 200 선물인버스 -2X 지수",
+        "corr": 0.971
+      }
+    ]
+  }
+}

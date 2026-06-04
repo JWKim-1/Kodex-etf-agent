@@ -771,6 +771,16 @@ class DataCollector:
             "삼성증권 ETF 이벤트",
             "삼성증권 ETF 프로모션",
             "삼성자산운용 삼성증권",
+            # 케이스4: AUM 마일스톤
+            "KODEX 순자산 돌파",
+            "KODEX AUM",
+            # 케이스5: 계절성
+            "삼성증권 ETF 설날",
+            "삼성증권 ETF 추석",
+            "삼성증권 ETF 가정의달",
+            # 케이스6: 경쟁사 대응
+            "KODEX 최저보수",
+            "삼성자산운용 보수 인하",
         ]
         for kw in naver_keywords:
             try:
@@ -806,6 +816,12 @@ class DataCollector:
                 "삼성증권 ETF 이벤트",
                 "삼성증권 ETF 프로모션",
                 "삼성자산운용 삼성증권 이벤트",
+                # 케이스4: AUM 마일스톤
+                "KODEX 순자산 돌파",
+                # 케이스5: 계절성
+                "삼성증권 ETF 설날", "삼성증권 ETF 추석",
+                # 케이스6: 경쟁사 대응
+                "KODEX 최저보수", "삼성자산운용 보수 인하",
             ]
             try:
                 for kw in keywords:

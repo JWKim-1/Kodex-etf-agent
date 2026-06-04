@@ -126,10 +126,10 @@ def fetch_weekly_etf_data(
     rows = []
     failed = 0
     _session_start = datetime.now()
-    _SESSION_LIMIT = 55  # 55분마다 선제적 재로그인 (KRX 세션 1시간 만료)
+    _SESSION_LIMIT = 25  # 25분마다 선제적 재로그인 (KRX 세션 30분 만료)
 
     for i, code in enumerate(etf_codes):
-        # 55분 경과 시 선제적 재로그인
+        # 25분 경과 시 선제적 재로그인
         if (datetime.now() - _session_start).seconds > _SESSION_LIMIT * 60:
             try:
                 print("  세션 선제 갱신 중...", flush=True)
@@ -375,18 +375,18 @@ def patch_all_weeks(min_kodex: int = 150, min_tiger: int = 100, max_rounds: int 
     for round_num in range(1, max_rounds + 1):
         issues = verify_cache(min_kodex, min_tiger)
         if not issues:
-            print(f"✅ 전체 품질 통과 ({round_num-1}라운드 보완)")
+            print(f"[OK] 전체 품질 통과 ({round_num-1}라운드 보완)")
             return
-        print(f"\n🔄 라운드 {round_num}: 미달 주차 {len(issues)}개 보완 시작")
+        print(f"\n[{round_num}라운드] 미달 주차 {len(issues)}개 보완 시작")
         for week_label, counts in issues.items():
             print(f"  {week_label}: KODEX {counts['kodex']}, TIGER {counts['tiger']}")
             patch_week(week_label, min_kodex, min_tiger)
     # 최종 결과 출력
     remaining = verify_cache(min_kodex, min_tiger)
     if remaining:
-        print(f"⚠️ {max_rounds}라운드 후에도 미달: {list(remaining.keys())}")
+        print(f"[WARNING] {max_rounds}라운드 후에도 미달: {list(remaining.keys())}")
     else:
-        print("✅ 전체 품질 통과")
+        print("[OK] 전체 품질 통과")
 
 
 def fetch_full_history(
@@ -424,7 +424,7 @@ def fetch_full_history(
         save_cache(existing)
 
     # 수집 완료 후 자동 품질 검사 및 보완
-    print("\n📋 품질 검사 시작...")
+    print("\n[품질 검사 시작]")
     patch_all_weeks()
 
     return existing

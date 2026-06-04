@@ -97,7 +97,8 @@ def auto_map_competitors(
         )
         for _, row in etf_universe[mask].iterrows():
             cname = str(row["종목명"])
-            ccode = str(row["종목코드"])
+            # *001 suffix 제거 (KRX 캐시 단축코드 형식 정규화)
+            ccode = str(row["종목코드"]).split("*")[0].strip()
             cand_variants = _variant_tags_in(cname)
             if cand_variants != kodex_variants:
                 continue
@@ -447,12 +448,14 @@ class MarketingAnalyzer:
         )
 
         # ── Step B-1: 비교군 정의 (LP 감지 전에 필요) ──
-        if kodex_code in COMPARISON_MAP:
-            comp_defs = COMPARISON_MAP[kodex_code]["competitors"]
-            mapping_source = "하드코딩 매핑"
+        # 우선순위: ① etf_mapping.json (사전 매핑) ② 실시간 auto_map (fallback)
+        from etf_mapping_loader import get_competitors as _get_comp
+        if _get_comp(kodex_code):
+            comp_defs = _get_comp(kodex_code)
+            mapping_source = "사전 매핑"
         else:
             comp_defs = auto_map_competitors(kodex_name, kodex_code, etf_universe)
-            mapping_source = f"자동 매핑 (키워드: '{extract_keyword(kodex_name)}')"
+            mapping_source = f"실시간 매핑 (키워드: '{extract_keyword(kodex_name)}')"
 
         # ── Step C: LP 노이즈 감지 (비교군도 함께 확인 → 장세 전환 오탐 방지) ──
         first_comp_data, first_comp_baseline = None, None
@@ -469,8 +472,9 @@ class MarketingAnalyzer:
         metric_label = "금융투자" if lp.use_metric == "financial" else "개인"
         cur_val = current_kodex.financial_investment if lp.use_metric == "financial" else current_kodex.individual
         base_val = baseline.fi_avg if lp.use_metric == "financial" else baseline.ind_avg
+        mabs_val = baseline.fi_mabs if lp.use_metric == "financial" else baseline.ind_mabs
         log.append(
-            f"[KODEX 변화율] ({cur_val:,.0f} ÷ {base_val:,.0f} - 1) × 100 = {kodex_chg:+.1f}%"
+            f"[KODEX 변화율] ({cur_val:,.0f} − {base_val:,.0f}) ÷ {mabs_val:,.0f} = {kodex_chg:+.4f}"
             f"  [{metric_label} 기준{'  ※추정값' if lp.is_estimate else ''}]"
         )
 
@@ -493,8 +497,9 @@ class MarketingAnalyzer:
 
             c_cur = cdata.financial_investment if force_metric == "financial" else cdata.individual
             c_base = cb.fi_avg if force_metric == "financial" else cb.ind_avg
+            c_mabs = cb.fi_mabs if force_metric == "financial" else cb.ind_mabs
             log.append(
-                f"  · {cname}: ({c_cur:,.0f} ÷ {c_base:,.0f} - 1) × 100 = {cchg:+.1f}%"
+                f"  · {cname}: ({c_cur:,.0f} − {c_base:,.0f}) ÷ {c_mabs:,.0f} = {cchg:+.4f}"
             )
             competitor_results.append(CompetitorResult(
                 code=ccode, name=cname, provider=cprov,
@@ -562,10 +567,10 @@ class MarketingAnalyzer:
             if row:
                 records.append({"week": sheet_name, "fi": row.financial_investment, "ind": row.individual})
 
-        # 직전 8주 이평선 (2개월 기준선)
-        # [설계 의도] 8주 = ETF 이벤트 잔존 효과 충분히 소멸 + 시장 환경 크게 안 변함
-        # 4주: 직전 이벤트 오염 가능 / 20주: 시장 환경 변화 큼 → 8주가 적정
-        recent = records[-8:] if len(records) >= 8 else records
+        # 직전 4주 이평선 (증권사 채널 기준)
+        # [설계 의도] 증권사 채널 = 단발성 이벤트 빠르게 반응 → 4주 적정
+        # 은행 채널은 agents/bank/analyzer.py 에서 8주 사용
+        recent = records[-4:] if len(records) >= 4 else records
 
         if not recent:
             return Baseline(code, name, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0, [])

@@ -1,391 +1,61 @@
 """
-DiD Analyzer for Samsung Securities ETF Marketing Effect Measurement
-이중차분법(DiD) 분석 모듈
+증권사 채널 DiD Analyzer
+공용 로직은 did_calculator.MarketingAnalyzerBase 에서 상속.
+증권사 전용: 금융투자 컬럼, 4주 베이스라인, LP 감지
 """
 
 import json
 import logging
 import re
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
+from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 
+# 공용 모듈에서 import
+from did_calculator import (
+    MarketingAnalyzerBase, ExcelLoader,
+    ETFWeekData, Baseline, LPResult, CompetitorResult, ETFDiDResult,
+    COMPETITOR_PREFIXES, extract_keyword, _variant_tags_in,
+    get_tracking_index, auto_map_competitors, extract_target_etfs_with_llm,
+)
+
 logger = logging.getLogger(__name__)
 
-# ── 비교 ETF 운용사 프리픽스 (우선순위 순) ────────────────────────────────────
-COMPETITOR_PREFIXES = ["TIGER", "ACE", "PLUS", "KINDEX", "SOL", "HANARO", "KB", "BNK", "iM"]
 
-# ── KODEX 이름에서 핵심 키워드 추출 시 제거할 단어 ────────────────────────────
-_STRIP_WORDS = ["KODEX", "액티브", "(합성)", "(H)", "TR", "Plus", "PLUS"]
-
-# 변형 태그 (레버리지·인버스 등): 원본에 없으면 비교군에서도 제외
-_VARIANT_TAGS = ["레버리지", "인버스", "2X", "선물", "커버드콜", "타겟", "위클리",
-                 "바이오테크", "산업재", "헬스케어", "IT", "금융", "에너지", "소비재"]
-
-
-def extract_keyword(etf_name: str) -> str:
-    """KODEX ETF 이름에서 핵심 테마 키워드 추출."""
-    name = etf_name
-    for w in _STRIP_WORDS:
-        name = name.replace(w, "")
-    return re.sub(r"\s+", " ", name).strip()
-
-
-def _variant_tags_in(name: str) -> set:
-    return {tag for tag in _VARIANT_TAGS if tag in name}
-
-
-_index_cache: Dict[str, str] = {}  # 기초지수 캐시 (ETF코드 → 지수명)
-
-def get_tracking_index(code: str) -> str:
-    """네이버 금융에서 ETF 기초지수 조회 (캐시 사용)."""
-    import requests as _req
-    from bs4 import BeautifulSoup as _BS
-
-    if code in _index_cache:
-        return _index_cache[code]
-
-    try:
-        h = {"User-Agent": "Mozilla/5.0", "Referer": "https://finance.naver.com"}
-        r = _req.get(f"https://finance.naver.com/item/main.naver?code={code}", headers=h, timeout=8)
-        soup = _BS(r.text, "lxml")
-        for th in soup.find_all("th", string=re.compile("기초지수")):
-            td = th.find_next_sibling("td")
-            if td:
-                val = td.get_text(strip=True)
-                if val and not re.match(r"^[\d,.\s]+$", val) and len(val) > 2:
-                    _index_cache[code] = val
-                    return val
-    except Exception:
-        pass
-
-    _index_cache[code] = ""
-    return ""
-
-
-def auto_map_competitors(
-    kodex_name: str,
-    kodex_code: str,
-    etf_universe: pd.DataFrame,
-) -> List[Dict]:
-    # [설계 의도] ETF 이름 키워드 + 기초지수(네이버 금융) 동일 여부로 비교군 탐색
-    # 기초지수 조회 실패 시 이름 유사도만으로 fallback
-    """
-    엑셀 전체 ETF에서 비교군 자동 탐색.
-    - 핵심 키워드 일치
-    - 레버리지·인버스 등 변형 태그 원본과 동일해야 매칭
-    - 이름 길이 차이 최소 = 가장 유사한 ETF 우선
-    """
-    keyword = extract_keyword(kodex_name)
-    if not keyword:
-        return []
-
-    # 원본 KODEX의 변형 태그 추출
-    kodex_variants = _variant_tags_in(kodex_name)
-
-    # 기초지수 조회 (네이버 금융) — 캐시 활용
-    kodex_index = get_tracking_index(kodex_code)
-
-    results = []
-    for prefix in COMPETITOR_PREFIXES:
-        mask = (
-            etf_universe["종목명"].astype(str).str.startswith(prefix)
-            & etf_universe["종목명"].astype(str).str.contains(keyword, regex=False, na=False)
-            & (etf_universe["종목코드"].astype(str) != kodex_code)
-        )
-        for _, row in etf_universe[mask].iterrows():
-            cname = str(row["종목명"])
-            ccode = str(row["종목코드"])
-            cand_variants = _variant_tags_in(cname)
-            if cand_variants != kodex_variants:
-                continue
-
-            name_diff = abs(len(cname) - len(kodex_name))
-            base_score = len(keyword) * 10 - name_diff
-
-            # 기초지수 일치 시 보너스 점수 (+50)
-            index_bonus = 0
-            if kodex_index:
-                cand_index = get_tracking_index(ccode)
-                if cand_index and kodex_index == cand_index:
-                    index_bonus = 50
-                elif cand_index and (kodex_index in cand_index or cand_index in kodex_index):
-                    index_bonus = 30  # 부분 일치
-
-            results.append({
-                "code": ccode,
-                "name": cname,
-                "provider": prefix,
-                "match_score": base_score + index_bonus,
-                "tracking_index": get_tracking_index(ccode) or "미확인",
-                "index_matched": index_bonus > 0,
-            })
-
-    # 운용사별로 최고 매칭 1개씩 선택 후 우선순위 적용
-    # 목표: TIGER 1개 + ACE/PLUS/SOL 1개 조합 (최대 2개)
-    priority = {"TIGER": 0, "ACE": 1, "PLUS": 1, "KINDEX": 2, "SOL": 2, "HANARO": 3}
-
-    # 운용사별 최고 매칭 선택
-    by_provider: Dict[str, dict] = {}
-    for r in sorted(results, key=lambda x: -x["match_score"]):
-        p = r["provider"]
-        if p not in by_provider:
-            by_provider[p] = r
-
-    # 우선순위 순으로 최대 2개, 단 같은 운용사 중복 없이
-    sorted_providers = sorted(by_provider.keys(), key=lambda p: priority.get(p, 3))
-    unique = [by_provider[p] for p in sorted_providers]
-
-    return unique[:2]  # 최대 2개 (DiD = KODEX - 비교군평균÷2)
-
-
-# ── 비교군 매핑 테이블 (하드코딩 폴백) ───────────────────────────────────────
+# ── COMPARISON_MAP (레거시 호환용, etf_mapping.json 으로 대체됨) ──────────────
 COMPARISON_MAP: Dict[str, Dict] = {
-    "069500": {
-        "name": "KODEX 200",
-        "competitors": [
-            {"code": "102110", "name": "TIGER 200", "provider": "TIGER"},
-            {"code": "152100", "name": "PLUS 200", "provider": "ACE"},  # ACE→PLUS 리브랜딩
-        ],
-    },
-    "229200": {
-        "name": "KODEX 코스닥150",
-        "competitors": [
-            {"code": "232080", "name": "TIGER 코스닥150", "provider": "TIGER"},
-        ],
-    },
-    "091160": {
-        "name": "KODEX 반도체",
-        "competitors": [
-            {"code": "091230", "name": "TIGER 반도체", "provider": "TIGER"},
-        ],
-    },
-    "498400": {
-        "name": "KODEX 200타겟위클리커버드콜",
-        "competitors": [
-            {"code": "0104N0", "name": "TIGER 200타겟위클리커버드콜", "provider": "TIGER"},
-        ],
-    },
+    "069500": {"name": "KODEX 200", "competitors": [
+        {"code": "102110", "name": "TIGER 200", "provider": "TIGER"},
+        {"code": "152100", "name": "PLUS 200",  "provider": "ACE"},
+    ]},
+    "229200": {"name": "KODEX 코스닥150", "competitors": [
+        {"code": "232080", "name": "TIGER 코스닥150", "provider": "TIGER"},
+    ]},
+    "091160": {"name": "KODEX 반도체", "competitors": [
+        {"code": "091230", "name": "TIGER 반도체", "provider": "TIGER"},
+    ]},
+    "498400": {"name": "KODEX 200타겟위클리커버드콜", "competitors": [
+        {"code": "0104N0", "name": "TIGER 200타겟위클리커버드콜", "provider": "TIGER"},
+    ]},
 }
 
 ALL_KNOWN_CODES = set(COMPARISON_MAP.keys()) | {
     c["code"] for v in COMPARISON_MAP.values() for c in v["competitors"]
 }
 
-
-# ── 데이터 클래스 ─────────────────────────────────────────────────────────────
-
-@dataclass
-class ETFWeekData:
-    code: str
-    name: str
-    financial_investment: float  # 금융투자 순매수
-    individual: float            # 개인 순매수
-    week_label: str = ""
+# ── 분석 엔진 (LP 감지는 증권사 전용) ────────────────────────────────────────
 
 
-@dataclass
-class Baseline:
-    code: str
-    name: str
-    fi_avg: float      # 금융투자 4주 평균
-    ind_avg: float     # 개인 4주 평균
-    fi_std: float      # 금융투자 표준편차 (LP 감지용)
-    ind_std: float     # 개인 표준편차
-    fi_mabs: float     # 금융투자 평균절댓값 (정규화 분모)
-    ind_mabs: float    # 개인 평균절댓값 (정규화 분모)
-    weeks_used: int
-    history: List[Dict] = field(default_factory=list)
+class MarketingAnalyzer(MarketingAnalyzerBase):
+    """증권사 채널: 금융투자 컬럼, 4주 베이스라인, LP 감지 포함."""
+    TARGET_COLUMN = "financial"
+    BASELINE_WEEKS = 4
+    USE_LP_DETECTION = True
+    CHANNEL_TYPE = "securities"
 
-
-@dataclass
-class LPResult:
-    code: str
-    suspicious: bool
-    z_score: float
-    direction_mismatch: bool
-    use_metric: str          # "financial" | "individual" | "average" | "both"
-    reliability: str         # "high" | "medium" | "low"
-    note: str
-    is_estimate: bool = False
-
-
-@dataclass
-class CompetitorResult:
-    """비교군 ETF 개별 결과."""
-    code: str
-    name: str
-    provider: str
-    change_pct: float
-    current_fi: float
-    current_ind: float
-    baseline_fi_avg: float
-    baseline_ind_avg: float
-    metric_used: str   # "financial" or "individual"
-
-
-@dataclass
-class ETFDiDResult:
-    kodex_code: str
-    kodex_name: str
-    current: ETFWeekData
-    baseline: Baseline
-    lp: LPResult
-    # 변화율
-    kodex_change_pct: float
-    control_avg_pct: float
-    did_value: float
-    judgement: str
-    judgement_emoji: str
-    # 비교군 상세
-    competitors: List[CompetitorResult] = field(default_factory=list)
-    mapping_source: str = ""
-    # 호환성 유지
-    tiger_change_pct: Optional[float] = None
-    ace_change_pct: Optional[float] = None
-    no_competitors: bool = False
-    notes: List[str] = field(default_factory=list)
-    calculation_log: List[str] = field(default_factory=list)
-
-
-# ── Excel 로더 ────────────────────────────────────────────────────────────────
-
-class ExcelLoader:
-    """
-    멀티 시트 엑셀 → {시트명: DataFrame} 변환
-    컬럼명을 최대한 유연하게 인식
-    """
-
-    # 실제 엑셀 컬럼 → 내부 표준명 매핑
-    COL_MAP = {
-        "종목코드": ["단축코드", "종목코드", "code", "Code", "ticker", "ETF코드", "종목 코드"],
-        "종목명":   ["종목명", "name", "Name", "ETF명", "종목", "펀드명", "상품명"],
-        "금융투자": ["금융투자", "금융투자합", "금투", "증권", "금융투자(순매수)"],
-        "개인":     ["개인", "개인합", "개인투자자", "개인(순매수)"],
-    }
-
-    def load(self, file_obj) -> Dict[str, pd.DataFrame]:
-        xl = pd.ExcelFile(file_obj)
-        result = {}
-        for sheet in xl.sheet_names:
-            df = self._load_sheet(xl, sheet)
-            if df is not None and not df.empty:
-                result[sheet] = df
-        return result
-
-    def _load_sheet(self, xl, sheet_name: str) -> Optional[pd.DataFrame]:
-        """단일 시트를 읽어 표준 컬럼으로 변환."""
-        # 먼저 header=0으로 시도 (일반적 구조)
-        df_raw = pd.read_excel(xl, sheet_name=sheet_name, header=None)
-
-        # 헤더 행 탐지: '금융투자' 또는 '단축코드'가 있는 첫 번째 행
-        header_row = None
-        for i, row in df_raw.iterrows():
-            row_str = " ".join(str(v) for v in row.values)
-            if re.search(r"금융투자|단축코드|종목코드|종목명", row_str):
-                header_row = i
-                break
-
-        if header_row is None:
-            return None
-
-        # 헤더 이후 데이터
-        cols = [str(v).strip() for v in df_raw.iloc[header_row].values]
-        data = df_raw.iloc[header_row + 1:].copy()
-        data.columns = cols
-        data = data.dropna(how="all").reset_index(drop=True)
-
-        # 컬럼명 정규화
-        rename = {}
-        used_src = set()
-        for target, aliases in self.COL_MAP.items():
-            for col in data.columns:
-                if col in used_src:
-                    continue
-                if col in aliases or any(a in col for a in aliases):
-                    rename[col] = target
-                    used_src.add(col)
-                    break
-
-        data = data.rename(columns=rename)
-
-        # 숫자 변환
-        for col in ["금융투자", "개인"]:
-            if col in data.columns:
-                data[col] = (
-                    data[col].astype(str)
-                    .str.replace(",", "", regex=False)
-                    .str.replace("(", "-", regex=False)
-                    .str.replace(")", "", regex=False)
-                    .str.strip()
-                )
-                data[col] = pd.to_numeric(data[col], errors="coerce")
-
-        # 종목코드 정규화: '069500*001' → '069500'
-        if "종목코드" in data.columns:
-            data["종목코드"] = (
-                data["종목코드"].astype(str).str.strip()
-                .str.split("*").str[0]   # *001 제거
-                .str.zfill(6)
-            )
-
-        return data
-
-    def get_etf_row(self, df: pd.DataFrame, code: str, name: str) -> Optional[ETFWeekData]:
-        if df is None or df.empty:
-            return None
-
-        # 코드로 검색
-        if "종목코드" in df.columns:
-            mask = df["종목코드"] == code.zfill(6)
-            if mask.any():
-                return self._row_to_etf(df[mask].iloc[0], code, name)
-
-        # 종목명으로 검색 (부분 일치)
-        if "종목명" in df.columns:
-            keyword = re.sub(r"(KODEX|TIGER|ACE|KINDEX|SOL)\s*", "", name).strip()
-            mask = df["종목명"].astype(str).str.contains(keyword, na=False, regex=False)
-            if mask.any():
-                return self._row_to_etf(df[mask].iloc[0], code, name)
-
-        # 전체 텍스트 검색 (중복 컬럼 안전 처리)
-        seen_cols = set()
-        for col in df.select_dtypes(include="object").columns:
-            if col in seen_cols:
-                continue
-            seen_cols.add(col)
-            col_series = df[col]
-            if isinstance(col_series, pd.DataFrame):
-                col_series = col_series.iloc[:, 0]
-            mask = col_series.astype(str).str.contains(code, na=False)
-            if mask.any():
-                return self._row_to_etf(df[mask].iloc[0], code, name)
-
-        return None
-
-    def _row_to_etf(self, row: pd.Series, code: str, name: str) -> ETFWeekData:
-        def _safe(v):
-            try:
-                f = float(v)
-                return 0.0 if pd.isna(f) else f
-            except (TypeError, ValueError):
-                return 0.0
-        fi = _safe(row.get("금융투자", 0))
-        ind = _safe(row.get("개인", 0))
-        nm = str(row.get("종목명", name))
-        return ETFWeekData(code=code, name=nm, financial_investment=fi, individual=ind)
-
-
-# ── 분석 엔진 ─────────────────────────────────────────────────────────────────
-
-class MarketingAnalyzer:
-    def __init__(self):
-        self.loader = ExcelLoader()
-
-    def load_excel(self, file_obj) -> Dict[str, pd.DataFrame]:
-        return self.loader.load(file_obj)
 
     def analyze(
         self,
@@ -417,6 +87,20 @@ class MarketingAnalyzer:
             if result:
                 results[code] = result
 
+        # ── DiD 결과 누적 저장 ──
+        try:
+            import sys as _sys, os as _os
+            _sys.path.insert(0, _os.path.join(_os.path.dirname(__file__), "../.."))
+            from did_history import save_results
+            save_results(current_sheet_name, [
+                {"code": code, "name": r.kodex_name, "did": r.did_value,
+                 "judgement": r.judgement, "marketing_detected": True,
+                 "no_competitors": r.no_competitors}
+                for code, r in results.items()
+            ], channel_type="securities")
+        except Exception:
+            pass
+
         return results
 
     def _analyze_one(
@@ -447,12 +131,14 @@ class MarketingAnalyzer:
         )
 
         # ── Step B-1: 비교군 정의 (LP 감지 전에 필요) ──
-        if kodex_code in COMPARISON_MAP:
-            comp_defs = COMPARISON_MAP[kodex_code]["competitors"]
-            mapping_source = "하드코딩 매핑"
+        # 우선순위: ① etf_mapping.json (사전 매핑) ② 실시간 auto_map (fallback)
+        from etf_mapping_loader import get_competitors as _get_comp
+        if _get_comp(kodex_code):
+            comp_defs = _get_comp(kodex_code)
+            mapping_source = "사전 매핑"
         else:
             comp_defs = auto_map_competitors(kodex_name, kodex_code, etf_universe)
-            mapping_source = f"자동 매핑 (키워드: '{extract_keyword(kodex_name)}')"
+            mapping_source = f"실시간 매핑 (키워드: '{extract_keyword(kodex_name)}')"
 
         # ── Step C: LP 노이즈 감지 (비교군도 함께 확인 → 장세 전환 오탐 방지) ──
         first_comp_data, first_comp_baseline = None, None
@@ -469,8 +155,9 @@ class MarketingAnalyzer:
         metric_label = "금융투자" if lp.use_metric == "financial" else "개인"
         cur_val = current_kodex.financial_investment if lp.use_metric == "financial" else current_kodex.individual
         base_val = baseline.fi_avg if lp.use_metric == "financial" else baseline.ind_avg
+        mabs_val = baseline.fi_mabs if lp.use_metric == "financial" else baseline.ind_mabs
         log.append(
-            f"[KODEX 변화율] ({cur_val:,.0f} ÷ {base_val:,.0f} - 1) × 100 = {kodex_chg:+.1f}%"
+            f"[KODEX 변화율] ({cur_val:,.0f} − {base_val:,.0f}) ÷ {mabs_val:,.0f} = {kodex_chg:+.4f}"
             f"  [{metric_label} 기준{'  ※추정값' if lp.is_estimate else ''}]"
         )
 
@@ -493,8 +180,9 @@ class MarketingAnalyzer:
 
             c_cur = cdata.financial_investment if force_metric == "financial" else cdata.individual
             c_base = cb.fi_avg if force_metric == "financial" else cb.ind_avg
+            c_mabs = cb.fi_mabs if force_metric == "financial" else cb.ind_mabs
             log.append(
-                f"  · {cname}: ({c_cur:,.0f} ÷ {c_base:,.0f} - 1) × 100 = {cchg:+.1f}%"
+                f"  · {cname}: ({c_cur:,.0f} − {c_base:,.0f}) ÷ {c_mabs:,.0f} = {cchg:+.4f}"
             )
             competitor_results.append(CompetitorResult(
                 code=ccode, name=cname, provider=cprov,
@@ -533,6 +221,18 @@ class MarketingAnalyzer:
         judgement, emoji = self._judge(did) if not no_competitors else ("비교군 없음 — DiD 불가", "⚫")
         log.append(f"[판정] {emoji} {judgement}  ({'DiD = ' + f'{did:+.4f}' if not no_competitors else '절대 변화율만 표시'})")
 
+        # ── 기저효과 착시 경고 ──
+        import sys as _sys, os as _os
+        _sys.path.insert(0, _os.path.join(_os.path.dirname(__file__), "../.."))
+        try:
+            from did_history import check_base_effect
+            base_warn = check_base_effect(kodex_code, did, week_label, channel_type="securities")
+            if base_warn:
+                notes.append(base_warn)
+                log.append(f"[기저효과] {base_warn}")
+        except Exception:
+            pass
+
         return ETFDiDResult(
             kodex_code=kodex_code,
             kodex_name=kodex_name,
@@ -562,10 +262,10 @@ class MarketingAnalyzer:
             if row:
                 records.append({"week": sheet_name, "fi": row.financial_investment, "ind": row.individual})
 
-        # 직전 8주 이평선 (2개월 기준선)
-        # [설계 의도] 8주 = ETF 이벤트 잔존 효과 충분히 소멸 + 시장 환경 크게 안 변함
-        # 4주: 직전 이벤트 오염 가능 / 20주: 시장 환경 변화 큼 → 8주가 적정
-        recent = records[-8:] if len(records) >= 8 else records
+        # 직전 4주 이평선 (증권사 채널 기준)
+        # [설계 의도] 증권사 채널 = 단발성 이벤트 효과 빠르게 반응 → 4주 적정
+        # 은행 채널은 agents/bank/analyzer.py 에서 8주 사용
+        recent = records[-4:] if len(records) >= 4 else records
 
         if not recent:
             return Baseline(code, name, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0, [])

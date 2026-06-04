@@ -6,11 +6,16 @@ DiD Analyzer for Samsung Securities ETF Marketing Effect Measurement
 import json
 import logging
 import re
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
+
+from etf_mapping_loader import get_competitors as _get_comp
 
 logger = logging.getLogger(__name__)
 
@@ -406,15 +411,7 @@ class MarketingAnalyzer:
         _code_col = "단축코드" if "단축코드" in current_df.columns else "종목코드"
         etf_universe = current_df[[_code_col, "종목명"]].rename(columns={_code_col: "종목코드"}).dropna(subset=["종목명"])
 
-        # etf_mapping.json 로드 (사전 빌드된 매핑 캐시) — 인스턴스에 캐싱
-        if not hasattr(self, '_etf_mapping'):
-            import json as _json, os as _os
-            _mapping_path = _os.path.join(_os.path.dirname(__file__), "../../etf_mapping.json")
-            try:
-                with open(_mapping_path, encoding="utf-8") as _f:
-                    self._etf_mapping = _json.load(_f)
-            except Exception:
-                self._etf_mapping = {}
+        # 공용 매핑 로더 사용 (etf_mapping_loader.py — 3개 채널 공유, 파일 상단에서 import)
 
         # 3번 fallback용 — 비KODEX ETF 전체 변화율 (시장 평균)
         def _market_avg_change(df, history_sheets_):
@@ -533,23 +530,15 @@ class MarketingAnalyzer:
         )
 
         # ── Step B-1: 비교군 정의 ──
-        # 우선순위: ① etf_mapping.json ② COMPARISON_MAP ③ auto_map ④ 시장평균 fallback
-        _mapping = getattr(self, '_etf_mapping', {})
+        # 우선순위: ① etf_mapping.json (사전 매핑) ② 실시간 auto_map ③ 시장평균 fallback
         _code_short = kodex_code.replace("*001","").strip()
 
-        if kodex_code in _mapping and _mapping[kodex_code].get("competitors"):
-            _map_entry = _mapping[kodex_code]
-            comp_defs = [{"code": c["code"], "name": c["name"]}
-                         for c in _map_entry["competitors"]]
-            _sim = _map_entry["competitors"][0].get("similarity", 0)
-            _idx = "기초지수일치" if _map_entry["competitors"][0].get("index_matched") else "이름유사도"
-            mapping_source = f"매핑캐시 ({_sim}% {_idx})"
-        elif _code_short in COMPARISON_MAP:
-            comp_defs = COMPARISON_MAP[_code_short]["competitors"]
-            mapping_source = "하드코딩 매핑"
+        if _get_comp(_code_short):
+            comp_defs = _get_comp(_code_short)
+            mapping_source = "사전 매핑"
         else:
             comp_defs = auto_map_competitors(kodex_name, _code_short, etf_universe)
-            mapping_source = f"자동매핑 (키워드:'{extract_keyword(kodex_name)}')" if comp_defs else "시장평균 fallback"
+            mapping_source = f"실시간 매핑 (키워드:'{extract_keyword(kodex_name)}')" if comp_defs else "시장평균 fallback"
 
         # ── Step C: LP 노이즈 감지 (비교군도 함께 확인 → 장세 전환 오탐 방지) ──
         first_comp_data, first_comp_baseline = None, None

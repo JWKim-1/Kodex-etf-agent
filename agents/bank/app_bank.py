@@ -90,7 +90,6 @@ all_sheets = {}
 base_loaded = False
 
 # KRX 공유 캐시 로드 — 은행은 2단계 Z-score 16주 윈도우 필요
-# 1단계 8주 베이스라인 + 2단계 16주 히스토리 + 현재 1주 = 25주 필요
 BANK_LOAD_WEEKS = 25
 krx_cache = load_cache_recent(BANK_LOAD_WEEKS)
 if krx_cache:
@@ -105,8 +104,35 @@ elif os.path.exists(os.path.join(ROOT, "ETF 순매수 데이터_260529.xlsx")):
     base_loaded = True
 
 if not base_loaded:
-    st.warning("데이터 없음 — 증권사 Agent에서 KRX 수집 후 다시 시도하세요")
+    st.warning("데이터 없음 — KRX 수집 후 다시 시도하세요")
     st.stop()
+
+# ── KRX 신규 주차 수집 (매주 금요일 장 마감 후 1회) ──
+with st.expander("🔄 신규 주차 데이터 수집 (매주 1회)", expanded=False):
+    st.caption("매주 금요일 장 마감 후 이번 주 데이터 추가. 수집 후 다음부터는 분석 시작만 누르면 됩니다.")
+    from datetime import date as _date
+    _today = _date.today()
+    _monday = _today - timedelta(days=_today.weekday())
+    _friday = _monday + timedelta(days=4)
+    col_d1, col_d2, col_btn = st.columns([2, 2, 2])
+    krx_start = col_d1.date_input("시작일", value=_monday, key="bank_krx_start")
+    krx_end   = col_d2.date_input("종료일", value=_friday, key="bank_krx_end")
+    if col_btn.button("🔄 KRX 수집", type="primary", use_container_width=True, key="bank_krx_btn"):
+        try:
+            from krx_data_fetcher import fetch_weekly_etf_data, load_cache, save_cache
+            with st.spinner("KRX 수집 중... (수분 소요)"):
+                new_df = fetch_weekly_etf_data(krx_start, krx_end)
+            if not new_df.empty:
+                label = f"{krx_start.month}.{krx_start.day}-{krx_end.month}.{krx_end.day}"
+                existing = load_cache()
+                existing[label] = new_df
+                save_cache(existing)
+                st.success(f"✅ {label} 수집 완료 — {len(new_df)}개 ETF")
+                st.rerun()
+            else:
+                st.warning("수집된 데이터 없음 — 날짜 확인 또는 KRX 세션 재시도")
+        except Exception as e:
+            st.error(f"수집 실패: {e}")
 
 # 주차 선택 — 금요일 이전이면 현재 주차 제외 (불완전 데이터)
 SKIP = {"참고사항", "설명", "README"}
@@ -161,6 +187,21 @@ if st.session_state.get("bank_collect_week") != selected:
 # Step 2 · 은행 채널 수집
 # ══════════════════════════════════════════════════════════════════
 st.markdown('<div class="step-header">Step 2 · 은행 채널 수집</div>', unsafe_allow_html=True)
+
+# 과거 주차면 채널 수집 의미 없음 (RSS 보관 기간 초과 가능)
+from datetime import date as _today_d
+import re as _re2
+_bm = _re2.match(r"(\d{1,2})\.(\d{1,2})", selected or "")
+if _bm:
+    try:
+        _sel_start_d = _today_d(_today_d.today().year, int(_bm.group(1)), int(_bm.group(2)))
+    except Exception:
+        _sel_start_d = None
+else:
+    _sel_start_d = None
+_days_ago_bank = (_today_d.today() - _sel_start_d).days if _sel_start_d else 0
+if _days_ago_bank > 14:
+    st.info(f"📼 {selected}은 {_days_ago_bank}일 전 주차 — RSS 보관 기간 초과로 채널 수집이 부정확할 수 있습니다. DiD 분석은 정상 수행됩니다.")
 
 if st.button("📡 은행 채널 수집 시작", type="primary", use_container_width=True, key="bank_collect"):
     prog_bar = st.progress(0)
@@ -255,7 +296,7 @@ analyzer = BankAnalyzer()
 st.markdown('<div class="step-header">Step 3 · KODEX ETF 은행 순매수 DiD</div>', unsafe_allow_html=True)
 
 current_df_bank = all_sheets[selected]
-_code_col = "단축코드" if "단축코드" in current_df_bank.columns else "종목코드"
+_code_col = "종목코드" if "종목코드" in current_df_bank.columns else "단축코드"
 
 # Step 2 수집 결과에서 ETF 이름 추출 (없으면 전체 KODEX로 진행)
 detected_etf_codes = []
@@ -297,15 +338,43 @@ else:
     st.caption("채널 감지 없음 — 전체 KODEX ETF 기준 DiD")
     bank_target_codes = all_kodex[_code_col].tolist()
 
-# 분석 결과 캐시 — 같은 주차+대상이면 재실행해도 다시 계산 안 함
+# 분석 결과 캐시 — parquet 영구 저장으로 앱 재시작해도 유지
+import sys as _sys, os as _os
+_sys.path.insert(0, ROOT)
+from did_history import get_summary as _get_did_summary, save_results as _save_did
+
 _cache_key = f"bank_did_{selected}_{len(bank_target_codes)}"
-if st.session_state.get("bank_did_key") != _cache_key:
+
+# 1. parquet에 이미 이 주차 결과가 있으면 재계산 없이 로드
+_cached_df = _get_did_summary("bank")
+_has_cache = (not _cached_df.empty
+              and selected in _cached_df["week"].values
+              and len(_cached_df[_cached_df["week"]==selected]) >= len(bank_target_codes) * 0.8)
+
+if _has_cache and st.session_state.get("bank_did_key") == _cache_key:
+    # session_state 캐시 우선 (ETFDiDResult 객체 포함)
+    summary = st.session_state.get("bank_did_result", {})
+elif _has_cache and not st.session_state.get("bank_did_result"):
+    # parquet엔 있는데 session_state 없으면 → 재계산 필요 (객체 복원 불가)
+    st.info("💾 이전 분석 결과 발견 — 빠르게 재계산 중...")
+    with st.spinner(f"KODEX ETF {len(bank_target_codes)}개 재계산 중..."):
+        summary = analyzer.analyze(all_sheets, bank_target_codes, selected)
+    st.session_state["bank_did_result"] = summary
+    st.session_state["bank_did_key"] = _cache_key
+elif st.session_state.get("bank_did_key") == _cache_key:
+    summary = st.session_state.get("bank_did_result", {})
+else:
     with st.spinner(f"KODEX ETF {len(bank_target_codes)}개 은행 순매수 DiD 분석 중... (첫 실행만 오래 걸림)"):
         summary = analyzer.analyze(all_sheets, bank_target_codes, selected)
     st.session_state["bank_did_result"] = summary
     st.session_state["bank_did_key"] = _cache_key
-else:
-    summary = st.session_state.get("bank_did_result", {})
+    # parquet 영구 저장
+    _save_did(selected, [
+        {"code": c, "name": r.kodex_name, "did": r.did_value,
+         "judgement": r.judgement, "marketing_detected": True,
+         "no_competitors": r.no_competitors}
+        for c, r in summary.items()
+    ], channel_type="bank")
 
 did_results = list(summary.values()) if summary else []
 

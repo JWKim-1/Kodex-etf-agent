@@ -50,8 +50,7 @@ CHANNEL_LABELS = {
     # ── KB증권 ───────────────────────────────────────
     "kb_youtube":          "KB증권 유튜브",
     # ── 공통 채널 ────────────────────────────────────
-    "krx_news":            "KRX 보도자료",
-    "krx_trading":         "KRX 투자자별 거래실적 (수동 엑셀 대체)",
+    # krx_news, krx_trading 제거 — KRX 데이터는 pykrx로 자동 수집 (krx_data_cache.parquet)
     "news":                "네이버/구글 뉴스",
 }
 
@@ -190,9 +189,7 @@ class DataCollector:
             ("shinhan_youtube",    self._ch_shinhan_youtube),
             # KB증권
             ("kb_youtube",         self._ch_kb_youtube),
-            # 공통
-            ("krx_news",           self._ch_krx_news),
-            ("krx_trading",        self._ch_krx_trading),
+            # 공통 (KRX 데이터는 pykrx 자동 수집으로 대체됨)
             ("news",               self._ch_news),
         ]
         results: Dict[str, ChannelResult] = {}
@@ -268,6 +265,36 @@ class DataCollector:
                         if img.get("alt", "").strip()
                     )
                     page_full_text = detail_text + " " + alt_texts
+
+                    # ── "이벤트 참여 >" 증권사 링크 따라가서 ETF명 추가 수집 ──
+                    # ── 분석 기준일: 현재 주차면 오늘, 과거 주차면 해당 주의 끝날 ──
+                    from datetime import date as _dt
+                    _ref_date = self.week_end.date() if self.week_end else _dt.today()
+
+                    for sec_a in detail_soup.find_all("a", href=True):
+                        sec_txt = sec_a.get_text(strip=True)
+                        sec_href = sec_a.get("href", "")
+                        if ("이벤트 참여" in sec_txt or "참여하기" in sec_txt) and sec_href.startswith("http"):
+                            try:
+                                sec_r = requests.get(sec_href, headers=BROWSER_HEADERS, timeout=8)
+                                sec_soup = BeautifulSoup(sec_r.text, "lxml")
+                                sec_text = sec_soup.get_text(" ", strip=True)
+                                # 이벤트 기간 추출 → 종료일 기준으로 유효한지 체크
+                                # 날짜 여러 개 중 가장 마지막 날짜 = 종료일로 판단
+                                # 4자리 연도 or 2자리 연도(26.05.15 형식) 모두 캐치
+                                date_matches = re.findall(r"(\d{2,4})[.\-년]?\s*(\d{1,2})[.\-월]?\s*(\d{1,2})", sec_text)
+                                if date_matches:
+                                    try:
+                                        # 마지막 날짜를 종료일로 사용 (2자리 연도 → 2000+로 변환)
+                                        raw_y, end_mo, end_d = int(date_matches[-1][0]), int(date_matches[-1][1]), int(date_matches[-1][2])
+                                        end_y = raw_y + 2000 if raw_y < 100 else raw_y
+                                        if _dt(end_y, end_mo, end_d) < _ref_date:
+                                            continue  # 분석 기준일 이전에 종료된 이벤트
+                                    except Exception:
+                                        pass
+                                page_full_text += " " + sec_text[:2000]
+                            except Exception:
+                                pass
 
                     # 본문에서 ETF 이름 추가 추출 (제목에서 못 찾은 것 보완)
                     etf_m2 = re.findall(
@@ -442,7 +469,8 @@ class DataCollector:
                     if not self._in_range(pub_dt):
                         continue
                 except Exception:
-                    pass
+                    if self.week_start is not None:
+                        continue
                 is_etf = bool(re.search(r"ETF|KODEX|코덱스|배당|채권|지수|리츠", title, re.I))
                 videos.append({"title": title, "published_at": pub_str, "is_etf_related": is_etf, "url": vid_url})
             note = "API 키 없음 — RSS 사용 (조회수 미포함)" if not self.youtube_api_key else "API 실패 — RSS 대체"
@@ -529,6 +557,9 @@ class DataCollector:
                 pub_str = item.find("pubDate").get_text(strip=True)      if item.find("pubDate")      else ""
 
                 pub_dt = self._parse_pub_date(pub_str)
+                # 날짜 파싱 실패해도 week_start 설정됐으면 제외 (오늘 글 혼입 방지)
+                if pub_dt is None and self.week_start is not None:
+                    continue
                 if pub_dt is not None and not self._in_range(pub_dt):
                     continue
 
@@ -798,6 +829,8 @@ class DataCollector:
                         link  = title_tag.get("href", "") if title_tag.name == "a" else (link_tag.get("href","") if link_tag else "")
                         pub_str = date_tag.get_text(strip=True) if date_tag else ""
                         pub_dt = self._parse_pub_date(pub_str)
+                        if not pub_dt and self.week_start is not None:
+                            continue
                         if pub_dt and not self._in_range(pub_dt):
                             continue
                         articles.append({
@@ -836,6 +869,8 @@ class DataCollector:
                     r.raise_for_status()
                     for item in r.json().get("items", []):
                         pub_dt = self._parse_pub_date(item.get("pubDate", ""))
+                        if not pub_dt and self.week_start is not None:
+                            continue
                         if pub_dt and not self._in_range(pub_dt):
                             continue
                         articles.append({
@@ -874,6 +909,8 @@ class DataCollector:
                     for item in soup.find_all("item")[:10]:
                         pub_str = item.find("pubDate").get_text(strip=True) if item.find("pubDate") else ""
                         pub_dt = self._parse_pub_date(pub_str)
+                        if not pub_dt and self.week_start is not None:
+                            continue
                         if pub_dt and not self._in_range(pub_dt):
                             continue
                         link = item.find("link").get_text(strip=True) if item.find("link") else ""

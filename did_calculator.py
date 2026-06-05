@@ -246,8 +246,11 @@ class ExcelLoader:
     def get_etf_row(self, df: pd.DataFrame, code: str, name: str) -> Optional[ETFWeekData]:
         if df is None or df.empty:
             return None
-        if "종목코드" in df.columns:
-            mask = df["종목코드"] == code.zfill(6)
+        # KRX 캐시는 '단축코드', 엑셀은 '종목코드' — 둘 다 처리
+        _code_col = "단축코드" if "단축코드" in df.columns else "종목코드" if "종목코드" in df.columns else None
+        if _code_col:
+            bare_code = code.split("*")[0].strip().zfill(6)
+            mask = df[_code_col].astype(str).str.split("*").str[0].str.strip().str.zfill(6) == bare_code
             if mask.any():
                 return self._row_to_etf(df[mask].iloc[0], code, name)
         if "종목명" in df.columns:

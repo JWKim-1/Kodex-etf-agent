@@ -407,8 +407,8 @@ class MarketingAnalyzer:
         history_names = sheet_names[:current_idx]          # 현재 이전만
         history_sheets = {k: all_sheets[k] for k in history_names}
 
-        # 전체 ETF 유니버스 (자동 매핑용) — KRX캐시=단축코드, 엑셀=종목코드
-        _code_col = "단축코드" if "단축코드" in current_df.columns else "종목코드"
+        # load_cache_recent()에서 단축코드→종목코드 정규화됨. 엑셀도 종목코드.
+        _code_col = "종목코드" if "종목코드" in current_df.columns else "단축코드"
         etf_universe = current_df[[_code_col, "종목명"]].rename(columns={_code_col: "종목코드"}).dropna(subset=["종목명"])
 
         # 공용 매핑 로더 사용 (etf_mapping_loader.py — 3개 채널 공유, 파일 상단에서 import)
@@ -453,20 +453,51 @@ class MarketingAnalyzer:
                 if not result.no_competitors and result.competitors:
                     WINDOW_2ND = 16
                     did_history = []
-                    # 캐시 활용: 이미 계산된 주차는 재사용
+
+                    # 캐시 1: 인스턴스 메모리 (같은 세션 내 재사용)
                     if not hasattr(self, '_did_cache'):
                         self._did_cache = {}
+
+                    # 캐시 2: parquet 영구 저장 (앱 재시작해도 유지)
+                    if not hasattr(self, '_parquet_cache'):
+                        try:
+                            import os as _os
+                            _root = _os.path.join(_os.path.dirname(__file__), "../..")
+                            import sys as _sys; _sys.path.insert(0, _root)
+                            from did_history import get_summary as _gs
+                            _hist_df = _gs("bank")
+                            # {code}_{week} → value 딕셔너리로 변환
+                            if not _hist_df.empty:
+                                self._parquet_cache = {
+                                    f"{r['code']}_{r['week']}": r['value']
+                                    for _, r in _hist_df.iterrows()
+                                    if r['value'] is not None
+                                }
+                            else:
+                                self._parquet_cache = {}
+                        except Exception:
+                            self._parquet_cache = {}
+
                     for hw in history_names[-WINDOW_2ND:]:
                         cache_key = f"{code}_{hw}"
+                        # 1순위: 인스턴스 메모리
                         if cache_key in self._did_cache:
                             did_history.append(self._did_cache[cache_key])
                             continue
+                        # 2순위: parquet 영구 캐시
+                        if cache_key in self._parquet_cache:
+                            v = self._parquet_cache[cache_key]
+                            self._did_cache[cache_key] = v  # 메모리에도 올려두기
+                            did_history.append(v)
+                            continue
+                        # 3순위: 새로 계산
                         hdf = all_sheets[hw]
                         hidx = history_names.index(hw)
                         hhistory = {k: all_sheets[k] for k in history_names[:hidx]}
                         hres = self._analyze_one(code, kodex_name, hhistory, hdf, hw, etf_universe)
                         if hres and not hres.no_competitors and hres.competitors:
                             self._did_cache[cache_key] = hres.did_value
+                            self._parquet_cache[cache_key] = hres.did_value
                             did_history.append(hres.did_value)
 
                     if len(did_history) >= 4:  # 최소 4주는 있어야 σ 의미있음
@@ -611,7 +642,7 @@ class MarketingAnalyzer:
             _mkt_norm = getattr(self, '_market_avg_cache', {}).get(week_label)
             if _mkt_norm is None:
                 TARGET_COL = "은행"
-                _code_col_fb = "단축코드" if "단축코드" in current_df.columns else "종목코드"
+                _code_col_fb = "종목코드" if "종목코드" in current_df.columns else "단축코드"
                 non_kodex = current_df[~current_df["종목명"].str.contains("KODEX", na=False)]
                 _norms = []
                 if TARGET_COL in current_df.columns:

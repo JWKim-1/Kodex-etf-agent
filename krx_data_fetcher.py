@@ -231,12 +231,25 @@ def save_cache(sheets: dict):
     combined.to_parquet(CACHE_FILE, index=False)
     print(f"캐시 저장: {CACHE_FILE} ({len(combined)}행, {len(sheets)}주차)")
 
+def _normalize_codes(df: pd.DataFrame) -> pd.DataFrame:
+    """단축코드 *001 suffix 제거 + 컬럼명을 '종목코드'로 통일.
+    이후 모든 analyzer/app에서 '종목코드' 하나만 쓰면 됨."""
+    if "단축코드" in df.columns:
+        df = df.copy()
+        df["단축코드"] = df["단축코드"].astype(str).str.split("*").str[0].str.strip()
+        df = df.rename(columns={"단축코드": "종목코드"})
+    elif "종목코드" in df.columns:
+        df = df.copy()
+        df["종목코드"] = df["종목코드"].astype(str).str.split("*").str[0].str.strip()
+    return df
+
+
 def load_cache() -> dict:
     """저장된 캐시에서 데이터 로드."""
     if not os.path.exists(CACHE_FILE):
         return {}
     try:
-        df = pd.read_parquet(CACHE_FILE)
+        df = _normalize_codes(pd.read_parquet(CACHE_FILE))
         sheets = {}
         for week in df["week"].unique():
             sheets[week] = df[df["week"] == week].drop(columns=["week"]).reset_index(drop=True)
@@ -257,7 +270,7 @@ def load_cache_recent(n_weeks: int = BASELINE_WEEKS + 1) -> dict:
     if not os.path.exists(CACHE_FILE):
         return {}
     try:
-        df = pd.read_parquet(CACHE_FILE)
+        df = _normalize_codes(pd.read_parquet(CACHE_FILE))
         # 주차 정렬 (시트명 기준 날짜 파싱)
         weeks_all = sorted(df["week"].unique(), key=lambda w: _parse_week_label(w) or date.min)
         weeks_recent = weeks_all[-n_weeks:]
@@ -442,6 +455,58 @@ def get_missing_weeks(sheets: dict, from_date: date, to_date: date) -> list:
             missing.append((cur, min(end_w, to_date)))
         cur += timedelta(weeks=1)
     return missing
+
+
+def detect_new_listings(lookback_weeks: int = 4) -> list:
+    """
+    캐시에서 신규 상장 ETF 감지.
+    최근 lookback_weeks 기간 이전에는 없었다가 최신 주차에 처음 등장한 ETF 반환.
+
+    반환: [{"code": "0193W0", "name": "KODEX 삼성전자단일종목레버리지",
+             "first_seen": "5.25-5.28"}, ...]
+
+    4번째 ETF 사후관리 Agent 용도로 설계됨.
+    """
+    existing = load_cache()
+    if not existing:
+        return []
+
+    weeks = sorted(existing.keys(), key=lambda w: _parse_week_label(w) or date.min)
+    if len(weeks) < 2:
+        return []
+
+    latest_week = weeks[-1]
+    reference_weeks = weeks[max(0, len(weeks) - lookback_weeks - 1):-1]
+
+    # 기준 기간 전체에 등장한 코드
+    historic_codes = set()
+    for w in reference_weeks:
+        df = existing[w]
+        col = "종목코드" if "종목코드" in df.columns else "단축코드"
+        codes = df[col].astype(str).str.split("*").str[0].str.strip()
+        historic_codes.update(codes)
+
+    # 최신 주차 코드
+    latest_df = existing[latest_week]
+    col = "종목코드" if "종목코드" in latest_df.columns else "단축코드"
+    latest_df = latest_df.copy()
+    latest_df["_code"] = latest_df[col].astype(str).str.split("*").str[0].str.strip()
+
+    new_codes = set(latest_df["_code"]) - historic_codes
+
+    results = []
+    for code in sorted(new_codes):
+        row = latest_df[latest_df["_code"] == code]
+        if row.empty:
+            continue
+        name = str(row["종목명"].iloc[0]) if "종목명" in row.columns else code
+        results.append({
+            "code": code,
+            "name": name,
+            "first_seen": latest_week,
+        })
+
+    return results
 
 
 if __name__ == "__main__":

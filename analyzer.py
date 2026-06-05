@@ -402,8 +402,9 @@ class MarketingAnalyzer:
         history_names = sheet_names[:current_idx]          # 현재 이전만
         history_sheets = {k: all_sheets[k] for k in history_names}
 
-        # 전체 ETF 유니버스 (자동 매핑용)
-        etf_universe = current_df[["종목코드", "종목명"]].dropna(subset=["종목명"])
+        # load_cache_recent()에서 단축코드→종목코드 정규화됨
+        _code_col = "종목코드" if "종목코드" in current_df.columns else "단축코드"
+        etf_universe = current_df[[_code_col, "종목명"]].rename(columns={_code_col: "종목코드"}).dropna(subset=["종목명"])
 
         results = {}
         for code in target_etf_codes:

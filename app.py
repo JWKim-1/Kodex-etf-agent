@@ -158,29 +158,18 @@ if st.session_state.selected_mode is None:
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="landing-title">📊 ETF 마케팅 효과 측정 AI Agent</div>', unsafe_allow_html=True)
+    st.markdown('<div class="landing-title">📊 ETF 마케팅 모니터링 AI Agent</div>', unsafe_allow_html=True)
     st.markdown('<div class="landing-sub">채널별 마케팅 활동을 자동 감지하고 이중차분법(DiD)으로 순매수 효과를 정량 측정합니다</div>', unsafe_allow_html=True)
 
+    # ── 1행: 구현 완료 3개 ──
     col1, col2, col3 = st.columns(3, gap="large")
 
     with col1:
         st.markdown("""
         <div class="mode-card">
-            <div class="mode-icon">🏦</div>
-            <div class="mode-title">은행 채널</div>
-            <div class="mode-desc">KB·신한 등 은행의 순매수 이상 감지 + 뉴스/유튜브 수집으로 은행 채널 ETF 유입 효과를 측정합니다</div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("은행 채널 →", key="btn_bank", use_container_width=True, type="primary"):
-            st.session_state.selected_mode = "bank"
-            st.rerun()
-
-    with col2:
-        st.markdown("""
-        <div class="mode-card">
             <div class="mode-icon">📈</div>
             <div class="mode-title">증권사 채널</div>
-            <div class="mode-desc">증권사의 마케팅 이벤트·유튜브·블로그를 자동 수집하고 KODEX ETF 금융투자 순매수 DiD를 측정합니다</div>
+            <div class="mode-desc">증권사 이벤트·유튜브·블로그 수집 → KODEX ETF 금융투자 순매수 DiD 측정</div>
         </div>
         """, unsafe_allow_html=True)
         if st.button("증권사 채널 →", key="btn_securities", use_container_width=True, type="primary"):
@@ -188,16 +177,66 @@ if st.session_state.selected_mode is None:
             st.session_state["analysis_run"] = False
             st.rerun()
 
+    with col2:
+        st.markdown("""
+        <div class="mode-card">
+            <div class="mode-icon">🏦</div>
+            <div class="mode-title">은행 채널</div>
+            <div class="mode-desc">KB·신한·하나 등 은행 순매수 이상 감지 + Z-score 2단계 분석으로 은행 채널 마케팅 효과 측정</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("은행 채널 →", key="btn_bank", use_container_width=True, type="primary"):
+            st.session_state.selected_mode = "bank"
+            st.rerun()
+
     with col3:
         st.markdown("""
         <div class="mode-card disabled">
             <div class="mode-icon">🎯</div>
             <div class="mode-title">개인 채널</div>
-            <div class="mode-desc">자산운용사 직접 채널(이벤트·SNS·유튜브)의 마케팅 효과를 개인 순매수 DiD로 측정합니다</div>
+            <div class="mode-desc">삼성자산운용 직접 채널(이벤트·유튜브·블로그) 마케팅 효과를 개인 순매수 DiD로 측정</div>
             <div class="coming-soon">🔒 추후 출시 예정</div>
         </div>
         """, unsafe_allow_html=True)
-        st.button("자산운용사 채널 (준비 중)", key="btn_amc", use_container_width=True, disabled=True)
+        st.button("개인 채널 (준비 중)", key="btn_mass", use_container_width=True, disabled=True)
+
+    st.markdown("<div style='margin:8px 0;'></div>", unsafe_allow_html=True)
+
+    # ── 2행: 추후 출시 3개 ──
+    col4, col5, col6 = st.columns(3, gap="large")
+
+    with col4:
+        st.markdown("""
+        <div class="mode-card disabled">
+            <div class="mode-icon">📊</div>
+            <div class="mode-title">ETF 시장 트렌드</div>
+            <div class="mode-desc">국내/해외 ETF 수익률·거래대금 Top 10 + 시장 요인 인사이트 자동 정리</div>
+            <div class="coming-soon">🔒 추후 출시 예정</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.button("시장 트렌드 (준비 중)", key="btn_trend", use_container_width=True, disabled=True)
+
+    with col5:
+        st.markdown("""
+        <div class="mode-card disabled">
+            <div class="mode-icon">🏢</div>
+            <div class="mode-title">경쟁사 채널</div>
+            <div class="mode-desc">TIGER·ACE·RISE 채널 모니터링 → 경쟁사가 밀어준 ETF 순매수 변화 대조 분석</div>
+            <div class="coming-soon">🔒 추후 출시 예정</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.button("경쟁사 채널 (준비 중)", key="btn_competitor", use_container_width=True, disabled=True)
+
+    with col6:
+        st.markdown("""
+        <div class="mode-card disabled">
+            <div class="mode-icon">🏷️</div>
+            <div class="mode-title">ETF 사후관리</div>
+            <div class="mode-desc">신규 상장 자동 감지 · 상장 폐지 모니터링 · AUM 추이 분석으로 중장기 투자자 소통 자료 생성</div>
+            <div class="coming-soon">🔒 추후 출시 예정</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.button("ETF 사후관리 (준비 중)", key="btn_lifecycle", use_container_width=True, disabled=True)
 
     st.markdown("---")
     st.caption("삼성자산운용 ETF 마케팅 모니터링 AI Agent · Powered by Claude")
@@ -268,13 +307,23 @@ def _parse_sheet_dates(sheet_name: str):
     return start, end
 
 def _sheet_label(name: str) -> str:
-    start, _ = _parse_sheet_dates(name)
+    start, end = _parse_sheet_dates(name)
     if start is None:
         return name
     days = (datetime.now().date() - start).days
+    # KRX 데이터는 월~금 — 끝날이 목요일이면 금요일로 보정
+    try:
+        from datetime import timedelta as _td
+        if end and end.weekday() == 3:
+            real_end = end + _td(days=1)
+            display = f"{start.month}.{start.day}-{real_end.month}.{real_end.day}"
+        else:
+            display = name
+    except Exception:
+        display = name
     if days == 0:
-        return f"{name}  (이번 주)"
-    return f"{name}  ({days}일 전)"
+        return f"{display}  (이번 주)"
+    return f"{display}  ({days}일 전)"
 
 def summarize_channel(r) -> str:
     if not r.data: return "데이터 없음"
@@ -334,12 +383,20 @@ def keyword_fallback(collection_results, all_kodex_etfs: dict) -> dict:
                           "text": d["raw_text"][:1000],
                           "channel_reason": "이벤트 페이지 텍스트에서 ETF명 확인"})
 
+        # 뉴스/블로그 채널에서 마케팅 제외 ETF 태그
+        # 레버리지·인버스·단일종목은 신규 상장 기사에 자주 나오지만 이벤트 대상 아님
+        _EXCL_TAGS = ["레버리지", "인버스", "2X", "단일종목", "선물인버스"]
+        is_event_channel = getattr(r, "channel", "") == "samsung_fund_event"
+
         # 전체 KODEX ETF 이름으로 검색
         for item in items:
             text = item["text"]
             matched_codes, matched_names = [], []
 
             for code, etf_name in all_kodex_etfs.items():
+                # 이벤트 페이지 아닌 뉴스/블로그에서 레버리지류는 마케팅으로 감지 안 함
+                if not is_event_channel and any(t in etf_name for t in _EXCL_TAGS):
+                    continue
                 if etf_name in text or code in text:
                     matched_codes.append(code)
                     matched_names.append(etf_name)
@@ -415,14 +472,23 @@ krx_id = os.getenv("KRX_ID", "")
 from krx_data_fetcher import fetch_weekly_etf_data, get_week_dates
 
 if krx_id:
-    # KRX 계정 있으면 직접 수집 UI
+    # KRX 계정 있으면 직접 수집 UI — 주차 드롭다운 (캐시에 없는 주차 자동 생성)
     today = datetime.now().date()
     monday = today - timedelta(days=today.weekday())
     friday = monday + timedelta(days=4)
 
-    col_d1, col_d2, col_btn = st.columns([1, 1, 1])
-    krx_start = col_d1.date_input("시작일", value=monday)
-    krx_end   = col_d2.date_input("종료일", value=friday)
+    # 최근 8주 옵션 생성 (이번 주 포함)
+    week_opts = {}
+    for i in range(8):
+        ws = monday - timedelta(weeks=i)
+        we = ws + timedelta(days=4)
+        label = f"{ws.month}.{ws.day}-{we.month}.{we.day}"
+        week_opts[label] = (ws, we)
+    week_labels = list(week_opts.keys())
+
+    col_w, col_btn = st.columns([3, 1])
+    sel_week = col_w.selectbox("수집할 주차", week_labels, index=0, key="krx_week_sel")
+    krx_start, krx_end = week_opts[sel_week]
 
     if col_btn.button("🔄 KRX 수집", type="primary", use_container_width=True):
         try:
@@ -512,13 +578,23 @@ if not sheet_names:
 
 # 시트명에 날짜 경과 여부 라벨 추가
 def _sheet_label(name: str) -> str:
-    start, _ = _parse_sheet_dates(name)
+    start, end = _parse_sheet_dates(name)
     if start is None:
         return name
     days = (datetime.now().date() - start).days
+    # KRX 데이터는 월~금 — 끝날이 목요일이면 금요일로 보정
+    try:
+        from datetime import timedelta as _td
+        if end and end.weekday() == 3:
+            real_end = end + _td(days=1)
+            display = f"{start.month}.{start.day}-{real_end.month}.{real_end.day}"
+        else:
+            display = name
+    except Exception:
+        display = name
     if days == 0:
-        return f"{name}  (이번 주)"
-    return f"{name}  ({days}일 전)"
+        return f"{display}  (이번 주)"
+    return f"{display}  ({days}일 전)"
 
 labeled = [_sheet_label(s) for s in sheet_names]
 _is_friday = datetime.now().weekday() == 4
@@ -562,16 +638,40 @@ IS_BACKTEST = sheet_start is not None and days_ago > 14
 week_start_dt = datetime(sheet_start.year, sheet_start.month, sheet_start.day) if sheet_start else None
 week_end_dt   = datetime(sheet_end.year,   sheet_end.month,   sheet_end.day, 23, 59) if sheet_end else None
 
-week_range_str = f"{sheet_start.strftime('%m/%d')}~{sheet_end.strftime('%m/%d')}" if sheet_start else current_sheet
+# KRX 데이터는 월~금 — 끝날이 목요일이면 금요일로 보정
+from datetime import timedelta as _td
+_real_end = sheet_end + _td(days=1) if (sheet_end and sheet_end.weekday() == 3) else sheet_end
+week_range_str = f"{sheet_start.strftime('%m/%d')}~{_real_end.strftime('%m/%d')}" if sheet_start else current_sheet
+
+# ── 5일 미만(불완전 주) 차단 ──
+from datetime import timedelta as _td2
+_trading_days = 0
+if sheet_start and sheet_end:
+    d = sheet_start
+    while d <= sheet_end:
+        if d.weekday() < 5:  # 월~금
+            _trading_days += 1
+        d += _td2(days=1)
+
+# 5일 미만 체크 — 오직 "이번 주가 아직 진행 중"일 때만 (과거 완료 주차는 통과)
+from datetime import date as _d2
+_week_already_ended = _real_end < _d2.today() if sheet_end else False
+if _trading_days < 5 and not _week_already_ended:
+    st.error(
+        f"⛔ 이번 주는 {_trading_days}일치 데이터만 있어요 ({week_range_str}). "
+        f"거래일 5일이 완성되는 **금요일 장 마감(15:30) 후** 분석을 시작하세요. "
+        f"3일 데이터를 5일 평균으로 나누면 DiD가 왜곡됩니다."
+    )
+    st.stop()
 
 if IS_BACKTEST:
     st.markdown(
-        f'<span class="mode-badge-weekly">📡 주간 분석 — {current_sheet}</span>'
+        f'<span class="mode-badge-weekly">📡 주간 분석 — {week_range_str}</span>'
         f'<br><small style="opacity:.7;">⚠️ {days_ago}일 전 주차 — 채널 데이터가 일부 또는 전부 없을 수 있음 (RSS 보관 기간 초과 가능). DiD 계산은 정상 수행됩니다.</small>',
         unsafe_allow_html=True)
 else:
     st.markdown(
-        f'<span class="mode-badge-weekly">📡 주간 분석 — {current_sheet}</span>'
+        f'<span class="mode-badge-weekly">📡 주간 분석 — {week_range_str}</span>'
         f'<br><small style="opacity:.7;">채널 수집 기준: <b>{week_range_str}</b></small>',
         unsafe_allow_html=True)
 st.markdown("")
@@ -587,11 +687,7 @@ if not st.session_state.get("analysis_run", False):
 # ════════════════════════════════════════════════════════════════════
 st.markdown('<div class="step-header">Step 1 · 마케팅 채널 수집</div>', unsafe_allow_html=True)
 
-if IS_BACKTEST:
-    st.info(f"📼 백테스팅 모드: {current_sheet}은 {days_ago}일 전 데이터입니다. "
-            f"과거 채널 내용을 실시간으로 재수집할 수 없어 채널 수집을 건너뜁니다.")
-    collection_results = {}
-else:
+if True:  # 과거/현재 모두 수집 시도
     collector = DataCollector(
         youtube_api_key=youtube_key, naver_client_id=naver_id,
         naver_client_secret=naver_secret, anthropic_api_key=anthropic_key,
@@ -682,19 +778,21 @@ st.markdown('<div class="step-header">Step 2 · 마케팅 활동 감지 & 대상
 
 # 엑셀 전체 KODEX ETF 목록 (코드 → 이름) — Step 2, 3에서 모두 사용
 current_df = all_sheets[current_sheet]
-# 컬럼명 통일: KRX캐시는 '단축코드', 멘토님 엑셀은 '종목코드'
-_code_col = "단축코드" if "단축코드" in current_df.columns else "종목코드"
-etf_universe = current_df[[_code_col,"종목명"]].dropna(subset=["종목명"]).rename(columns={_code_col:"종목코드"})
+# KRX 캐시는 load_cache_recent()에서 '단축코드'→'종목코드' 이미 정규화됨
+_code_col = "종목코드" if "종목코드" in current_df.columns else "단축코드"
+etf_universe = current_df[[_code_col,"종목명"]].dropna(subset=["종목명"]).rename(columns={_code_col:"종목코드"}).copy()
+etf_universe["종목코드"] = etf_universe["종목코드"].astype(str).str.split("*").str[0].str.strip()
 all_kodex_etfs = {
-    str(row["종목코드"]): str(row["종목명"])
+    str(row["종목코드"]).split("*")[0].strip(): str(row["종목명"])
     for _, row in etf_universe[etf_universe["종목명"].str.contains("KODEX", na=False)].iterrows()
 }
 
-if IS_BACKTEST:
-    st.info("📼 백테스팅 모드: 분석할 ETF를 아래에서 직접 선택하세요.")
+if IS_BACKTEST and not collection_results:
+    # 채널 수집 결과가 아예 없을 때만 직접 선택 안내
+    st.info("채널 수집 결과 없음 — 분석할 ETF를 아래에서 직접 선택하세요.")
     detected_codes = []
     llm_result = {"marketing_detected": False, "etf_codes": [],
-                  "summary": f"백테스팅 모드 — {current_sheet} 채널 수집 불가"}
+                  "summary": f"{current_sheet} 채널 수집 결과 없음"}
 else:
     with st.spinner("LLM 분석 중..."):
 
@@ -786,8 +884,21 @@ else:
 target_codes = detected_codes
 
 if not target_codes:
-    st.warning("감지된 마케팅 활동 없음 — 이번 주 분석을 종료합니다. 베이스라인은 업데이트됩니다.")
-    st.stop()
+    if IS_BACKTEST:
+        # 과거 주차 — 채널 감지 실패해도 직접 선택해서 DiD 가능
+        st.info("채널 감지 없음 — 분석할 KODEX ETF를 직접 선택하세요.")
+        all_kodex_names = {v: k for k, v in all_kodex_etfs.items()}
+        selected_names = st.multiselect(
+            "분석할 ETF 선택",
+            sorted(all_kodex_names.keys()),
+            key="backtest_etf_select"
+        )
+        if not selected_names:
+            st.stop()
+        target_codes = [all_kodex_names[n] for n in selected_names]
+    else:
+        st.warning("감지된 마케팅 활동 없음 — 이번 주 분석을 종료합니다.")
+        st.stop()
 
 # ════════════════════════════════════════════════════════════════════
 # STEP 3: 비교군 자동 매핑 (미리보기 + 확인)
@@ -795,7 +906,7 @@ if not target_codes:
 st.markdown('<div class="step-header">Step 3 · 비교군 매핑</div>', unsafe_allow_html=True)
 
 with st.expander("🔗 비교군 매핑", expanded=True):
-    st.caption("📌 매핑 근거: 네이버 금융 기초지수 일치 우선 → 이름 유사도 → 운용사별 최대 2개 선정")
+    st.caption("📌 매핑 근거: 사전 매핑(수익률 상관계수 0.7+ 검증) → 없으면 실시간 이름 유사도 탐색 → 운용사별 최대 2개")
     analyzer = MarketingAnalyzer()
     for code in target_codes:
         row_etf = analyzer.loader.get_etf_row(current_df, code, code)
@@ -1128,10 +1239,13 @@ for code, res in did_results.items():
             for comp in res.competitors:
                 c_cur  = comp.current_fi   if metric=="financial" else comp.current_ind
                 c_avg  = comp.baseline_fi_avg  if metric=="financial" else comp.baseline_ind_avg
-                c_mabs = comp.fi_mabs if metric=="financial" else comp.ind_mabs
-                comp_lines += (
-                    f"     · {comp.name}: ({c_cur:,.0f} − {c_avg:,.0f}) ÷ {c_mabs:,.0f} = {int(comp.change_pct*100):+d}%\n"
-                )
+                c_mabs = getattr(comp, "fi_mabs" if metric=="financial" else "ind_mabs", None)
+                if c_mabs:
+                    comp_lines += (
+                        f"     · {comp.name}: ({c_cur:,.0f} − {c_avg:,.0f}) ÷ {c_mabs:,.0f} = {int(comp.change_pct*100):+d}%\n"
+                    )
+                else:
+                    comp_lines += f"     · {comp.name}: {int(comp.change_pct*100):+d}%\n"
             ctrl_str = " + ".join(f"{int(c.change_pct*100):+d}%" for c in res.competitors)
             formula = (
                 f"[ 지표: {metric_label} ]\n\n"

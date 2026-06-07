@@ -7,7 +7,9 @@
       "PowerShell(python --version)",
       "PowerShell(python -c \"print\\('hello'\\)\")",
       "PowerShell($env:PATH -split ';' | Where-Object { $_ -match 'python|conda|uv' })",
-      "mcp__Claude_in_Chrome__tabs_context_mcp"
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(curl -s http://localhost:8501)",
+      "Bash(del krx_data_cache.parquet)"
     ]
   }
 }

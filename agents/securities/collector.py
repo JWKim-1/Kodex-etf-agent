@@ -344,12 +344,13 @@ class DataCollector:
 
     def _fetch_youtube_rss(self, ch: str, name: str, channel_id: str) -> ChannelResult:
         """유튜브 RSS 공통 수집 로직."""
-        one_week_ago = datetime.utcnow() - timedelta(days=7)
+        # 분석 대상 주차 기준으로 검색 시작점 설정 — 과거 주차 분석 시 "최근 7일"로 고정되면 시간축이 어긋남
+        _search_start = self.week_start if self.week_start else (datetime.utcnow() - timedelta(days=7))
         if self.youtube_api_key:
             try:
                 from googleapiclient.discovery import build
                 yt = build("youtube", "v3", developerKey=self.youtube_api_key)
-                pub_after = (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
+                pub_after = _search_start.strftime("%Y-%m-%dT%H:%M:%SZ")
                 search = yt.search().list(part="id,snippet", channelId=channel_id, type="video",
                                           publishedAfter=pub_after, maxResults=10, order="date").execute()
                 videos = []
@@ -357,6 +358,9 @@ class DataCollector:
                     vid_id = item["id"].get("videoId", "")
                     title = item.get("snippet", {}).get("title", "")
                     pub = item.get("snippet", {}).get("publishedAt", "")
+                    pub_dt = self._parse_pub_date(pub)
+                    if pub_dt is not None and not self._in_range(pub_dt):
+                        continue
                     is_etf = bool(re.search(r"ETF|KODEX|TIGER|코덱스|배당|채권|지수|리츠|반도체|AI", title, re.I))
                     videos.append({"title": title, "published_at": pub, "is_etf_related": is_etf,
                                    "url": f"https://youtu.be/{vid_id}"})
@@ -415,7 +419,8 @@ class DataCollector:
     def _ch_samsung_youtube(self) -> ChannelResult:
         ch, name = "samsung_youtube", CHANNEL_LABELS["samsung_youtube"]
         channel_id = "UCq7h8qFlHN5FL_T6waKZllw"
-        one_week_ago = datetime.utcnow() - timedelta(days=7)
+        # 분석 대상 주차 기준으로 검색 시작점 설정 — 과거 주차 분석 시 "최근 7일"로 고정되면 시간축이 어긋남
+        _search_start = self.week_start if self.week_start else (datetime.utcnow() - timedelta(days=7))
 
         # YouTube Data API v3 시도
         if self.youtube_api_key:
@@ -423,7 +428,7 @@ class DataCollector:
                 from googleapiclient.discovery import build
 
                 yt = build("youtube", "v3", developerKey=self.youtube_api_key)
-                pub_after = (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
+                pub_after = _search_start.strftime("%Y-%m-%dT%H:%M:%SZ")
                 search = (
                     yt.search()
                     .list(
@@ -442,6 +447,9 @@ class DataCollector:
                     snippet = item.get("snippet", {})
                     title = snippet.get("title", "")
                     pub = snippet.get("publishedAt", "")
+                    pub_dt = self._parse_pub_date(pub)
+                    if pub_dt is not None and not self._in_range(pub_dt):
+                        continue
                     stats_r = yt.videos().list(part="statistics", id=vid_id).execute()
                     stats = stats_r["items"][0]["statistics"] if stats_r.get("items") else {}
                     is_etf = bool(re.search(r"ETF|KODEX|코덱스|배당|채권|지수|리츠", title, re.I))
@@ -692,12 +700,14 @@ class DataCollector:
                     soup = BeautifulSoup(r.text, "xml")
                     items = soup.find_all("item")
                     if items:
-                        one_week_ago = datetime.now() - timedelta(days=7)
                         news = []
                         for item in items[:20]:
                             title = item.find("title").get_text(strip=True) if item.find("title") else ""
                             pub = item.find("pubDate").get_text(strip=True) if item.find("pubDate") else ""
                             link = item.find("link").get_text(strip=True) if item.find("link") else ""
+                            pub_dt = self._parse_pub_date(pub)
+                            if pub_dt is not None and not self._in_range(pub_dt):
+                                continue
                             if title:
                                 news.append({"title": title, "date": pub, "url": link})
                         if news:

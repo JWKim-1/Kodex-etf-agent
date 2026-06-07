@@ -446,7 +446,7 @@ def load_excel_path(path: str):
     return ExcelLoader().load(path)
 
 # ── 데이터 로드 우선순위: KRX 캐시 → 기존 엑셀 ───────────────────────────
-from krx_data_fetcher import load_cache, load_cache_recent, save_cache, fetch_full_history, BASELINE_WEEKS
+from krx_data_fetcher import load_cache, load_cache_recent, save_cache, BASELINE_WEEKS
 
 all_sheets = {}
 base_loaded = False
@@ -506,29 +506,6 @@ if krx_id:
         except Exception as e:
             st.error(f"수집 실패: {e}")
 
-    # 전체 히스토리 수집 (2025년 1월~현재, 약 78주)
-    with st.expander("📅 전체 히스토리 수집 (처음 1회)", expanded=not base_loaded):
-        st.caption(
-            f"2025년 1월부터 현재까지 약 78주치 데이터를 수집합니다. "
-            f"이미 수집된 주차는 스킵됩니다. 처음 실행 시 30~60분 소요될 수 있습니다."
-        )
-        if st.button("🗄️ 전체 히스토리 수집 (2025.1~현재)", use_container_width=True):
-            prog = st.progress(0)
-            status_ph = st.empty()
-
-            def on_prog(idx, total, label):
-                prog.progress(idx / total)
-                status_ph.caption(f"수집 중 ({idx}/{total}): {label}")
-
-            full_data = fetch_full_history(
-                from_date=date(2025, 1, 6),
-                progress_callback=on_prog,
-            )
-            all_sheets.update(full_data)
-            base_loaded = True
-            # save_cache는 fetch_full_history 내부에서 이미 호출됨 — 중복 저장 방지
-            st.success(f"✅ 전체 히스토리 수집 완료 — {len(full_data)}주차 캐시 저장됨")
-            st.rerun()
 
 else:
     # KRX 계정 없으면 파일 업로드 fallback
@@ -666,13 +643,11 @@ if _trading_days < 5 and not _week_already_ended:
 
 if IS_BACKTEST:
     st.markdown(
-        f'<span class="mode-badge-weekly">📡 주간 분석 — {week_range_str}</span>'
-        f'<br><small style="opacity:.7;">⚠️ {days_ago}일 전 주차 — 채널 데이터가 일부 또는 전부 없을 수 있음 (RSS 보관 기간 초과 가능). DiD 계산은 정상 수행됩니다.</small>',
+        f'<small style="opacity:.7;">⚠️ {days_ago}일 전 주차 — 채널 데이터가 일부 또는 전부 없을 수 있음 (RSS 보관 기간 초과 가능). DiD 계산은 정상 수행됩니다.</small>',
         unsafe_allow_html=True)
 else:
     st.markdown(
-        f'<span class="mode-badge-weekly">📡 주간 분석 — {week_range_str}</span>'
-        f'<br><small style="opacity:.7;">채널 수집 기준: <b>{week_range_str}</b></small>',
+        f'<small style="opacity:.7;">채널 수집 기준: <b>{week_range_str}</b></small>',
         unsafe_allow_html=True)
 st.markdown("")
 
@@ -734,7 +709,7 @@ if True:  # 과거/현재 모두 수집 시도
                             transition:left 0.25s; line-height:1;'>🐂</div>
               </div>
               <!-- 텍스트 (별도 줄) -->
-              <div style='font-size:0.65rem; opacity:.45; margin-top:2px;'>{int(pct*100)}% — {name[:35]}</div>
+              <div style='font-size:0.8rem; opacity:.45; margin-top:2px;'>{int(pct*100)}% — {name[:35]}</div>
             </div>""",
             unsafe_allow_html=True
         )
@@ -755,7 +730,7 @@ if True:  # 과거/현재 모두 수집 시도
             <div style='position:absolute; left:calc(100% - 1.4rem); top:12px;
                         font-size:1.8rem; transform:scaleX(-1);'>🐂</div>
           </div>
-          <div style='font-size:0.65rem; opacity:.6; margin-top:2px;'>
+          <div style='font-size:0.8rem; opacity:.6; margin-top:2px;'>
             완료 {elapsed:.1f}초 — 성공 {ok}개 / 실패 {fail}개</div>
         </div>""",
         unsafe_allow_html=True

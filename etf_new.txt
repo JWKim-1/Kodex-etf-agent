@@ -1,0 +1,66 @@
+﻿KRX 로그인 시도...
+  로그인 ID: kjwoo6307
+python.exe : Traceback (most recent call last):
+At line:3 char:1
++ & $python test_etf_new.py 2>&1 | Out-File etf_new.txt -Encoding utf8
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\models.py", line 1116, in json
+    return complexjson.loads(self.text, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py", line 356, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\USER\Desktop\kodex agent\test_etf_new.py", line 5, in <module>
+    from pykrx import stock
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\pykrx\__init__.py", line 7, in <module>
+    from . import bond, stock
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\pykrx\bond\__init__.py", line 1, in <mo
+dule>
+    from .bond import *
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\pykrx\bond\bond.py", line 5, in <module
+>
+    from pykrx.website import krx
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\pykrx\website\krx\__init__.py", line 3,
+ in <module>
+    from .bond import *
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\pykrx\website\krx\bond\__init__.py", li
+ne 2, in <module>
+    from .wrap import *
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\pykrx\website\krx\bond\wrap.py", line 5
+, in <module>
+    from pykrx.website.comm import dataframe_empty_handler
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\pykrx\website\comm\__init__.py", line 8
+, in <module>
+    from pykrx.website.comm.webio import get_session, set_session
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\pykrx\website\comm\webio.py", line 12, 
+in <module>
+    _session = build_krx_session()
+               ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\pykrx\website\comm\auth.py", line 192, 
+in build_krx_session
+    success = krxs.refresh(login_id, login_pw)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\pykrx\website\comm\auth.py", line 53, i
+n refresh
+    success = login_krx(login_id, login_pw, self.session)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\pykrx\website\comm\auth.py", line 153, 
+in login_krx
+    data = resp.json()
+           ^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\models.py", line 1120, in json
+    raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)

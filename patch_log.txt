@@ -1,0 +1,36 @@
+캐시 로드: 22주차
+
+[1라운드] 미달 주차 2개 보완 시작
+  1.19-1.23: KODEX 107, TIGER 184
+KRX 로그인 시도...
+  로그인 ID: kjwoo6307
+KRX 로그인 완료.
+  로그인 시간: 2026-06-07 21:28:57
+  만료 시간: 2026-06-07 22:28:57
+캐시 로드: 22주차
+1.19-1.23 부분 보완 시작 (KODEX 107, TIGER 184)
+Traceback (most recent call last):
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\indexes\base.py", line 3812, in get_loc
+    return self._engine.get_loc(casted_key)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pandas/_libs/index.pyx", line 167, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/index.pyx", line 196, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/hashtable_class_helper.pxi", line 7088, in pandas._libs.hashtable.PyObjectHashTable.get_item
+  File "pandas/_libs/hashtable_class_helper.pxi", line 7096, in pandas._libs.hashtable.PyObjectHashTable.get_item
+KeyError: '단축코드'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 8, in <module>
+  File "C:\Users\USER\Desktop\kodex agent\krx_data_fetcher.py", line 396, in patch_all_weeks
+    patch_week(week_label, min_kodex, min_tiger)
+  File "C:\Users\USER\Desktop\kodex agent\krx_data_fetcher.py", line 328, in patch_week
+    existing_codes = set(df['단축코드'].str.replace('*001','').str.strip())
+                         ~~^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\frame.py", line 4113, in __getitem__
+    indexer = self.columns.get_loc(key)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\indexes\base.py", line 3819, in get_loc
+    raise KeyError(key) from err
+KeyError: '단축코드'

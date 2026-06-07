@@ -142,6 +142,9 @@ class BankChannelCollector:
                 pub_dt = self._parse_date(pub_str)
                 link = link_el.get("href", "") if link_el is not None else ""
 
+                if pub_dt is not None and not self._in_range(pub_dt):
+                    continue
+
                 is_etf = any(k in title for k in etf_keywords)
                 videos.append({
                     "title": title, "pub_date": pub_str,
@@ -176,6 +179,9 @@ class BankChannelCollector:
                 title = item.findtext("title", "")
                 link = item.findtext("link", "")
                 pub = item.findtext("pubDate", "")
+                pub_dt = self._parse_date(pub)
+                if pub_dt is not None and not self._in_range(pub_dt):
+                    continue
                 is_relevant = any(k in title for k in etf_kws)
                 posts.append({"title": title, "link": link, "pub_date": pub, "relevant": is_relevant})
 

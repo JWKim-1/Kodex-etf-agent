@@ -324,8 +324,8 @@ def patch_week(week_label: str, min_kodex: int = 200, min_tiger: int = 150) -> b
 
     print(f"{week_label} 부분 보완 시작 (KODEX {kodex_cnt}, TIGER {tiger_cnt})")
 
-    # 이미 수집된 코드 제외
-    existing_codes = set(df['단축코드'].str.replace('*001','').str.strip())
+    # 이미 수집된 코드 제외 (df는 load_cache()에서 이미 정규화됨 → '종목코드', 접미사 없음)
+    existing_codes = set(df['종목코드'].astype(str).str.strip())
 
     # 보완 대상: KODEX 우선 + 전체 목록에서 누락된 것
     m = re.match(r"(\d{1,2})\.(\d{1,2})-(\d{1,2})\.(\d{1,2})", week_label)
@@ -354,9 +354,12 @@ def patch_week(week_label: str, min_kodex: int = 200, min_tiger: int = 150) -> b
     if df_patch.empty:
         return False
 
+    # 새로 받은 데이터는 '단축코드'+'*001' 원본 형태 → df(이미 정규화됨)와 컬럼/형식 통일
+    df_patch = _normalize_codes(df_patch)
+
     # 기존 데이터와 병합
     combined = pd.concat([df, df_patch], ignore_index=True)
-    combined = combined.drop_duplicates(subset=['단축코드'], keep='last')
+    combined = combined.drop_duplicates(subset=['종목코드'], keep='last')
     existing[week_label] = combined
     save_cache(existing)
 
@@ -385,6 +388,8 @@ def patch_all_weeks(min_kodex: int = 150, min_tiger: int = 100, max_rounds: int 
     캐시 전체 품질 체크 → 부족한 주차 보완 → 재검사.
     원하는 품질 될 때까지 최대 max_rounds회 반복.
     """
+    existing = refresh_stale_weeks(load_cache())
+    save_cache(existing)
     for round_num in range(1, max_rounds + 1):
         issues = verify_cache(min_kodex, min_tiger)
         if not issues:
@@ -415,6 +420,7 @@ def fetch_full_history(
         to_date = date.today()
 
     existing = load_cache()
+    existing = refresh_stale_weeks(existing)  # 부분 수집된 과거 주차부터 5일 완전본으로 교체
     missing = get_missing_weeks(existing, from_date, to_date)
 
     if not missing:
@@ -439,6 +445,52 @@ def fetch_full_history(
     # 수집 완료 후 자동 품질 검사 및 보완
     print("\n[품질 검사 시작]")
     patch_all_weeks()
+
+    return existing
+
+
+def refresh_stale_weeks(existing: dict) -> dict:
+    """
+    주중(예: 수요일)에 수집되어 5거래일 미만으로 저장된 과거 주차 중,
+    이제 그 주(월~금)가 완전히 끝난 것들을 5일 전체로 재수집해서 교체.
+    예: '6.1-6.3'(부분, 3일치)로 저장됐는데 그 주의 금요일이 이미 지났다면
+        '6.1-6.5'(전체, 5일치)로 재수집 후 stale 항목 제거.
+    DiD는 N주 평균과 비교하는 계산이라 대조군에 부분 주차가 섞이면 왜곡됨 — 반드시 5일 완성본으로 교체해야 함.
+    """
+    today = date.today()
+    stale = []
+    for label in list(existing.keys()):
+        parsed_start = _parse_week_label(label)
+        if not parsed_start:
+            continue
+        m = re.match(r"(\d{1,2})\.(\d{1,2})-(\d{1,2})\.(\d{1,2})", label)
+        if not m:
+            continue
+        end_month, end_day = int(m.group(3)), int(m.group(4))
+        year = parsed_start.year if end_month >= parsed_start.month else parsed_start.year + 1
+        try:
+            parsed_end = date(year, end_month, end_day)
+        except Exception:
+            continue
+        canonical_friday = parsed_start + timedelta(days=4)
+        # 부분 수집(끝날이 금요일보다 이름) + 그 주가 이미 끝났으면 재수집 대상
+        if parsed_end < canonical_friday and canonical_friday < today:
+            stale.append((label, parsed_start, canonical_friday))
+
+    for label, ws, we in stale:
+        print(f"[재수집] {label}: 부분 수집된 주차 — 해당 주가 끝났으므로 5일 전체로 재수집", flush=True)
+        try:
+            df_full = fetch_weekly_etf_data(ws, we)
+            if df_full.empty:
+                print(f"  재수집 실패 — 기존(부분) 데이터 유지", flush=True)
+                continue
+            df_full = _normalize_codes(df_full)
+            new_label = df_full['week'].iloc[0]
+            del existing[label]
+            existing[new_label] = df_full.drop(columns=['week'])
+            print(f"  교체 완료: {label} → {new_label}", flush=True)
+        except Exception as e:
+            print(f"  재수집 실패: {e}", flush=True)
 
     return existing
 

@@ -1,0 +1,264 @@
+2026-06-07 21:38:39.270 Uvicorn server started on 0.0.0.0:8501
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://10.211.1.6:8501
+  External URL: http://14.35.204.212:8501
+
+캐시 최근 22주 로드 (전체 22주 중)
+2026-06-07 21:39:08.068 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:39:36,303 [WARNING] 현재 주 데이터에서 KODEX 미국빅테크10(H)(314250) 찾기 실패
+2026-06-07 21:39:50,148 [WARNING] 현재 주 데이터에서 KODEX 금액티브(0064K0) 찾기 실패
+2026-06-07 21:39:54,581 [WARNING] 현재 주 데이터에서 KODEX 2차전지산업레버리지(462330) 찾기 실패
+2026-06-07 21:40:28,959 [WARNING] 현재 주 데이터에서 KODEX 미국AI광통신네트워크(0173Y0) 찾기 실패
+2026-06-07 21:40:28,984 [WARNING] 현재 주 데이터에서 KODEX 미국AI광통신네트워크(0173Y0) 찾기 실패
+2026-06-07 21:40:28,987 [WARNING] 현재 주 데이터에서 KODEX 미국AI광통신네트워크(0173Y0) 찾기 실패
+2026-06-07 21:40:28,991 [WARNING] 현재 주 데이터에서 KODEX 미국AI광통신네트워크(0173Y0) 찾기 실패
+2026-06-07 21:40:28,994 [WARNING] 현재 주 데이터에서 KODEX 미국AI광통신네트워크(0173Y0) 찾기 실패
+2026-06-07 21:40:36,680 [WARNING] 현재 주 데이터에서 KODEX 2차전지핵심소재10(461950) 찾기 실패
+캐시 최근 22주 로드 (전체 22주 중)
+2026-06-07 21:40:42.999 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:40:52,607 [WARNING] 현재 주 데이터에서 KODEX 단기채권PLUS(214980) 찾기 실패
+2026-06-07 21:41:28,108 [WARNING] 현재 주 데이터에서 KODEX 미국10년국채선물(308620) 찾기 실패
+2026-06-07 21:43:00,782 [WARNING] 현재 주 데이터에서 KODEX 33-06 국고채액티브(457690) 찾기 실패
+2026-06-07 21:43:07,616 [WARNING] 현재 주 데이터에서 KODEX K-뉴딜디지털플러스(368680) 찾기 실패
+2026-06-07 21:43:20,895 [WARNING] 현재 주 데이터에서 KODEX ESG종합채권(A-이상)액티브(439860) 찾기 실패
+2026-06-07 21:43:24,043 [WARNING] 현재 주 데이터에서 KODEX 국채선물10년인버스(176950) 찾기 실패
+2026-06-07 21:43:29,398 [WARNING] 현재 주 데이터에서 KODEX 퀄리티Plus(244660) 찾기 실패
+2026-06-07 21:43:34,542 [WARNING] 현재 주 데이터에서 KODEX MSCI EM선물(H)(291890) 찾기 실패
+2026-06-07 21:43:35,531 [WARNING] 현재 주 데이터에서 KODEX 국채선물3년인버스(292770) 찾기 실패
+2026-06-07 21:43:46,366 [WARNING] 현재 주 데이터에서 KODEX 미국S&P500경기소비재(453660) 찾기 실패
+2026-06-07 21:43:49,025 [WARNING] 현재 주 데이터에서 KODEX 53-09 국고채액티브(457700) 찾기 실패
+2026-06-07 21:44:53,353 [WARNING] 현재 주 데이터에서 KODEX 차이나AI반도체TOP10(0162L0) 찾기 실패
+2026-06-07 21:45:21,624 [WARNING] 현재 주 데이터에서 KODEX 200IT TR(363580) 찾기 실패
+2026-06-07 21:45:45,590 [WARNING] 현재 주 데이터에서 KODEX 주주환원고배당주(0153K0) 찾기 실패
+2026-06-07 21:45:45,592 [WARNING] 현재 주 데이터에서 KODEX 주주환원고배당주(0153K0) 찾기 실패
+2026-06-07 21:46:02,223 [WARNING] 현재 주 데이터에서 KODEX 200ESG(337160) 찾기 실패
+2026-06-07 21:46:11,258 [WARNING] 현재 주 데이터에서 KODEX 삼성전자SK하이닉스채권혼합50(0177N0) 찾기 실패
+2026-06-07 21:46:14,526 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,531 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,566 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,582 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,591 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,594 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,597 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,601 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,603 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,614 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,617 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,631 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,634 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,636 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,639 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:14,660 [WARNING] 현재 주 데이터에서 KODEX 삼성전자단일종목레버리지(0193W0) 찾기 실패
+2026-06-07 21:46:15,272 [WARNING] 현재 주 데이터에서 KODEX 미국AI광통신네트워크(0173Y0) 찾기 실패
+2026-06-07 21:46:15,278 [WARNING] 현재 주 데이터에서 KODEX 미국AI광통신네트워크(0173Y0) 찾기 실패
+2026-06-07 21:46:15,286 [WARNING] 현재 주 데이터에서 KODEX 미국AI광통신네트워크(0173Y0) 찾기 실패
+2026-06-07 21:46:15,307 [WARNING] 현재 주 데이터에서 KODEX 미국AI광통신네트워크(0173Y0) 찾기 실패
+2026-06-07 21:46:33,420 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,426 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,428 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,431 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,447 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,450 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,475 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,477 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,501 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,504 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,509 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,511 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,567 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,594 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,598 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:33,607 [WARNING] 현재 주 데이터에서 KODEX SK하이닉스단일종목레버리지(0193T0) 찾기 실패
+2026-06-07 21:46:40,388 [WARNING] 현재 주 데이터에서 KODEX 코스닥150레버리지(233740) 찾기 실패
+2026-06-07 21:47:44.598 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+캐시 최근 9주 로드 (전체 22주 중)
+2026-06-07 21:51:25.629 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+캐시 최근 9주 로드 (전체 22주 중)
+2026-06-07 21:51:36.646 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+캐시 최근 9주 로드 (전체 22주 중)
+2026-06-07 21:51:39.877 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+캐시 최근 9주 로드 (전체 22주 중)
+2026-06-07 21:51:41.371 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:51:47,420 [INFO] file_cache is only supported with oauth2client<4.0.0
+2026-06-07 21:51:50,853 [INFO] file_cache is only supported with oauth2client<4.0.0
+2026-06-07 21:51:55,024 [INFO] file_cache is only supported with oauth2client<4.0.0
+2026-06-07 21:51:57,360 [INFO] file_cache is only supported with oauth2client<4.0.0
+2026-06-07 21:51:58,295 [INFO] file_cache is only supported with oauth2client<4.0.0
+2026-06-07 21:51:59,183 [INFO] file_cache is only supported with oauth2client<4.0.0
+2026-06-07 21:52:00,058 [INFO] file_cache is only supported with oauth2client<4.0.0
+2026-06-07 21:52:13.924 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:52:13.935 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:52:13.976 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:52:13.979 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:52:14.010 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:52:14.014 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:52:14.044 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:52:14.049 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:52:14.080 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:52:14.084 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:52:14.291 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:52:14.394 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+캐시 최근 9주 로드 (전체 22주 중)
+2026-06-07 21:56:12.865 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+캐시 최근 9주 로드 (전체 22주 중)
+2026-06-07 21:58:09.313 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+캐시 최근 9주 로드 (전체 22주 중)
+2026-06-07 21:58:16.039 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:58:22,143 [INFO] file_cache is only supported with oauth2client<4.0.0
+2026-06-07 21:58:25,389 [INFO] file_cache is only supported with oauth2client<4.0.0
+2026-06-07 21:58:29,277 [INFO] file_cache is only supported with oauth2client<4.0.0
+2026-06-07 21:58:31,366 [INFO] file_cache is only supported with oauth2client<4.0.0
+2026-06-07 21:58:32,210 [INFO] file_cache is only supported with oauth2client<4.0.0
+2026-06-07 21:58:33,133 [INFO] file_cache is only supported with oauth2client<4.0.0
+2026-06-07 21:58:33,937 [INFO] file_cache is only supported with oauth2client<4.0.0
+2026-06-07 21:58:43.817 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:58:43.821 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:58:43.855 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:58:43.858 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:58:43.906 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:58:43.910 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:58:43.946 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:58:43.948 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:58:43.982 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:58:43.985 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:58:44.150 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-07 21:58:44.231 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.

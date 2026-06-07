@@ -1,9 +1,9 @@
 import sys, json, pandas as pd, numpy as np, re
 sys.stdout.reconfigure(encoding='utf-8')
-import FinanceDataReader as fdr
+from pykrx import stock
 
 df = pd.read_parquet('krx_data_cache.parquet')
-w = df[df['week']=='5.25-5.28']
+w = df[df['week']=='5.25-5.29']
 
 def bare(c): return str(c).split('*')[0].strip()
 
@@ -13,17 +13,20 @@ with open('etf_mapping.json', encoding='utf-8') as f:
 # 비교군 없는 KODEX
 no_comp = {bare(k): v['kodex_name'] for k,v in mapping.items() if not v.get('competitors')}
 
-PREFIXES = ['TIGER','ACE','PLUS','SOL','HANARO','RISE','KINDEX','WOORI','KB','NH']
+PREFIXES = ['TIGER','ACE','PLUS','SOL','HANARO','RISE','KINDEX','WOORI','KB','NH',
+            'BNK','DAISHIN','FOCUS','HK','IBK','KCGI','KIWOOM','KoAct','MIDAS',
+            'TIME','TREX','TRUSTON','UNICORN','VITA','WON',
+            '더제이','마이티','아이엠에셋','에셋플러스','파워']
 
 _cache = {}
 def get_corr(c1, c2):
     for c in [c1, c2]:
         if c not in _cache:
             try:
-                df2 = fdr.DataReader(c, '20260101', '20260603')
-                r = df2['Close'].pct_change().dropna()
+                df2 = stock.get_market_ohlcv_by_date('20260101', '20260605', c)
+                r = df2['종가'].pct_change().dropna()
                 _cache[c] = r if len(r) >= 20 else None
-            except:
+            except Exception:
                 _cache[c] = None
     kr, cr = _cache[c1], _cache[c2]
     if kr is None or cr is None: return None
@@ -73,7 +76,7 @@ for kcode, kname in sorted(no_comp.items(), key=lambda x: x[1]):
             hits = w[w['종목명'].str.startswith(pfx) &
                      w['종목명'].str.contains(kw, regex=False, na=False)]
             for _, r in hits.iterrows():
-                ccode = bare(r['단축코드'])
+                ccode = bare(r['종목코드'])
                 cname = r['종목명']
                 if ccode == kcode: continue
                 corr = get_corr(kcode, ccode)

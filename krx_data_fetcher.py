@@ -162,7 +162,8 @@ def fetch_weekly_etf_data(
                 }
                 for krx_name, col_name in investor_map.items():
                     if krx_name in 순매수.index:
-                        row[col_name] = int(순매수[krx_name])
+                        # KRX는 원 단위로 반환 → 멘토 엑셀 데이터(천원 단위)와 통일하기 위해 1000으로 나눔
+                        row[col_name] = int(순매수[krx_name] / 1000)
                     else:
                         row[col_name] = 0
 

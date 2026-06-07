@@ -586,8 +586,8 @@ class MarketingAnalyzer:
             ind_avg=float(np.mean(ind_vals)),
             fi_std=float(np.std(fi_vals, ddof=1)) if len(fi_vals) > 1 else abs(fi_vals[0]) * 0.1 + 1,
             ind_std=float(np.std(ind_vals, ddof=1)) if len(ind_vals) > 1 else abs(ind_vals[0]) * 0.1 + 1,
-            fi_mabs=float(np.mean(np.abs(fi_vals))) + 1000000000,   # 라플라스 α=10억 (+로 항상 분모에 포함)
-            ind_mabs=float(np.mean(np.abs(ind_vals))) + 1000000000,
+            fi_mabs=float(np.mean(np.abs(fi_vals))) + 1000000,   # 라플라스 α=100만 (천원 단위 데이터 기준, +로 항상 분모에 포함)
+            ind_mabs=float(np.mean(np.abs(ind_vals))) + 1000000,
             weeks_used=len(recent),
             history=recent,
         )

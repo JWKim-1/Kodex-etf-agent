@@ -435,7 +435,7 @@ class MarketingAnalyzer:
                     if not pd.isna(v): hist_vals.append(float(v))
                 if len(hist_vals) >= 2:
                     avg = float(np.mean(hist_vals))
-                    norms.append((float(cur) - avg) / (abs(avg) + 1_000_000_000))
+                    norms.append((float(cur) - avg) / (abs(avg) + 1_000_000))
             return float(np.median(norms)) if norms else 0.0
 
         results = {}
@@ -657,7 +657,7 @@ class MarketingAnalyzer:
                         _hist = [v for v in _hist if not pd.isna(v)]
                         if len(_hist) >= 2:
                             _avg = float(np.mean(_hist))
-                            _norms.append((float(_cur) - _avg) / (abs(_avg) + 1_000_000_000))
+                            _norms.append((float(_cur) - _avg) / (abs(_avg) + 1_000_000))
                 _mkt_norm = float(np.median(_norms)) if _norms else 0.0
                 if not hasattr(self, '_market_avg_cache'):
                     self._market_avg_cache = {}
@@ -720,8 +720,8 @@ class MarketingAnalyzer:
             ind_avg=float(np.mean(ind_vals)),
             fi_std=float(np.std(fi_vals, ddof=1)) if len(fi_vals) > 1 else abs(fi_vals[0]) * 0.1 + 1,
             ind_std=float(np.std(ind_vals, ddof=1)) if len(ind_vals) > 1 else abs(ind_vals[0]) * 0.1 + 1,
-            fi_mabs=float(np.mean(np.abs(fi_vals))) + 1000000000,   # 라플라스 α=10억 (+로 항상 분모에 포함) (은행컬럼용)
-            ind_mabs=float(np.mean(np.abs(ind_vals))) + 1000000000,
+            fi_mabs=float(np.mean(np.abs(fi_vals))) + 1000000,   # 라플라스 α=100만 (천원 단위 데이터 기준, +로 항상 분모에 포함) (은행컬럼용)
+            ind_mabs=float(np.mean(np.abs(ind_vals))) + 1000000,
             weeks_used=len(recent),
             history=recent,
         )

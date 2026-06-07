@@ -507,14 +507,15 @@ if krx_id:
             st.error(f"수집 실패: {e}")
 
 
-else:
-    # KRX 계정 없으면 파일 업로드 fallback
+elif not base_loaded:
+    # KRX 계정 없고 캐시도 없을 때만 파일 업로드 fallback 노출
     st.warning("KRX 계정 없음 — `.env`에 `KRX_ID`/`KRX_PW` 설정하면 자동 수집 가능")
     uploaded_new = st.file_uploader("엑셀 파일 업로드 (임시)", type=["xlsx"])
     if uploaded_new:
         file_bytes_base = uploaded_new.read()
         all_sheets = load_excel(file_bytes_base)
         base_loaded = True
+# else: 계정은 없지만 캐시 데이터로 base_loaded=True → 안내문 불필요 (공유 클라우드 배포 시)
 
 uploaded_new = None  # 파일 업로드 비활성화
 
@@ -1214,13 +1215,10 @@ for code, res in did_results.items():
             for comp in res.competitors:
                 c_cur  = comp.current_fi   if metric=="financial" else comp.current_ind
                 c_avg  = comp.baseline_fi_avg  if metric=="financial" else comp.baseline_ind_avg
-                c_mabs = getattr(comp, "fi_mabs" if metric=="financial" else "ind_mabs", None)
-                if c_mabs:
-                    comp_lines += (
-                        f"     · {comp.name}: ({c_cur:,.0f} − {c_avg:,.0f}) ÷ {c_mabs:,.0f} = {int(comp.change_pct*100):+d}%\n"
-                    )
-                else:
-                    comp_lines += f"     · {comp.name}: {int(comp.change_pct*100):+d}%\n"
+                c_mabs = getattr(comp, "fi_mabs" if metric=="financial" else "ind_mabs", 0) or 1_000_000
+                comp_lines += (
+                    f"     · {comp.name}: ({c_cur:,.0f} − {c_avg:,.0f}) ÷ {c_mabs:,.0f} = {int(comp.change_pct*100):+d}%\n"
+                )
             ctrl_str = " + ".join(f"{int(c.change_pct*100):+d}%" for c in res.competitors)
             formula = (
                 f"[ 지표: {metric_label} ]\n\n"

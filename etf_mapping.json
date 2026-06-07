@@ -1772,7 +1772,18 @@
   },
   "453810*001": {
     "kodex_name": "KODEX 인도Nifty50",
-    "competitors": []
+    "competitors": [
+      {
+        "code": "200250",
+        "name": "KIWOOM 인도Nifty50(합성)",
+        "provider": "KIWOOM",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": true,
+        "tracking_index": "",
+        "corr": 0.962
+      }
+    ]
   },
   "0000H0*001": {
     "kodex_name": "KODEX 인도Nifty미드캡100",
@@ -2082,7 +2093,18 @@
   },
   "0144L0*001": {
     "kodex_name": "KODEX 미국성장커버드콜액티브",
-    "competitors": []
+    "competitors": [
+      {
+        "code": "0174R0",
+        "name": "KIWOOM 미국성장다우존스",
+        "provider": "KIWOOM",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": true,
+        "tracking_index": "",
+        "corr": 0.765
+      }
+    ]
   },
   "140710*001": {
     "kodex_name": "KODEX 운송",
@@ -2312,7 +2334,28 @@
   },
   "237350*001": {
     "kodex_name": "KODEX 코스피100",
-    "competitors": []
+    "competitors": [
+      {
+        "code": "140950",
+        "name": "파워 코스피100",
+        "provider": "파워",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": true,
+        "tracking_index": "",
+        "corr": 0.996
+      },
+      {
+        "code": "159800",
+        "name": "마이티 코스피100",
+        "provider": "마이티",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": true,
+        "tracking_index": "",
+        "corr": 0.995
+      }
+    ]
   },
   "0153K0*001": {
     "kodex_name": "KODEX 주주환원고배당주",
@@ -2518,7 +2561,18 @@
   },
   "476800*001": {
     "kodex_name": "KODEX 한국부동산리츠인프라",
-    "competitors": []
+    "competitors": [
+      {
+        "code": "480460",
+        "name": "WON 한국부동산TOP3플러스",
+        "provider": "WON",
+        "similarity": 70,
+        "index_matched": false,
+        "index_partial": true,
+        "tracking_index": "",
+        "corr": 0.828
+      }
+    ]
   },
   "0177N0*001": {
     "kodex_name": "KODEX 삼성전자SK하이닉스채권혼합50",

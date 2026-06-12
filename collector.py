@@ -50,9 +50,13 @@ CHANNEL_LABELS = {
     # ── KB증권 ───────────────────────────────────────
     "kb_youtube":          "KB증권 유튜브",
     # ── 공통 채널 ────────────────────────────────────
-    "krx_news":            "KRX 보도자료",
-    "krx_trading":         "KRX 투자자별 거래실적 (수동 엑셀 대체)",
+    # krx_news, krx_trading 제거 — KRX 데이터는 pykrx로 자동 수집 (krx_data_cache.parquet)
     "news":                "네이버/구글 뉴스",
+    # ── ETF 운용사 채널 (개인·경쟁사 모드 공용) ─────────────────────────
+    # 실제 채널 ID/URL 미확정 — 사용자 확인 후 추가 예정
+    # "kodex_youtube":    "KODEX ETF 유튜브 (삼성자산운용)",
+    # "tiger_youtube":    "TIGER ETF 유튜브 (미래에셋자산운용)",
+    # ...
 }
 
 # 삼성자산운용 이벤트 페이지 → 대고객 디지털 마케팅 채널로 이동 (증권 채널 아님)
@@ -190,9 +194,7 @@ class DataCollector:
             ("shinhan_youtube",    self._ch_shinhan_youtube),
             # KB증권
             ("kb_youtube",         self._ch_kb_youtube),
-            # 공통
-            ("krx_news",           self._ch_krx_news),
-            ("krx_trading",        self._ch_krx_trading),
+            # 공통 (KRX 데이터는 pykrx 자동 수집으로 대체됨 — krx_news/krx_trading 제거)
             ("news",               self._ch_news),
         ]
         results: Dict[str, ChannelResult] = {}
@@ -211,6 +213,53 @@ class DataCollector:
                 result.error_label = ERROR_TYPES.get(result.error_type, result.error_type)
             results[key] = result
         return results
+
+    # ETF 운용사 채널 목록 — 채널 ID/URL 확인 후 여기 추가
+    # 형식: (key, func) 튜플. key는 CHANNEL_LABELS에도 등록 필요.
+    # 예시 (실제 ID 확인 전까지 비워둠):
+    #   ("kodex_youtube",  self._ch_kodex_youtube),   # 삼성자산운용 KODEX
+    #   ("tiger_youtube",  self._ch_tiger_youtube),   # 미래에셋자산운용 TIGER
+    #   ("ace_youtube",    self._ch_ace_youtube),     # 한국투자신탁운용 ACE
+    #   ("rise_youtube",   self._ch_rise_youtube),    # KB자산운용 RISE
+    #   ("hanaro_youtube", self._ch_hanaro_youtube),  # NH-Amundi HANARO
+    #   ("sol_youtube",    self._ch_sol_youtube),     # 신한자산운용 SOL
+    ETF_AM_CHANNELS: list = []  # ← 여기 채워넣으면 됨
+
+    def _collect_etf_am(self, progress_callback=None) -> Dict[str, ChannelResult]:
+        """
+        ETF 운용사 채널 공통 수집 로직.
+        개인 채널(mass)·경쟁사 채널(competitor) 모두 이 함수를 사용.
+        ETF_AM_CHANNELS 목록에 등록된 채널만 수집.
+        """
+        base = [
+            ("samsung_fund_event", self._ch_samsung_fund_event),  # 삼성자산운용 이벤트 (항상 포함)
+            ("news",               self._ch_news),
+        ]
+        channels = base + self.ETF_AM_CHANNELS
+        results: Dict[str, ChannelResult] = {}
+        for idx, (key, func) in enumerate(channels):
+            name = CHANNEL_LABELS.get(key, key)
+            if progress_callback:
+                progress_callback(idx + 1, len(channels), name)
+            try:
+                result = func()
+            except Exception as e:
+                logger.exception(f"[{name}] 예외")
+                result = ChannelResult(key, name, False, error=str(e), error_type="UNKNOWN")
+            result.channel = key
+            result.channel_name = name
+            if result.error_type and not result.error_label:
+                result.error_label = ERROR_TYPES.get(result.error_type, result.error_type)
+            results[key] = result
+        return results
+
+    def collect_all_mass(self, progress_callback=None) -> Dict[str, ChannelResult]:
+        """개인 채널 — ETF 운용사 전체 채널 수집 (경쟁사 포함), 개인 순매수 DiD용."""
+        return self._collect_etf_am(progress_callback)
+
+    def collect_all_competitor(self, progress_callback=None) -> Dict[str, ChannelResult]:
+        """경쟁사 채널 — ETF 운용사 전체 채널 수집, 이벤트 보드 표시용."""
+        return self._collect_etf_am(progress_callback)
 
     # ── CH1: 삼성자산운용 이벤트 페이지 ───────────────────────────────────────
 
@@ -317,14 +366,18 @@ class DataCollector:
 
     def _fetch_youtube_rss(self, ch: str, name: str, channel_id: str) -> ChannelResult:
         """유튜브 RSS 공통 수집 로직."""
-        one_week_ago = datetime.utcnow() - timedelta(days=7)
+        # 선택한 주차 기준으로 조회 범위 지정 (없으면 최근 7일) — week_start/week_end 무시하던 버그 수정
+        _range_start = self.week_start or (datetime.utcnow() - timedelta(days=7))
+        _range_end = self.week_end or datetime.utcnow()
         if self.youtube_api_key:
             try:
                 from googleapiclient.discovery import build
                 yt = build("youtube", "v3", developerKey=self.youtube_api_key)
-                pub_after = (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
+                pub_after = _range_start.strftime("%Y-%m-%dT%H:%M:%SZ")
+                pub_before = (_range_end + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
                 search = yt.search().list(part="id,snippet", channelId=channel_id, type="video",
-                                          publishedAfter=pub_after, maxResults=10, order="date").execute()
+                                          publishedAfter=pub_after, publishedBefore=pub_before,
+                                          maxResults=10, order="date").execute()
                 videos = []
                 for item in search.get("items", []):
                     vid_id = item["id"].get("videoId", "")
@@ -388,7 +441,6 @@ class DataCollector:
     def _ch_samsung_youtube(self) -> ChannelResult:
         ch, name = "samsung_youtube", CHANNEL_LABELS["samsung_youtube"]
         channel_id = "UCq7h8qFlHN5FL_T6waKZllw"
-        one_week_ago = datetime.utcnow() - timedelta(days=7)
 
         # YouTube Data API v3 시도
         if self.youtube_api_key:
@@ -396,7 +448,7 @@ class DataCollector:
                 from googleapiclient.discovery import build
 
                 yt = build("youtube", "v3", developerKey=self.youtube_api_key)
-                pub_after = (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
+                pub_after = self.week_start.strftime("%Y-%m-%dT%H:%M:%SZ")
                 search = (
                     yt.search()
                     .list(
@@ -639,72 +691,6 @@ class DataCollector:
                 "채널 관리자 계정 권한 필요"
             ),
             error_type="SUBSCRIBER_ONLY",
-        )
-
-    # ── CH7: KRX 보도자료 ────────────────────────────────────────────────────
-
-    def _ch_krx_news(self) -> ChannelResult:
-        ch, name = "krx_news", CHANNEL_LABELS["krx_news"]
-        # KRX 보도자료 RSS / API 시도
-        try_urls = [
-            "https://www.krx.co.kr/contents/COM/GenerateFile.jspx?filetype=rss&filename=krx_press",
-            "https://www.krx.co.kr/main/main.jsp",
-        ]
-        for url in try_urls:
-            try:
-                r = requests.get(url, headers=BROWSER_HEADERS, timeout=15)
-                if r.status_code == 403:
-                    continue
-                r.raise_for_status()
-                # RSS 파싱 시도
-                try:
-                    soup = BeautifulSoup(r.text, "xml")
-                    items = soup.find_all("item")
-                    if items:
-                        one_week_ago = datetime.now() - timedelta(days=7)
-                        news = []
-                        for item in items[:20]:
-                            title = item.find("title").get_text(strip=True) if item.find("title") else ""
-                            pub = item.find("pubDate").get_text(strip=True) if item.find("pubDate") else ""
-                            link = item.find("link").get_text(strip=True) if item.find("link") else ""
-                            if title:
-                                news.append({"title": title, "date": pub, "url": link})
-                        if news:
-                            return ChannelResult(ch, name, True, data={"news": news, "source": "rss"})
-                except Exception:
-                    pass
-                # HTML 파싱 시도
-                soup = BeautifulSoup(r.text, "lxml")
-                news = []
-                for row in soup.find_all("tr")[:30]:
-                    tds = row.find_all("td")
-                    if tds:
-                        title = tds[0].get_text(strip=True)
-                        if title and len(title) > 5:
-                            news.append({"title": title})
-                if news:
-                    return ChannelResult(ch, name, True, data={"news": news[:10], "source": "html"})
-            except Exception as e:
-                logger.debug(f"KRX URL 실패 ({url}): {e}")
-                continue
-
-        return ChannelResult(
-            ch, name, False,
-            error="KRX 보도자료 접근 실패 — SPA 또는 접속 차단 (403). 직접 브라우저 접속 필요",
-            error_type="ACCESS_BLOCKED",
-        )
-
-    # ── CH8: KRX 투자자별 거래실적 ───────────────────────────────────────────
-
-    def _ch_krx_trading(self) -> ChannelResult:
-        ch, name = "krx_trading", CHANNEL_LABELS["krx_trading"]
-        return ChannelResult(
-            ch, name, False,
-            error=(
-                "data.krx.co.kr는 SPA 구조 — 정적 요청으로 데이터 테이블 접근 불가. "
-                "엑셀 파일 수동 업로드로 대체 (현재 선택된 방식)"
-            ),
-            error_type="SPA_STRUCTURE",
         )
 
     # ── CH9: 구글 트렌드 ─────────────────────────────────────────────────────
@@ -951,3 +937,9 @@ class DataCollector:
             "kb_youtube", CHANNEL_LABELS["kb_youtube"],
             "UCD0k4Kq7SJROxxV-9N5v8IA"
         )
+
+    # ── ETF 운용사 채널 (개인·경쟁사 모드 공용) ─────────────────────────────────
+    # 채널 ID/URL은 사용자 확인 후 여기 추가
+    # 형식:
+    #   유튜브: self._fetch_youtube_rss("key", CHANNEL_LABELS["key"], "UC...channel_id...")
+    #   블로그: self._ch_naver_blog_base("key", CHANNEL_LABELS["key"], "https://rss.blog.naver.com/xxx.xml")

@@ -191,14 +191,15 @@ if st.session_state.selected_mode is None:
 
     with col3:
         st.markdown("""
-        <div class="mode-card disabled">
+        <div class="mode-card">
             <div class="mode-icon">🎯</div>
             <div class="mode-title">개인 채널</div>
-            <div class="mode-desc">삼성자산운용 직접 채널(이벤트·유튜브·블로그) 마케팅 효과를 개인 순매수 DiD로 측정</div>
-            <div class="coming-soon">🔒 추후 출시 예정</div>
+            <div class="mode-desc">삼성자산운용 직접 채널(이벤트·KODEX유튜브·뉴스) 마케팅 효과를 개인 순매수 DiD로 측정</div>
         </div>
         """, unsafe_allow_html=True)
-        st.button("개인 채널 (준비 중)", key="btn_mass", use_container_width=True, disabled=True)
+        if st.button("개인 채널 →", key="btn_mass", use_container_width=True, type="primary"):
+            st.session_state.selected_mode = "mass"
+            st.rerun()
 
     st.markdown("<div style='margin:8px 0;'></div>", unsafe_allow_html=True)
 
@@ -207,25 +208,27 @@ if st.session_state.selected_mode is None:
 
     with col4:
         st.markdown("""
-        <div class="mode-card disabled">
+        <div class="mode-card">
             <div class="mode-icon">📊</div>
             <div class="mode-title">ETF 시장 트렌드</div>
-            <div class="mode-desc">국내/해외 ETF 수익률·거래대금 Top 10 + 시장 요인 인사이트 자동 정리</div>
-            <div class="coming-soon">🔒 추후 출시 예정</div>
+            <div class="mode-desc">국내 ETF 수익률·거래대금 Top 10 + 운용사별 점유율 자동 정리</div>
         </div>
         """, unsafe_allow_html=True)
-        st.button("시장 트렌드 (준비 중)", key="btn_trend", use_container_width=True, disabled=True)
+        if st.button("시장 트렌드 →", key="btn_trend", use_container_width=True, type="primary"):
+            st.session_state.selected_mode = "trend"
+            st.rerun()
 
     with col5:
         st.markdown("""
-        <div class="mode-card disabled">
+        <div class="mode-card">
             <div class="mode-icon">🏢</div>
             <div class="mode-title">경쟁사 채널</div>
-            <div class="mode-desc">TIGER·ACE·RISE 채널 모니터링 → 경쟁사가 밀어준 ETF 순매수 변화 대조 분석</div>
-            <div class="coming-soon">🔒 추후 출시 예정</div>
+            <div class="mode-desc">TIGER·ACE·RISE·HANARO·SOL 유튜브·블로그 이벤트 감지 → 이벤트명·기간·내용 자동 정리</div>
         </div>
         """, unsafe_allow_html=True)
-        st.button("경쟁사 채널 (준비 중)", key="btn_competitor", use_container_width=True, disabled=True)
+        if st.button("경쟁사 채널 →", key="btn_competitor", use_container_width=True, type="primary"):
+            st.session_state.selected_mode = "competitor"
+            st.rerun()
 
     with col6:
         st.markdown("""
@@ -240,6 +243,33 @@ if st.session_state.selected_mode is None:
 
     st.markdown("---")
     st.caption("삼성자산운용 ETF 마케팅 모니터링 AI Agent · Powered by Claude")
+    st.stop()
+
+# 개인 채널 모드
+if st.session_state.selected_mode == "mass":
+    with st.sidebar:
+        if st.button("← 채널 선택", key="back_mass"):
+            st.session_state.selected_mode = None
+            st.rerun()
+    exec(open(os.path.join(os.path.dirname(__file__), "agents/mass/app_mass.py"), encoding="utf-8").read())
+    st.stop()
+
+# 경쟁사 채널 모드
+if st.session_state.selected_mode == "competitor":
+    with st.sidebar:
+        if st.button("← 채널 선택", key="back_competitor"):
+            st.session_state.selected_mode = None
+            st.rerun()
+    exec(open(os.path.join(os.path.dirname(__file__), "agents/competitor/app_competitor.py"), encoding="utf-8").read())
+    st.stop()
+
+# ETF 시장 트렌드 모드
+if st.session_state.selected_mode == "trend":
+    with st.sidebar:
+        if st.button("← 채널 선택", key="back_trend"):
+            st.session_state.selected_mode = None
+            st.rerun()
+    exec(open(os.path.join(os.path.dirname(__file__), "agents/market/app_market.py"), encoding="utf-8").read())
     st.stop()
 
 # 은행 모드
@@ -716,11 +746,29 @@ if True:  # 과거/현재 모두 수집 시도
         )
 
     t0 = time.time()
-    collection_results = collector.collect_all(progress_callback=on_prog)
+
+    # ── 주차별 채널 수집 결과 아카이브: 같은 주차를 다시 분석할 때 ──
+    # RSS/유튜브/블로그는 "현재 시점 기준 최근 글"만 반환하므로, 1주만 지나도
+    # 그 시점에 감지했던 글/링크가 사라져 재조회가 안 됨 → 최초 수집 시 보존,
+    # 이후엔 보존된 결과를 그대로 사용 (그 주차 시점의 데이터를 영구 확보)
+    from channel_archive import has_archive, save_channel_results, load_channel_results, get_archived_at
+
+    _from_archive = False
+    _days_old = (today_date - sheet_start).days if sheet_start else 0
+    if has_archive(current_sheet):
+        collection_results = load_channel_results(current_sheet)
+        _from_archive = True
+        _archived_at = get_archived_at(current_sheet)
+    else:
+        collection_results = collector.collect_all(progress_callback=on_prog)
+        if _days_old <= 14:
+            save_channel_results(current_sheet, collection_results)
+
     elapsed = time.time() - t0
     ok   = sum(1 for r in collection_results.values() if r.success)
     fail = len(collection_results) - ok
     # 완료: 황소가 바 끝(100%)에 서있고 불 꺼짐
+    _src_label = f"📦 보존된 결과 사용 (최초 수집: {_archived_at})" if _from_archive else f"완료 {elapsed:.1f}초"
     dino_ph.markdown(
         f"""<div style='background:rgba(255,255,255,0.03); border-radius:8px; padding:8px 8px 4px; margin:6px 0;'>
           <div style='position:relative; height:50px;'>
@@ -732,7 +780,7 @@ if True:  # 과거/현재 모두 수집 시도
                         font-size:1.8rem; transform:scaleX(-1);'>🐂</div>
           </div>
           <div style='font-size:0.8rem; opacity:.6; margin-top:2px;'>
-            완료 {elapsed:.1f}초 — 성공 {ok}개 / 실패 {fail}개</div>
+            {_src_label} — 성공 {ok}개 / 실패 {fail}개</div>
         </div>""",
         unsafe_allow_html=True
     )
@@ -784,7 +832,68 @@ else:
         if llm_result.get("summary"):
             st.caption(llm_result["summary"])
 
-        # 감지 근거 — 탭 형태
+        # ── 이벤트 보드 ──────────────────────────────────────────────────────
+        evidence = llm_result.get("evidence", [])
+        events_with_info = [ev for ev in (evidence or []) if ev.get("event_summary") or ev.get("event_period")]
+        if events_with_info:
+            st.markdown("""
+            <style>
+            .ev-board { display:flex; gap:12px; flex-wrap:wrap; margin:12px 0; }
+            .ev-card {
+                flex:1; min-width:220px; max-width:320px;
+                border:1px solid rgba(0,82,255,0.25); border-radius:14px;
+                padding:14px 16px; background:rgba(0,82,255,0.05);
+            }
+            .ev-card-type {
+                font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:100px;
+                display:inline-block; margin-bottom:6px;
+            }
+            .ev-type-event   { background:rgba(0,198,255,0.15);color:#00c6ff;border:1px solid rgba(0,198,255,0.3); }
+            .ev-type-promo   { background:rgba(5,177,105,0.15);color:#05b169;border:1px solid rgba(5,177,105,0.3); }
+            .ev-type-content { background:rgba(255,200,50,0.15);color:#f0c040;border:1px solid rgba(255,200,50,0.3); }
+            .ev-type-fee     { background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3); }
+            .ev-type-etc     { background:rgba(255,255,255,0.08);color:#aaa;border:1px solid rgba(255,255,255,0.15); }
+            .ev-title { font-size:0.88rem; font-weight:700; color:#e8eaed; margin-bottom:4px; line-height:1.4; }
+            .ev-period { font-size:0.75rem; color:#4d9fff; margin:4px 0; }
+            .ev-summary { font-size:0.78rem; color:#aaa; line-height:1.5; margin:6px 0 0; }
+            .ev-channel { font-size:0.68rem; color:#666; margin-top:6px; }
+            </style>
+            """, unsafe_allow_html=True)
+
+            _type_cls = {
+                "이벤트": "ev-type-event",
+                "프로모션": "ev-type-promo",
+                "추천콘텐츠": "ev-type-content",
+                "수수료혜택": "ev-type-fee",
+            }
+            _type_icon = {
+                "이벤트": "🎁", "프로모션": "💰",
+                "추천콘텐츠": "📺", "수수료혜택": "🎯",
+            }
+            cards_html = '<div class="ev-board">'
+            for ev in events_with_info[:6]:
+                mtype = ev.get("marketing_type", "기타")
+                cls = _type_cls.get(mtype, "ev-type-etc")
+                icon = _type_icon.get(mtype, "📋")
+                title = ev.get("title", "")[:60]
+                period = ev.get("event_period") or ""
+                summary = ev.get("event_summary") or ev.get("reason") or ""
+                channel = ev.get("channel", "")
+                url = ev.get("url", "")
+                title_html = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>' if url and url.startswith("http") else title
+                period_html = f'<div class="ev-period">📅 {period}</div>' if period and period != "null" else ""
+                cards_html += f"""
+                <div class="ev-card">
+                  <span class="ev-card-type {cls}">{icon} {mtype}</span>
+                  <div class="ev-title">{title_html}</div>
+                  {period_html}
+                  <div class="ev-summary">{summary[:120]}</div>
+                  <div class="ev-channel">출처: {channel}</div>
+                </div>"""
+            cards_html += "</div>"
+            st.markdown(cards_html, unsafe_allow_html=True)
+
+        # 감지 근거 — 탭 형태 (접이식)
         evidence = llm_result.get("evidence", [])
         from collections import defaultdict
         by_channel = defaultdict(list)
@@ -1215,14 +1324,16 @@ for code, res in did_results.items():
             for comp in res.competitors:
                 c_cur  = comp.current_fi   if metric=="financial" else comp.current_ind
                 c_avg  = comp.baseline_fi_avg  if metric=="financial" else comp.baseline_ind_avg
-                c_mabs = getattr(comp, "fi_mabs" if metric=="financial" else "ind_mabs", 0) or 1_000_000
+                c_mabs = (comp.baseline_fi_mabs if metric == "financial" else comp.baseline_ind_mabs) or 1_000_000
+                c_raw_mabs = c_mabs - 1_000_000
                 comp_lines += (
-                    f"     · {comp.name}: ({c_cur:,.0f} − {c_avg:,.0f}) ÷ {c_mabs:,.0f} = {int(comp.change_pct*100):+d}%\n"
+                    f"     · {comp.name}: ({c_cur:,.0f} − {c_avg:,.0f}) ÷ (mean(절댓값) {c_raw_mabs:,.0f} + 100만 = {c_mabs:,.0f}) = {int(comp.change_pct*100):+d}%\n"
                 )
             ctrl_str = " + ".join(f"{int(c.change_pct*100):+d}%" for c in res.competitors)
+            raw_mabs_val = mabs_val - 1_000_000
             formula = (
                 f"[ 지표: {metric_label} ]\n\n"
-                f"  ① KODEX = ({cur_val:,.0f} − {avg_val:,.0f}) ÷ {mabs_val:,.0f}\n"
+                f"  ① KODEX = ({cur_val:,.0f} − {avg_val:,.0f}) ÷ (mean(절댓값) {raw_mabs_val:,.0f} + 100만 = {mabs_val:,.0f})\n"
                 f"          = {int(res.kodex_change_pct*100):+d}%\n\n"
                 f"  ② 비교군 (각 ETF):\n"
                 f"{comp_lines}"

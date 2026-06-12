@@ -224,7 +224,9 @@ class CompetitorResult:
     current_ind: float
     baseline_fi_avg: float
     baseline_ind_avg: float
-    metric_used: str   # "financial" or "individual"
+    baseline_fi_mabs: float = 0.0   # 정규화 분모 (UI 수식 박스 표시용)
+    baseline_ind_mabs: float = 0.0
+    metric_used: str = "financial"   # "financial" or "individual"
 
 
 @dataclass
@@ -447,6 +449,8 @@ class MarketingAnalyzer:
             f"[베이스라인] 금융투자 4주평균={baseline.fi_avg:,.0f} (σ={baseline.fi_std:,.0f})  "
             f"개인 4주평균={baseline.ind_avg:,.0f} ({baseline.weeks_used}주 사용)"
         )
+        log.append(f"[베이스라인 상세 — {kodex_name}] 4주 평균/분모(c) 계산 과정:")
+        log.extend(self._baseline_detail_lines(baseline, kodex_name, metric="both"))
 
         # ── Step B-1: 비교군 정의 (LP 감지 전에 필요) ──
         # 우선순위: ① etf_mapping.json (사전 매핑) ② 실시간 auto_map (fallback)
@@ -502,11 +506,14 @@ class MarketingAnalyzer:
             log.append(
                 f"  · {cname}: ({c_cur:,.0f} − {c_base:,.0f}) ÷ {c_mabs:,.0f} = {cchg:+.4f}"
             )
+            log.append(f"  · {cname} 베이스라인 상세 — 4주 평균/분모(c) 계산 과정:")
+            log.extend(self._baseline_detail_lines(cb, cname, metric=force_metric))
             competitor_results.append(CompetitorResult(
                 code=ccode, name=cname, provider=cprov,
                 change_pct=cchg,
                 current_fi=cdata.financial_investment, current_ind=cdata.individual,
                 baseline_fi_avg=cb.fi_avg, baseline_ind_avg=cb.ind_avg,
+                baseline_fi_mabs=cb.fi_mabs, baseline_ind_mabs=cb.ind_mabs,
                 metric_used=force_metric,
             ))
 
@@ -558,6 +565,35 @@ class MarketingAnalyzer:
             notes=notes,
             calculation_log=log,
         )
+
+    def _baseline_detail_lines(self, baseline: "Baseline", label: str, metric: str = "both") -> List[str]:
+        """4주 평균/평균절댓값(분모) 계산 과정을 생략 없이 풀어쓴 로그 라인 생성.
+        metric: "financial" | "individual" | "both" — 어떤 지표 상세를 보여줄지
+        """
+        lines = []
+        if not baseline.history:
+            return [f"  └ {label}: 사용 가능한 과거 주차 데이터 없음 (기본값 적용)"]
+
+        weeks_str = ", ".join(f"{r['week']}(금융={r['fi']:,.0f} / 개인={r['ind']:,.0f})" for r in baseline.history)
+        lines.append(f"  └ {label} 사용 주차({baseline.weeks_used}개): {weeks_str}")
+
+        def _metric_detail(vals_key: str, avg: float, mabs: float, mlabel: str):
+            vals = [r[vals_key] for r in baseline.history if not pd.isna(r[vals_key])] or [0.0]
+            n = len(vals)
+            sum_str = " + ".join(f"{v:,.0f}" for v in vals)
+            abs_str = " + ".join(f"|{v:,.0f}|" for v in vals)
+            raw_mabs = mabs - 1_000_000
+            return [
+                f"      · {mlabel} 평균(b) = ({sum_str}) ÷ {n} = {avg:,.0f}",
+                f"      · {mlabel} mean(절댓값) = ({abs_str}) ÷ {n} = {raw_mabs:,.0f}",
+                f"      · {mlabel} 분모(c) = mean(절댓값) {raw_mabs:,.0f} + 라플라스상수 1,000,000 = {mabs:,.0f}",
+            ]
+
+        if metric in ("financial", "both"):
+            lines += _metric_detail("fi", baseline.fi_avg, baseline.fi_mabs, "금융투자")
+        if metric in ("individual", "both"):
+            lines += _metric_detail("ind", baseline.ind_avg, baseline.ind_mabs, "개인")
+        return lines
 
     def _compute_baseline(
         self, code: str, name: str, history: Dict[str, pd.DataFrame]
@@ -722,7 +758,7 @@ class MarketingAnalyzer:
 
 # ── LLM ETF 추출 ──────────────────────────────────────────────────────────────
 
-def extract_target_etfs_with_llm(collection_results: Dict, anthropic_api_key: str = "") -> Dict:
+def extract_target_etfs_with_llm(collection_results: Dict, anthropic_api_key: str = "", channel_context: str = "") -> Dict:
     """
     수집된 마케팅 채널 텍스트에서 LLM으로 대상 ETF 코드 및 마케팅 활동 요약 추출.
     반환: {"marketing_detected": bool, "etf_codes": [...], "summary": str}
@@ -797,6 +833,8 @@ JSON만 출력:
       "reason": "이 콘텐츠가 마케팅 활동으로 판단된 이유 (1문장)",
       "marketing_type": "이벤트|프로모션|추천콘텐츠|수수료혜택|기타 중 하나",
       "marketing_reason": "단순 키워드 노출이 아닌 마케팅 활동으로 분류한 구체적 근거 (이벤트 기간 명시·혜택 내용·매수 유도 문구 등)",
+      "event_period": "2026-06-01 ~ 2026-06-30 (텍스트에서 기간 언급 없으면 null)",
+      "event_summary": "이벤트·프로모션 핵심 내용 1-2문장 (어떤 혜택인지, 대상 ETF, 조건 등)",
       "etf_codes": ["069500"]
     }}
   ]

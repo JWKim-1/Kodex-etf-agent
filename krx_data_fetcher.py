@@ -213,6 +213,133 @@ def fetch_multiple_weeks(
 
 
 CACHE_FILE = "krx_data_cache.parquet"
+TREND_CACHE_FILE = "krx_trend_cache.parquet"
+
+
+def fetch_etf_market_summary(week_start: date, week_end: date) -> pd.DataFrame:
+    """
+    주간 ETF 수익률·거래대금 조회.
+    pykrx get_etf_ohlcv_by_date 사용 (ETF별 개별 조회, KODEX 우선 234개 + 전체 목록).
+    get_market_ohlcv_by_ticker(market="ETF")는 KRX가 HTML 오류 반환하므로 사용 안 함.
+    """
+    _setup_krx_env()
+    try:
+        from pykrx import stock
+    except ImportError:
+        raise ImportError("pykrx 미설치: pip install pykrx")
+
+    end_str   = week_end.strftime("%Y%m%d")
+    start_str = week_start.strftime("%Y%m%d")
+    prev_friday = week_start - timedelta(days=3)
+    prev_str  = prev_friday.strftime("%Y%m%d")
+    week_label = f"{week_start.month}.{week_start.day}-{week_end.month}.{week_end.day}"
+
+    # ETF 티커 목록 (KODEX 우선 + 전체)
+    try:
+        all_tickers = list(stock.get_etf_ticker_list(end_str) or [])
+    except Exception as e:
+        print(f"  ETF 목록 조회 실패: {e}")
+        return pd.DataFrame()
+
+    # KODEX 우선 정렬 후 전체 포함 (최대 300개 — 속도/커버리지 균형)
+    priority = [c for c in KODEX_PRIORITY if c in set(all_tickers)]
+    rest     = [c for c in all_tickers if c not in set(priority)]
+    target_tickers = (priority + rest)[:300]
+    print(f"  수집 대상: {len(target_tickers)}개 ETF (KODEX {len(priority)}개 우선)")
+
+    rows = []
+    failed = 0
+    _session_start = datetime.now()
+    _SESSION_LIMIT = 25
+
+    for i, code in enumerate(target_tickers):
+        # 세션 선제 갱신
+        if (datetime.now() - _session_start).seconds > _SESSION_LIMIT * 60:
+            try:
+                _setup_krx_env()
+                import importlib, pykrx.website.comm.webio as _webio
+                importlib.reload(_webio)
+                _session_start = datetime.now()
+            except Exception:
+                pass
+
+        try:
+            # 이번 주 일별 OHLCV (시가·고가·저가·종가·거래량·거래대금)
+            df_w = stock.get_etf_ohlcv_by_date(start_str, end_str, code)
+            if df_w is None or df_w.empty:
+                continue
+
+            # 직전 금요일 종가 (수익률 기준)
+            try:
+                df_p = stock.get_etf_ohlcv_by_date(prev_str, prev_str, code)
+                prev_close = float(df_p["종가"].iloc[-1]) if (df_p is not None and not df_p.empty and "종가" in df_p.columns) else np.nan
+            except Exception:
+                prev_close = np.nan
+
+            last_close = float(df_w["종가"].iloc[-1]) if "종가" in df_w.columns else np.nan
+            ret_pct = (last_close - prev_close) / prev_close * 100 if (not np.isnan(prev_close) and prev_close != 0) else np.nan
+
+            vol_col = "거래대금" if "거래대금" in df_w.columns else None
+            total_vol = float(df_w[vol_col].sum()) if vol_col else 0.0
+
+            try:
+                name = stock.get_etf_ticker_name(code)
+            except Exception:
+                name = code
+
+            rows.append({
+                "종목코드": code,
+                "종목명":   name,
+                "수익률_pct": ret_pct,
+                "거래대금_억": total_vol / 1e8,
+                "마지막종가": last_close,
+            })
+
+        except Exception:
+            failed += 1
+
+        if (i + 1) % 50 == 0:
+            print(f"  진행: {i+1}/{len(target_tickers)} (실패 {failed}개)")
+
+    if not rows:
+        print("  데이터 없음")
+        return pd.DataFrame()
+
+    df_result = pd.DataFrame(rows)
+    df_result["week"] = week_label
+    print(f"  시장 트렌드 수집 완료: {len(df_result)}개 ETF, 실패 {failed}개, 기준주 {week_label}")
+    return df_result
+
+
+def load_trend_cache() -> dict:
+    """주간 시장 트렌드 캐시 로드."""
+    if not os.path.exists(TREND_CACHE_FILE):
+        return {}
+    try:
+        df = pd.read_parquet(TREND_CACHE_FILE)
+        result = {}
+        for week in df["week"].unique():
+            result[week] = df[df["week"] == week].drop(columns=["week"]).reset_index(drop=True)
+        return result
+    except Exception as e:
+        print(f"트렌드 캐시 로드 실패: {e}")
+        return {}
+
+
+def save_trend_cache(week_label: str, df: pd.DataFrame):
+    """주간 시장 트렌드 데이터 캐시에 추가/갱신."""
+    existing = load_trend_cache()
+    df_save = df.copy()
+    if "week" in df_save.columns:
+        df_save = df_save.drop(columns=["week"])
+    existing[week_label] = df_save
+    all_dfs = []
+    for wk, wdf in existing.items():
+        wdf = wdf.copy()
+        wdf["week"] = wk
+        all_dfs.append(wdf)
+    pd.concat(all_dfs, ignore_index=True, sort=False).to_parquet(TREND_CACHE_FILE, index=False)
+    print(f"트렌드 캐시 저장: {week_label}")
 
 def save_cache(sheets: dict):
     """수집된 데이터를 로컬 parquet에 저장."""

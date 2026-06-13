@@ -69,11 +69,12 @@ st.markdown("""
 
 # ── 경쟁사 프로바이더 정의 ────────────────────────────────────────────────────
 COMP_PROVIDERS = {
-    "TIGER": {"color": "#ff8c42", "bg": "rgba(255,140,66,0.15)", "channels": ["tiger_youtube", "tiger_blog"]},
-    "ACE":   {"color": "#05b169", "bg": "rgba(5,177,105,0.15)",  "channels": ["ace_youtube"]},
-    "RISE":  {"color": "#a78bfa", "bg": "rgba(167,139,250,0.15)","channels": ["rise_youtube"]},
-    "HANARO":{"color": "#00c6ff", "bg": "rgba(0,198,255,0.12)",  "channels": ["hanaro_youtube"]},
-    "SOL":   {"color": "#f43f5e", "bg": "rgba(244,63,94,0.15)",  "channels": ["sol_youtube"]},
+    "TIGER": {"color": "#ff8c42", "bg": "rgba(255,140,66,0.15)",  "channels": ["tiger_youtube", "tiger_event"]},
+    "ACE":   {"color": "#05b169", "bg": "rgba(5,177,105,0.15)",   "channels": ["ace_youtube", "ace_event"]},
+    "RISE":  {"color": "#a78bfa", "bg": "rgba(167,139,250,0.15)", "channels": ["rise_youtube", "rise_event"]},
+    "HANARO":{"color": "#00c6ff", "bg": "rgba(0,198,255,0.12)",   "channels": ["hanaro_youtube", "hanaro_event"]},
+    "SOL":   {"color": "#f43f5e", "bg": "rgba(244,63,94,0.15)",   "channels": ["sol_youtube", "sol_event", "sol_blog"]},
+    "KODEX": {"color": "#3B82F6", "bg": "rgba(59,130,246,0.12)",  "channels": ["kodex_youtube", "samsung_fund_event"]},
 }
 
 # ── API 키 ────────────────────────────────────────────────────────────────────
@@ -116,11 +117,12 @@ if not st.session_state.get("comp_analysis_run", False):
     st.info("위 버튼을 눌러 경쟁사 ETF 운용사 채널 수집을 시작하세요.")
     st.markdown("""
     **수집 채널:**
-    - 🟠 **TIGER ETF** — 미래에셋자산운용 유튜브·블로그
-    - 🟢 **ACE ETF** — 한국투자신탁운용 유튜브
-    - 🟣 **RISE ETF** — KB자산운용 유튜브
-    - 🔵 **HANARO ETF** — NH-Amundi자산운용 유튜브
-    - 🔴 **SOL ETF** — 신한자산운용 유튜브
+    - 🔵 **KODEX ETF** — 삼성자산운용 유튜브 + 이벤트 페이지
+    - 🟠 **TIGER ETF** — 미래에셋자산운용 유튜브 + 이벤트 페이지
+    - 🟢 **ACE ETF** — 한국투자신탁운용 유튜브 + 이벤트 공지
+    - 🟣 **RISE ETF** — KB자산운용 유튜브 + 이벤트 페이지
+    - 🔵 **HANARO ETF** — NH-Amundi자산운용 유튜브 + 이벤트 공지
+    - 🔴 **SOL ETF** — 신한자산운용 유튜브 + 이벤트 공지 + 네이버 블로그
     - 📰 뉴스 (네이버/구글)
     """)
     st.stop()
@@ -173,8 +175,10 @@ with st.expander("📡 채널별 상세", expanded=False):
         else:
             d = r.data or {}
             items = []
-            if "videos" in d:  items = [v.get("title","") for v in d["videos"][:5]]
-            elif "posts" in d: items = [p.get("title","") for p in d["posts"][:5]]
+            if "videos" in d:         items = [v.get("title","") for v in d["videos"][:5]]
+            elif "event_details" in d: items = [e.get("title","") for e in d["event_details"][:5]]
+            elif "posts" in d:         items = [p.get("title","") for p in d["posts"][:5]]
+            elif "events" in d:        items = d["events"][:5]
             if items:
                 st.markdown(f"**{r.channel_name}**")
                 for it in items:
@@ -209,7 +213,7 @@ def extract_competitor_events(collection_results: dict, api_key: str) -> dict:
     if not marketing_texts:
         return {"marketing_detected": False, "events": [], "summary": "수집된 텍스트 없음"}
 
-    prompt = f"""다음은 경쟁사 ETF 운용사 채널(TIGER/ACE/RISE/HANARO/SOL)에서 수집된 텍스트입니다.
+    prompt = f"""다음은 ETF 운용사 채널(KODEX/TIGER/ACE/RISE/HANARO/SOL)에서 수집된 텍스트입니다.
 
 {chr(10).join(marketing_texts)}
 
@@ -226,7 +230,7 @@ JSON만 출력:
   "events": [
     {{
       "channel": "채널명 (예: TIGER ETF 유튜브)",
-      "provider": "TIGER|ACE|RISE|HANARO|SOL|기타",
+      "provider": "KODEX|TIGER|ACE|RISE|HANARO|SOL|기타",
       "title": "이벤트·콘텐츠 제목",
       "url": "링크 (있으면)",
       "marketing_type": "이벤트|프로모션|추천콘텐츠|수수료혜택|기타",
@@ -286,7 +290,7 @@ for ev in events:
 
 _type_cls  = {"이벤트":"ev-type-event","프로모션":"ev-type-promo","추천콘텐츠":"ev-type-content","수수료혜택":"ev-type-fee"}
 _type_icon = {"이벤트":"🎁","프로모션":"💰","추천콘텐츠":"📺","수수료혜택":"🎯"}
-_prov_icon = {"TIGER":"🟠","ACE":"🟢","RISE":"🟣","HANARO":"🔵","SOL":"🔴"}
+_prov_icon = {"KODEX":"🔵","TIGER":"🟠","ACE":"🟢","RISE":"🟣","HANARO":"🔵","SOL":"🔴"}
 
 for prov, prov_events in by_provider.items():
     pinfo = COMP_PROVIDERS.get(prov, {"color":"#aaa","bg":"rgba(255,255,255,0.05)"})

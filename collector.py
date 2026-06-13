@@ -53,10 +53,19 @@ CHANNEL_LABELS = {
     # krx_news, krx_trading 제거 — KRX 데이터는 pykrx로 자동 수집 (krx_data_cache.parquet)
     "news":                "네이버/구글 뉴스",
     # ── ETF 운용사 채널 (개인·경쟁사 모드 공용) ─────────────────────────
-    # 실제 채널 ID/URL 미확정 — 사용자 확인 후 추가 예정
-    # "kodex_youtube":    "KODEX ETF 유튜브 (삼성자산운용)",
-    # "tiger_youtube":    "TIGER ETF 유튜브 (미래에셋자산운용)",
-    # ...
+    "kodex_youtube":    "KODEX ETF 유튜브 (삼성자산운용)",
+    "tiger_youtube":    "TIGER ETF 유튜브 (미래에셋자산운용)",
+    "ace_youtube":      "ACE ETF 유튜브 (한국투자신탁운용)",
+    "rise_youtube":     "RISE ETF 유튜브 (KB자산운용)",
+    "hanaro_youtube":   "HANARO ETF 유튜브 (NH-Amundi)",
+    "sol_youtube":      "SOL ETF 유튜브 (신한자산운용)",
+    "tiger_event":      "TIGER ETF 이벤트 페이지",
+    "ace_event":        "ACE ETF 이벤트 공지",
+    "rise_event":       "RISE ETF 이벤트 페이지",
+    "hanaro_event":     "HANARO ETF 이벤트 공지",
+    "sol_event":        "SOL ETF 이벤트 공지",
+    "sol_blog":         "SOL ETF 블로그 (네이버)",
+    "etf_am_news":      "ETF 운용사 뉴스 (네이버/구글)",
 }
 
 # 삼성자산운용 이벤트 페이지 → 대고객 디지털 마케팅 채널로 이동 (증권 채널 아님)
@@ -214,16 +223,25 @@ class DataCollector:
             results[key] = result
         return results
 
-    # ETF 운용사 채널 목록 — 채널 ID/URL 확인 후 여기 추가
-    # 형식: (key, func) 튜플. key는 CHANNEL_LABELS에도 등록 필요.
-    # 예시 (실제 ID 확인 전까지 비워둠):
-    #   ("kodex_youtube",  self._ch_kodex_youtube),   # 삼성자산운용 KODEX
-    #   ("tiger_youtube",  self._ch_tiger_youtube),   # 미래에셋자산운용 TIGER
-    #   ("ace_youtube",    self._ch_ace_youtube),     # 한국투자신탁운용 ACE
-    #   ("rise_youtube",   self._ch_rise_youtube),    # KB자산운용 RISE
-    #   ("hanaro_youtube", self._ch_hanaro_youtube),  # NH-Amundi HANARO
-    #   ("sol_youtube",    self._ch_sol_youtube),     # 신한자산운용 SOL
-    ETF_AM_CHANNELS: list = []  # ← 여기 채워넣으면 됨
+    @property
+    def ETF_AM_CHANNELS(self):
+        return [
+            ("kodex_youtube",  self._ch_kodex_youtube),
+            ("tiger_youtube",  self._ch_tiger_youtube),
+            ("ace_youtube",    self._ch_ace_youtube),
+            ("rise_youtube",   self._ch_rise_youtube),
+            ("hanaro_youtube", self._ch_hanaro_youtube),
+            ("sol_youtube",    self._ch_sol_youtube),
+            ("tiger_event",    self._ch_tiger_event),
+            ("ace_event",      self._ch_ace_event),
+            ("rise_event",     self._ch_rise_event),
+            ("hanaro_event",   self._ch_hanaro_event),
+            ("sol_event",      self._ch_sol_event),
+            ("sol_blog",       self._ch_sol_blog),
+            ("etf_am_news",    self._ch_etf_am_news),
+        ]
+
+    _yt_handle_cache: dict = {}  # @handle → UC 채널 ID 캐시 (클래스 공유)
 
     def _collect_etf_am(self, progress_callback=None) -> Dict[str, ChannelResult]:
         """
@@ -235,7 +253,7 @@ class DataCollector:
             ("samsung_fund_event", self._ch_samsung_fund_event),  # 삼성자산운용 이벤트 (항상 포함)
             ("news",               self._ch_news),
         ]
-        channels = base + self.ETF_AM_CHANNELS
+        channels = base + list(self.ETF_AM_CHANNELS)
         results: Dict[str, ChannelResult] = {}
         for idx, (key, func) in enumerate(channels):
             name = CHANNEL_LABELS.get(key, key)
@@ -939,7 +957,411 @@ class DataCollector:
         )
 
     # ── ETF 운용사 채널 (개인·경쟁사 모드 공용) ─────────────────────────────────
-    # 채널 ID/URL은 사용자 확인 후 여기 추가
-    # 형식:
-    #   유튜브: self._fetch_youtube_rss("key", CHANNEL_LABELS["key"], "UC...channel_id...")
-    #   블로그: self._ch_naver_blog_base("key", CHANNEL_LABELS["key"], "https://rss.blog.naver.com/xxx.xml")
+
+    def _resolve_youtube_handle(self, handle: str) -> str:
+        """YouTube @handle → UC... 채널 ID 자동 추출 (캐시 사용)."""
+        if handle in DataCollector._yt_handle_cache:
+            return DataCollector._yt_handle_cache[handle]
+        try:
+            url = f"https://www.youtube.com/@{handle.lstrip('@')}"
+            r = requests.get(url, headers=BROWSER_HEADERS, timeout=15)
+            r.raise_for_status()
+            m = re.search(r'"channelId"\s*:\s*"(UC[^"]+)"', r.text)
+            if not m:
+                m = re.search(r'"externalId"\s*:\s*"(UC[^"]+)"', r.text)
+            if m:
+                channel_id = m.group(1)
+                DataCollector._yt_handle_cache[handle] = channel_id
+                return channel_id
+        except Exception as e:
+            logger.warning(f"YouTube @handle 해석 실패 ({handle}): {e}")
+        return ""
+
+    def _ch_kodex_youtube(self) -> ChannelResult:
+        return self._fetch_youtube_rss(
+            "kodex_youtube", CHANNEL_LABELS["kodex_youtube"],
+            "UCohjHDdtYtoKYtiCSVFoHAw"
+        )
+
+    def _ch_tiger_youtube(self) -> ChannelResult:
+        channel_id = self._resolve_youtube_handle("tiger_etf")
+        if not channel_id:
+            return ChannelResult("tiger_youtube", CHANNEL_LABELS["tiger_youtube"], False,
+                                 error="@tiger_etf 채널 ID 추출 실패", error_type="PARSE_ERROR")
+        return self._fetch_youtube_rss("tiger_youtube", CHANNEL_LABELS["tiger_youtube"], channel_id)
+
+    def _ch_ace_youtube(self) -> ChannelResult:
+        return self._fetch_youtube_rss(
+            "ace_youtube", CHANNEL_LABELS["ace_youtube"],
+            "UCnuyNitL5SIfBJvTJcdDNLQ"
+        )
+
+    def _ch_rise_youtube(self) -> ChannelResult:
+        return self._fetch_youtube_rss(
+            "rise_youtube", CHANNEL_LABELS["rise_youtube"],
+            "UCZ9jozYXT6BXl2TchjNH8hw"
+        )
+
+    def _ch_hanaro_youtube(self) -> ChannelResult:
+        return self._fetch_youtube_rss(
+            "hanaro_youtube", CHANNEL_LABELS["hanaro_youtube"],
+            "UCnK3ANYTFZnF8pkEh3_cOgg"
+        )
+
+    def _ch_sol_youtube(self) -> ChannelResult:
+        channel_id = self._resolve_youtube_handle("SOL_ETF")
+        if not channel_id:
+            return ChannelResult("sol_youtube", CHANNEL_LABELS["sol_youtube"], False,
+                                 error="@SOL_ETF 채널 ID 추출 실패", error_type="PARSE_ERROR")
+        return self._fetch_youtube_rss("sol_youtube", CHANNEL_LABELS["sol_youtube"], channel_id)
+
+    def _ch_tiger_event(self) -> ChannelResult:
+        """TIGER ETF 이벤트 페이지 — 미래에셋자산운용."""
+        ch, name = "tiger_event", CHANNEL_LABELS["tiger_event"]
+        list_url = "https://investments.miraeasset.com/tigeretf/ko/customer/event/list.do"
+        try:
+            r = requests.get(list_url, headers=BROWSER_HEADERS, timeout=15)
+            if r.status_code == 403:
+                return ChannelResult(ch, name, False, error="HTTP 403 — 접속 차단", error_type="ACCESS_BLOCKED")
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "lxml")
+            events = []
+            for a in soup.find_all("a", href=re.compile(r"event", re.I)):
+                title = a.get_text(strip=True)
+                href = a.get("href", "")
+                if not title or len(title) < 5:
+                    continue
+                url_full = href if href.startswith("http") else f"https://investments.miraeasset.com{href}"
+                events.append({"title": title, "url": url_full})
+            if not events:
+                return ChannelResult(ch, name, False,
+                    error="이벤트 목록 파싱 실패 (JS 렌더링 필요할 수 있음)", error_type="SPA_STRUCTURE")
+            raw_text = " ".join(e["title"] for e in events)
+            return ChannelResult(ch, name, True, data={
+                "events": [e["title"] for e in events],
+                "event_details": events,
+                "raw_text": raw_text,
+                "url": list_url,
+            })
+        except requests.RequestException as e:
+            code = getattr(getattr(e, "response", None), "status_code", 0)
+            et = "ACCESS_BLOCKED" if code in (403, 429) else "CONNECTION_ERROR"
+            return ChannelResult(ch, name, False, error=str(e), error_type=et)
+        except Exception as e:
+            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
+
+    def _ch_ace_event(self) -> ChannelResult:
+        """ACE ETF 이벤트 공지 — 한국투자신탁운용."""
+        ch, name = "ace_event", CHANNEL_LABELS["ace_event"]
+        list_url = "https://www.aceetf.co.kr/cs/notice"
+        base_url = "https://www.aceetf.co.kr"
+        try:
+            r = requests.get(list_url, headers=BROWSER_HEADERS, timeout=15)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "lxml")
+            events = []
+            for a in soup.find_all("a", href=re.compile(r"/cs/notice/\d+")):
+                title = a.get_text(strip=True)
+                href = a.get("href", "")
+                if not title or len(title) < 5:
+                    continue
+                if not re.search(r"이벤트|EVENT|event|프로모션|매수인증|경품|혜택", title, re.I):
+                    continue
+                url_full = base_url + href if href.startswith("/") else href
+                events.append({"title": title, "url": url_full})
+            if not events:
+                return ChannelResult(ch, name, False,
+                    error="이벤트 공지 없음 또는 파싱 실패", error_type="PARSE_ERROR")
+            raw_text = " ".join(e["title"] for e in events)
+            return ChannelResult(ch, name, True, data={
+                "events": [e["title"] for e in events],
+                "event_details": events,
+                "raw_text": raw_text,
+                "url": list_url,
+            })
+        except requests.RequestException as e:
+            code = getattr(getattr(e, "response", None), "status_code", 0)
+            et = "ACCESS_BLOCKED" if code in (403, 429) else "CONNECTION_ERROR"
+            return ChannelResult(ch, name, False, error=str(e), error_type=et)
+        except Exception as e:
+            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
+
+    def _ch_rise_event(self) -> ChannelResult:
+        """RISE ETF 이벤트 페이지 — KB자산운용 (SSR)."""
+        ch, name = "rise_event", CHANNEL_LABELS["rise_event"]
+        list_url = "https://www.riseetf.co.kr/cust/event"
+        base_url = "https://www.riseetf.co.kr"
+        try:
+            r = requests.get(list_url, headers=BROWSER_HEADERS, timeout=15)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "lxml")
+            events = []
+            # 이벤트 목록: li 구조, /cust/event/[ID] 링크
+            for a in soup.find_all("a", href=re.compile(r"/cust/event/\d+")):
+                title_el = a.find(text=True, recursive=True)
+                title = a.get_text(" ", strip=True)
+                href = a.get("href", "")
+                if not title or len(title) < 5:
+                    continue
+                url_full = base_url + href if href.startswith("/") else href
+                # 기간 추출 (YYYY-MM-DD ~ YYYY-MM-DD)
+                period = ""
+                parent = a.find_parent()
+                if parent:
+                    period_m = re.search(r"\d{4}-\d{2}-\d{2}\s*~\s*\d{4}-\d{2}-\d{2}", parent.get_text())
+                    if period_m:
+                        period = period_m.group()
+                events.append({"title": title, "url": url_full, "period": period})
+            if not events:
+                return ChannelResult(ch, name, False,
+                    error="이벤트 목록 없음 또는 파싱 실패", error_type="PARSE_ERROR")
+            raw_text = " ".join(f"{e['title']} {e.get('period','')}" for e in events)
+            return ChannelResult(ch, name, True, data={
+                "events": [e["title"] for e in events],
+                "event_details": events,
+                "raw_text": raw_text,
+                "url": list_url,
+            })
+        except requests.RequestException as e:
+            code = getattr(getattr(e, "response", None), "status_code", 0)
+            et = "ACCESS_BLOCKED" if code in (403, 429) else "CONNECTION_ERROR"
+            return ChannelResult(ch, name, False, error=str(e), error_type=et)
+        except Exception as e:
+            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
+
+    def _ch_hanaro_event(self) -> ChannelResult:
+        """HANARO ETF 이벤트 공지 — NH-Amundi (SPA, 기본 파싱 시도)."""
+        ch, name = "hanaro_event", CHANNEL_LABELS["hanaro_event"]
+        list_url = "https://www.hanaroetf.com/customer/notice"
+        base_url = "https://www.hanaroetf.com"
+        try:
+            r = requests.get(list_url, headers=BROWSER_HEADERS, timeout=15)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "lxml")
+            events = []
+            for a in soup.find_all("a", href=re.compile(r"/customer/notice/")):
+                title = a.get_text(strip=True)
+                href = a.get("href", "")
+                if not title or len(title) < 5:
+                    continue
+                if not re.search(r"이벤트|EVENT|event|프로모션|경품|혜택|매수", title, re.I):
+                    continue
+                url_full = base_url + href if href.startswith("/") else href
+                events.append({"title": title, "url": url_full})
+            if not events:
+                return ChannelResult(ch, name, False,
+                    error="이벤트 공지 없음 (SPA 구조로 JS 렌더링 필요)", error_type="SPA_STRUCTURE")
+            raw_text = " ".join(e["title"] for e in events)
+            return ChannelResult(ch, name, True, data={
+                "events": [e["title"] for e in events],
+                "event_details": events,
+                "raw_text": raw_text,
+                "url": list_url,
+            })
+        except requests.RequestException as e:
+            code = getattr(getattr(e, "response", None), "status_code", 0)
+            et = "ACCESS_BLOCKED" if code in (403, 429) else "CONNECTION_ERROR"
+            return ChannelResult(ch, name, False, error=str(e), error_type=et)
+        except Exception as e:
+            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
+
+    def _ch_sol_event(self) -> ChannelResult:
+        """SOL ETF 이벤트 공지 — 신한자산운용."""
+        ch, name = "sol_event", CHANNEL_LABELS["sol_event"]
+        list_url = "https://www.soletf.com/ko/cs/notice"
+        base_url = "https://www.soletf.com"
+        try:
+            r = requests.get(list_url, headers=BROWSER_HEADERS, timeout=15)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "lxml")
+            events = []
+            for a in soup.find_all("a", href=re.compile(r"/ko/cs/noticeView")):
+                title = a.get_text(strip=True)
+                href = a.get("href", "")
+                if not title or len(title) < 5:
+                    continue
+                if not re.search(r"이벤트|EVENT|event|프로모션|경품|혜택|매수|기념", title, re.I):
+                    continue
+                url_full = base_url + href if href.startswith("/") else href
+                events.append({"title": title, "url": url_full})
+            if not events:
+                return ChannelResult(ch, name, False,
+                    error="이벤트 공지 없음 또는 파싱 실패 (동적 로딩)", error_type="SPA_STRUCTURE")
+            raw_text = " ".join(e["title"] for e in events)
+            return ChannelResult(ch, name, True, data={
+                "events": [e["title"] for e in events],
+                "event_details": events,
+                "raw_text": raw_text,
+                "url": list_url,
+            })
+        except requests.RequestException as e:
+            code = getattr(getattr(e, "response", None), "status_code", 0)
+            et = "ACCESS_BLOCKED" if code in (403, 429) else "CONNECTION_ERROR"
+            return ChannelResult(ch, name, False, error=str(e), error_type=et)
+        except Exception as e:
+            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
+
+    def _ch_sol_blog(self) -> ChannelResult:
+        """SOL ETF 블로그 — 신한자산운용 네이버 블로그."""
+        ch, name = "sol_blog", CHANNEL_LABELS["sol_blog"]
+        rss_url = "https://rss.blog.naver.com/soletf.xml"
+        try:
+            r = requests.get(rss_url, headers=BROWSER_HEADERS, timeout=15)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "xml")
+            posts = []
+            for item in soup.find_all("item")[:20]:
+                title = item.find("title").get_text(strip=True) if item.find("title") else ""
+                link = item.find("link").get_text(strip=True) if item.find("link") else ""
+                pub_str = item.find("pubDate").get_text(strip=True) if item.find("pubDate") else ""
+                pub_dt = self._parse_pub_date(pub_str)
+                if pub_dt and not self._in_range(pub_dt):
+                    continue
+                is_event = bool(re.search(r"이벤트|EVENT|event|프로모션|경품|혜택|매수|기념|출시|상장", title, re.I))
+                posts.append({"title": title, "url": link, "published_at": pub_str, "is_event_related": is_event})
+            if not posts:
+                return ChannelResult(ch, name, True, data={"posts": [], "note": "해당 주차 게시물 없음"})
+            return ChannelResult(ch, name, True, data={
+                "posts": posts,
+                "raw_text": " ".join(p["title"] for p in posts),
+                "url": rss_url,
+            })
+        except requests.RequestException as e:
+            code = getattr(getattr(e, "response", None), "status_code", 0)
+            et = "ACCESS_BLOCKED" if code in (403, 429) else "CONNECTION_ERROR"
+            return ChannelResult(ch, name, False, error=str(e), error_type=et)
+        except Exception as e:
+            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
+
+    def _ch_etf_am_news(self) -> ChannelResult:
+        """ETF 운용사 마케팅·이벤트 뉴스 — 네이버 스크래핑 + 구글 뉴스 RSS."""
+        ch, name = "etf_am_news", CHANNEL_LABELS["etf_am_news"]
+        articles = []
+        source_used = None
+        seen_links: set = set()
+
+        # ── 네이버 뉴스 스크래핑 ──────────────────────────────────────────────
+        naver_keywords = [
+            "KODEX ETF 이벤트", "TIGER ETF 이벤트", "ACE ETF 이벤트",
+            "RISE ETF 이벤트", "HANARO ETF 이벤트", "SOL ETF 이벤트",
+            "삼성자산운용 ETF 출시", "미래에셋자산운용 ETF 출시",
+            "한국투자신탁운용 ETF 이벤트", "KB자산운용 ETF 이벤트",
+        ]
+        for kw in naver_keywords:
+            try:
+                url = f"https://search.naver.com/search.naver?where=news&query={requests.utils.quote(kw)}&sort=1"
+                r = requests.get(url, headers=BROWSER_HEADERS, timeout=10)
+                if r.status_code != 200:
+                    continue
+                soup = BeautifulSoup(r.text, "lxml")
+                for item in soup.select(".news_area, .list_news .bx")[:5]:
+                    title_tag = item.select_one(".news_tit, a.title")
+                    date_tag  = item.select_one(".info_group .info, .sub_txt .info")
+                    if not title_tag:
+                        continue
+                    title = title_tag.get_text(strip=True)
+                    link  = title_tag.get("href", "") if title_tag.name == "a" else ""
+                    if link in seen_links:
+                        continue
+                    seen_links.add(link)
+                    pub_str = date_tag.get_text(strip=True) if date_tag else ""
+                    pub_dt = self._parse_pub_date(pub_str)
+                    if pub_dt and not self._in_range(pub_dt):
+                        continue
+                    articles.append({
+                        "title": title, "description": "",
+                        "link": link, "pub_date": pub_str,
+                        "keyword": kw, "source": "naver_scrape",
+                    })
+                source_used = source_used or "naver_scrape"
+            except Exception as e:
+                logger.debug(f"네이버 뉴스 스크래핑 실패 ({kw}): {e}")
+
+        # ── 네이버 뉴스 API (키 있을 때) ─────────────────────────────────────
+        if self.naver_client_id and self.naver_client_secret:
+            api_keywords = [
+                "KODEX ETF 이벤트", "TIGER ETF 이벤트", "ACE ETF 이벤트",
+                "RISE ETF 이벤트", "HANARO ETF 이벤트", "SOL ETF 이벤트",
+                "삼성자산운용 ETF", "미래에셋자산운용 TIGER ETF",
+                "한국투자신탁운용 ACE ETF", "KB자산운용 RISE ETF",
+                "NH아문디 HANARO ETF", "신한자산운용 SOL ETF",
+            ]
+            try:
+                for kw in api_keywords:
+                    r = requests.get(
+                        "https://openapi.naver.com/v1/search/news.json",
+                        headers={**BROWSER_HEADERS,
+                                 "X-Naver-Client-Id": self.naver_client_id,
+                                 "X-Naver-Client-Secret": self.naver_client_secret},
+                        params={"query": kw, "display": 10, "sort": "date"},
+                        timeout=10,
+                    )
+                    r.raise_for_status()
+                    for item in r.json().get("items", []):
+                        link = item.get("originallink") or item.get("link", "")
+                        if link in seen_links:
+                            continue
+                        seen_links.add(link)
+                        pub_dt = self._parse_pub_date(item.get("pubDate", ""))
+                        if pub_dt and not self._in_range(pub_dt):
+                            continue
+                        articles.append({
+                            "title": re.sub(r"<[^>]+>", "", item.get("title", "")),
+                            "description": re.sub(r"<[^>]+>", "", item.get("description", ""))[:300],
+                            "link": link,
+                            "pub_date": item.get("pubDate", ""),
+                            "keyword": kw, "source": "naver_api",
+                        })
+                source_used = "naver_api"
+            except Exception as e:
+                logger.warning(f"네이버 뉴스 API 실패 (ETF AM): {e}")
+
+        # ── 구글 뉴스 RSS ─────────────────────────────────────────────────────
+        google_queries = [
+            "KODEX+ETF+이벤트", "TIGER+ETF+이벤트", "ACE+ETF+이벤트",
+            "RISE+ETF+이벤트", "HANARO+ETF+이벤트", "SOL+ETF+이벤트",
+            "삼성자산운용+ETF+신규상장", "미래에셋자산운용+TIGER+ETF",
+            "한국투자신탁운용+ACE+ETF", "KB자산운용+RISE+ETF",
+            "NH아문디+HANARO+ETF", "신한자산운용+SOL+ETF",
+        ]
+        for q in google_queries:
+            try:
+                r = requests.get(
+                    f"https://news.google.com/rss/search?q={q}&hl=ko&gl=KR&ceid=KR:ko",
+                    headers=BROWSER_HEADERS, timeout=15,
+                )
+                r.raise_for_status()
+                soup = BeautifulSoup(r.text, "xml")
+                for item in soup.find_all("item")[:8]:
+                    pub_str = item.find("pubDate").get_text(strip=True) if item.find("pubDate") else ""
+                    pub_dt = self._parse_pub_date(pub_str)
+                    if pub_dt and not self._in_range(pub_dt):
+                        continue
+                    link = item.find("link").get_text(strip=True) if item.find("link") else ""
+                    if link in seen_links:
+                        continue
+                    seen_links.add(link)
+                    title = item.find("title").get_text(strip=True) if item.find("title") else ""
+                    articles.append({
+                        "title": title, "description": "",
+                        "link": link, "pub_date": pub_str,
+                        "keyword": q.replace("+", " "), "source": "google_rss",
+                    })
+                source_used = source_used or "google_rss"
+            except Exception as e:
+                logger.debug(f"Google RSS 실패 ({q}): {e}")
+
+        note = (
+            "네이버 뉴스 API" if source_used == "naver_api"
+            else ("네이버 스크래핑 + 구글 RSS" if source_used == "naver_scrape" else "구글 뉴스 RSS")
+        )
+        if articles:
+            return ChannelResult(ch, name, True, data={
+                "articles": articles[:40],
+                "source": source_used,
+                "note": note,
+                "raw_text": " ".join(a["title"] for a in articles[:40]),
+            })
+        return ChannelResult(ch, name, False,
+            error="뉴스 수집 실패 — 네트워크 확인 필요",
+            error_type="CONNECTION_ERROR")

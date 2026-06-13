@@ -267,7 +267,7 @@ for code, res in did_results.items():
     <div style="border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px 20px;margin:8px 0;">
       <div style="font-size:1rem;font-weight:700;margin-bottom:4px;">{etf_name}</div>
       <div style="font-size:1.8rem;font-weight:800;color:{color};font-family:'JetBrains Mono',monospace;">
-        {sign}{did_val*100:.1f}% <span style="font-size:0.9rem;opacity:.6;">DiD</span>
+        {sign}{(did_val or 0)*100:.1f}% <span style="font-size:0.9rem;opacity:.6;">DiD</span>
       </div>
       <div style="font-size:0.8rem;opacity:.5;margin-top:4px;">개인 순매수 기준</div>
     </div>

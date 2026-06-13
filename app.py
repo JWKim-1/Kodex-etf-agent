@@ -241,8 +241,58 @@ if st.session_state.selected_mode is None:
         """, unsafe_allow_html=True)
         st.button("ETF 사후관리 (준비 중)", key="btn_lifecycle", use_container_width=True, disabled=True)
 
+    st.markdown("<div style='margin:16px 0 4px;'></div>", unsafe_allow_html=True)
+    if st.button(
+        "📁  채널 수집 히스토리  —  주차별 마케팅 채널 수집 결과 및 이벤트 내역",
+        key="btn_history",
+        use_container_width=True,
+    ):
+        st.session_state.selected_mode = "history"
+        st.rerun()
+
+    st.markdown("<div style='margin:4px 0;'></div>", unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+    div[data-testid="stButton"] button[kind="secondary"].report-bar {
+        background: linear-gradient(90deg, #1a1f3a 0%, #0d1226 100%) !important;
+        border: 1px solid rgba(59,130,246,0.35) !important;
+        border-radius: 14px !important;
+        padding: 18px 32px !important;
+        font-size: 1.05rem !important;
+        font-weight: 700 !important;
+        color: #93c5fd !important;
+        letter-spacing: 0.02em !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    if st.button(
+        "📋  주간 종합 리포트  —  6개 채널 데이터를 통합 분석해 마케팅 인사이트 & 액션 제안을 생성합니다",
+        key="btn_report",
+        use_container_width=True,
+    ):
+        st.session_state.selected_mode = "report"
+        st.rerun()
+
     st.markdown("---")
     st.caption("삼성자산운용 ETF 마케팅 모니터링 AI Agent · Powered by Claude")
+    st.stop()
+
+# 채널 수집 히스토리 모드
+if st.session_state.selected_mode == "history":
+    with st.sidebar:
+        if st.button("← 채널 선택", key="back_history"):
+            st.session_state.selected_mode = None
+            st.rerun()
+    exec(open(os.path.join(os.path.dirname(__file__), "agents/history/app_history.py"), encoding="utf-8").read())
+    st.stop()
+
+# 주간 종합 리포트 모드
+if st.session_state.selected_mode == "report":
+    with st.sidebar:
+        if st.button("← 채널 선택", key="back_report"):
+            st.session_state.selected_mode = None
+            st.rerun()
+    exec(open(os.path.join(os.path.dirname(__file__), "report_weekly.py"), encoding="utf-8").read())
     st.stop()
 
 # 개인 채널 모드

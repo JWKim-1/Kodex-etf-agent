@@ -142,45 +142,30 @@ def fetch_weekly_etf_data(
                 print(f"  세션 갱신 실패: {_e}", flush=True)
 
         try:
-            df = stock.get_etf_trading_volume_and_value(start_str, end_str, code)
-            if df is None or df.empty:
-                continue
-
-            # 거래대금 순매수 추출
+            # 종목명 먼저 확보 (거래 없는 종목도 이름은 저장)
             try:
+                name = stock.get_etf_ticker_name(code)
+                name = name or code
+            except Exception:
+                name = code
+
+            row = {"종목코드": code, "종목명": name, "금융투자": 0, "개인": 0, "은행": 0}
+
+            df = stock.get_etf_trading_volume_and_value(start_str, end_str, code)
+            if df is not None and not df.empty:
                 col_순매수 = ('거래대금', '순매수')
-                if col_순매수 not in df.columns:
-                    continue
-                순매수 = df[col_순매수]
+                if col_순매수 in df.columns:
+                    순매수 = df[col_순매수]
+                    investor_map = {"금융투자": "금융투자", "은행": "은행", "개인": "개인"}
+                    for krx_name, col_name in investor_map.items():
+                        if krx_name in 순매수.index:
+                            # KRX 원 단위 → 천원 단위 (멘토 엑셀 기준)
+                            row[col_name] = int(순매수[krx_name] / 1000)
 
-                # 투자자 유형별 매핑 — DiD 분석에 필요한 컬럼만 저장
-                row = {"단축코드": f"{code}*001", "종목명": ""}
-                investor_map = {
-                    "금융투자": "금융투자",  # 증권사 채널
-                    "은행": "은행",          # 은행 채널
-                    "개인": "개인",          # 개인 (LP 노이즈 감지용)
-                }
-                for krx_name, col_name in investor_map.items():
-                    if krx_name in 순매수.index:
-                        # KRX는 원 단위로 반환 → 멘토 엑셀 데이터(천원 단위)와 통일하기 위해 1000으로 나눔
-                        row[col_name] = int(순매수[krx_name] / 1000)
-                    else:
-                        row[col_name] = 0
+            rows.append(row)
 
-                # 종목명
-                try:
-                    name = stock.get_etf_ticker_name(code)
-                    row["종목명"] = name or code
-                except Exception:
-                    row["종목명"] = code
-
-                rows.append(row)
-
-                if (i + 1) % 50 == 0:
-                    print(f"  진행: {i+1}/{len(etf_codes)}")
-
-            except Exception as e:
-                failed += 1
+            if (i + 1) % 50 == 0:
+                print(f"  진행: {i+1}/{len(etf_codes)}")
 
         except Exception as e:
             failed += 1
@@ -699,3 +684,122 @@ if __name__ == "__main__":
     if not df.empty:
         print("\n수집 결과:")
         print(df[["단축코드","종목명","금융투자","개인","은행","투신"]].to_string())
+
+
+import re as _re
+
+_MATURITY_PATTERN = _re.compile(r'\b\d{2}-\d{2}\b')  # 26-06, 25-12 등 만기형 ETF 이름 패턴
+
+
+def _classify_delisting(code: str, name: str, disappear_week: str,
+                         all_weeks: list, cache: dict) -> str:
+    """
+    상폐 의심 종목의 사유를 분류.
+    Returns: 'maturity_redemption' | 'collection_gap' | 'delisting_confirmed' | 'delisting_pending'
+    """
+    idx = all_weeks.index(disappear_week)
+    later_weeks = all_weeks[idx:]
+    reappeared = any(
+        code in set(cache[w]["종목코드"].astype(str).tolist())
+        for w in later_weeks
+    )
+    if reappeared:
+        return "collection_gap"
+
+    # 2) 만기형 ETF (이름에 YY-MM 패턴) — 재등장 없는 경우에만 적용
+    if _MATURITY_PATTERN.search(name):
+        return "maturity_redemption"
+
+    # 3) 연속 2주 이상 미등장 → 상폐 확정, 1주만 → 추적 중
+    missing_count = sum(
+        1 for w in later_weeks
+        if code not in set(cache[w]["종목코드"].astype(str).tolist())
+    )
+    if missing_count >= 2:
+        return "delisting_confirmed"
+    return "delisting_pending"
+
+
+def _classify_new_listing(code: str, appear_week: str,
+                           all_weeks: list, cache: dict) -> str:
+    """
+    신규상장 확정 여부.
+    Returns: 'confirmed' (다음 주에도 존재) | 'pending' (마지막 주 등장, 아직 검증 불가)
+    """
+    idx = all_weeks.index(appear_week)
+    if idx + 1 >= len(all_weeks):
+        return "pending"
+    next_week = all_weeks[idx + 1]
+    exists_next = code in set(cache[next_week]["종목코드"].astype(str).tolist())
+    return "confirmed" if exists_next else "pending"
+
+
+def detect_listing_changes(cache: dict = None) -> dict:
+    """
+    주차별 캐시를 비교해 신규상장(+) / 상장폐지(-) ETF 감지.
+    모든 ETF를 수집해야 가능하므로 fetch_weekly_etf_data가 거래 없는 종목도 저장해야 함.
+
+    필터링 로직:
+    - 만기형 ETF (이름에 YY-MM 패턴): maturity_redemption 으로 자동 분류
+    - 1주 갭 후 재등장: collection_gap (수집 오류)
+    - 2주+ 연속 미등장: delisting_confirmed
+    - 1주 미등장, 아직 후속 주 없음: delisting_pending
+    - 신규상장도 다음 주 확인 여부로 confirmed/pending 구분
+
+    Returns:
+        {
+          "new_listings": [{"week", "종목코드", "종목명", "status": confirmed|pending}],
+          "delistings":   [{"week", "종목코드", "종목명", "last_seen",
+                            "reason": maturity_redemption|collection_gap|
+                                      delisting_confirmed|delisting_pending}],
+        }
+    """
+    if cache is None:
+        cache = load_cache()
+
+    sorted_weeks = sorted(cache.keys(), key=lambda w: _parse_week_label(w) or date.min)
+
+    # 코드별 첫 등장 주 추적 (중복 신규상장 방지)
+    first_seen: dict = {}
+    new_listings = []
+    raw_removed: list = []  # (disappear_week, code, name)
+
+    for i in range(1, len(sorted_weeks)):
+        prev_week = sorted_weeks[i - 1]
+        curr_week = sorted_weeks[i]
+        prev_codes = set(cache[prev_week]["종목코드"].astype(str).tolist())
+        curr_codes = set(cache[curr_week]["종목코드"].astype(str).tolist())
+
+        # 신규 등장
+        for code in curr_codes - prev_codes:
+            if code in first_seen:
+                continue  # 재등장은 신규상장 아님
+            first_seen[code] = curr_week
+            row = cache[curr_week][cache[curr_week]["종목코드"].astype(str) == code]
+            name = row["종목명"].iloc[0] if not row.empty else code
+            status = _classify_new_listing(code, curr_week, sorted_weeks, cache)
+            new_listings.append({"week": curr_week, "종목코드": code, "종목명": name, "status": status})
+
+        # 사라진 종목 (1차 수집 — 이후 필터링)
+        for code in prev_codes - curr_codes:
+            row = cache[prev_week][cache[prev_week]["종목코드"].astype(str) == code]
+            name = row["종목명"].iloc[0] if not row.empty else code
+            raw_removed.append((curr_week, code, name))
+
+    # 중복 제거: 같은 code가 여러 주에 걸쳐 raw_removed에 있으면 첫 disappear_week만 유지
+    seen_removed: set = set()
+    delistings = []
+    for disappear_week, code, name in raw_removed:
+        if code in seen_removed:
+            continue
+        seen_removed.add(code)
+        reason = _classify_delisting(code, name, disappear_week, sorted_weeks, cache)
+        delistings.append({
+            "week":      disappear_week,
+            "종목코드":  code,
+            "종목명":    name,
+            "last_seen": sorted_weeks[sorted_weeks.index(disappear_week) - 1],
+            "reason":    reason,
+        })
+
+    return {"new_listings": new_listings, "delistings": delistings}

@@ -201,11 +201,47 @@ CACHE_FILE = "krx_data_cache.parquet"
 TREND_CACHE_FILE = "krx_trend_cache.parquet"
 
 
+def fetch_etf_market_summary_naver() -> pd.DataFrame:
+    """
+    네이버 금융 ETF 목록 API로 실시간 ETF 데이터 수집.
+    KRX IP 차단 시 폴백으로 사용. 수익률/거래대금/시총은 있으나 투자자별 수급 없음.
+    """
+    import requests as _req
+    HEADERS = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+        "Accept-Language": "ko-KR,ko;q=0.9",
+        "Referer": "https://finance.naver.com/",
+    }
+    r = _req.get("https://finance.naver.com/api/sise/etfItemList.nhn",
+                 headers=HEADERS, timeout=15)
+    r.raise_for_status()
+    items = r.json().get("result", {}).get("etfItemList", [])
+    if not items:
+        raise ValueError("네이버 ETF 목록 비어있음")
+    rows = []
+    for x in items:
+        rows.append({
+            "종목코드":    str(x.get("itemcode", "")),
+            "종목명":      x.get("itemname", ""),
+            "수익률_pct":  float(x.get("changeRate") or 0),
+            "거래대금_억": float(x.get("amonut") or 0) / 100,  # 백만원 → 억원
+            "시총_억":     float(x.get("marketSum") or 0) / 100,
+            "현재가":      float(x.get("nowVal") or 0),
+            "NAV":         float(x.get("nav") or 0),
+            "3개월수익률": float(x.get("threeMonthEarnRate") or 0),
+            "마지막종가":  float(x.get("nowVal") or 0),
+            "금융투자": 0, "개인": 0, "은행": 0,  # 네이버는 투자자 수급 없음
+            "data_source": "naver",
+        })
+    df = pd.DataFrame(rows)
+    print(f"  네이버 금융 ETF 수집 완료: {len(df)}개")
+    return df
+
+
 def fetch_etf_market_summary(week_start: date, week_end: date) -> pd.DataFrame:
     """
     주간 ETF 수익률·거래대금 조회.
-    pykrx get_etf_ohlcv_by_date 사용 (ETF별 개별 조회, KODEX 우선 234개 + 전체 목록).
-    get_market_ohlcv_by_ticker(market="ETF")는 KRX가 HTML 오류 반환하므로 사용 안 함.
+    KRX 차단 시 네이버 금융 API로 자동 폴백.
     """
     _setup_krx_env()
     try:
@@ -287,11 +323,12 @@ def fetch_etf_market_summary(week_start: date, week_end: date) -> pd.DataFrame:
             print(f"  진행: {i+1}/{len(target_tickers)} (실패 {failed}개)")
 
     if not rows:
-        print("  데이터 없음")
-        return pd.DataFrame()
+        print("  KRX 데이터 없음 — 네이버 금융 폴백 시도")
+        return fetch_etf_market_summary_naver()
 
     df_result = pd.DataFrame(rows)
     df_result["week"] = week_label
+    df_result["data_source"] = "krx"
     print(f"  시장 트렌드 수집 완료: {len(df_result)}개 ETF, 실패 {failed}개, 기준주 {week_label}")
     return df_result
 
@@ -717,6 +754,16 @@ def _classify_delisting(code: str, name: str, disappear_week: str,
     )
     if missing_count >= 2:
         return "delisting_confirmed"
+
+    # 4) 마지막 주차 1회만 빠진 경우: 직전 5주 중 3주 이상 등장했으면 수집 오류 가능성
+    prev_weeks = all_weeks[max(0, idx - 5):idx]
+    stable_count = sum(
+        1 for w in prev_weeks
+        if code in set(cache[w]["종목코드"].astype(str).tolist())
+    )
+    if stable_count >= 3 and idx == len(all_weeks) - 1:
+        return "collection_gap"
+
     return "delisting_pending"
 
 

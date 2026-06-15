@@ -39,6 +39,11 @@ def _load_module(path, name):
 _bank_collector = _load_module(os.path.join(ROOT, "agents", "bank", "collector.py"), "bank_collector")
 _bank_analyzer  = _load_module(os.path.join(ROOT, "agents", "bank", "analyzer.py"),  "bank_analyzer")
 
+# pickle이 동적 로드 모듈을 직렬화할 수 있도록 sys.modules에 등록
+import sys as _sys_mod
+_sys_mod.modules.setdefault("bank_collector", _bank_collector)
+_sys_mod.modules.setdefault("bank_analyzer",  _bank_analyzer)
+
 BankChannelCollector = _bank_collector.BankChannelCollector
 CHANNEL_LABELS       = _bank_collector.CHANNEL_LABELS
 BankAnalyzer         = _bank_analyzer.MarketingAnalyzer
@@ -46,6 +51,12 @@ BankAnalyzer         = _bank_analyzer.MarketingAnalyzer
 # ── 페이지 설정 ───────────────────────────────────────────────────────────────
 st.title("🏦 은행 채널 KODEX ETF 마케팅 효과 측정 Agent")
 st.caption("은행 순매수 이상 감지 → ETF 특정 → DiD 분석 → 역추적")
+
+with st.sidebar:
+    st.header("⚙️ LLM 설정")
+    _bank_ant = st.text_input("Anthropic API Key", value=os.getenv("ANTHROPIC_API_KEY",""), type="password", key="bank_ant_key", help="Anthropic Claude 사용 시")
+    _bank_gem = st.text_input("Gemini API Key",    value=os.getenv("GEMINI_API_KEY",""),    type="password", key="bank_gem_key", help="Google Gemini 무료 사용 시")
+    if _bank_gem: os.environ["GEMINI_API_KEY"] = _bank_gem
 
 # ── Step Header 스타일 ────────────────────────────────────────────────────────
 st.markdown("""
@@ -74,6 +85,25 @@ st.markdown("""
               font-family:'Pretendard','JetBrains Mono','D2Coding','Courier New',monospace; }
 .badge-ok  { background:rgba(40,167,69,0.15); color:#28a745; padding:3px 10px;
              border-radius:100px; font-size:0.72rem; font-weight:600; border:1px solid rgba(40,167,69,0.3); }
+.ev-board { display:flex; gap:12px; flex-wrap:wrap; margin:12px 0; }
+.ev-card {
+    flex:1; min-width:220px; max-width:320px;
+    border:1px solid rgba(0,82,255,0.25); border-radius:14px;
+    padding:14px 16px; background:rgba(0,82,255,0.05);
+}
+.ev-card-type {
+    font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:100px;
+    display:inline-block; margin-bottom:6px;
+}
+.ev-type-event   { background:rgba(0,198,255,0.15);color:#00c6ff;border:1px solid rgba(0,198,255,0.3); }
+.ev-type-promo   { background:rgba(5,177,105,0.15);color:#05b169;border:1px solid rgba(5,177,105,0.3); }
+.ev-type-content { background:rgba(255,200,50,0.15);color:#f0c040;border:1px solid rgba(255,200,50,0.3); }
+.ev-type-fee     { background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3); }
+.ev-type-etc     { background:rgba(255,255,255,0.08);color:#aaa;border:1px solid rgba(255,255,255,0.15); }
+.ev-title { font-size:.88rem; font-weight:700; color:#e8eaed; margin-bottom:4px; line-height:1.4; }
+.ev-period { font-size:.75rem; color:#4d9fff; margin:4px 0; }
+.ev-summary { font-size:.78rem; color:#aaa; line-height:1.5; margin:6px 0 0; }
+.ev-channel { font-size:.68rem; color:#666; margin-top:6px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -203,6 +233,24 @@ _days_ago_bank = (_today_d.today() - _sel_start_d).days if _sel_start_d else 0
 if _days_ago_bank > 14:
     st.info(f"📼 {selected}은 {_days_ago_bank}일 전 주차 — RSS 보관 기간 초과로 채널 수집이 부정확할 수 있습니다. DiD 분석은 정상 수행됩니다.")
 
+# 아카이브에서 자동 로드 (버튼 없이) — importlib로 강제 재로드해 캐시 문제 방지
+_bank_arch_key = f"bank_{selected}"
+_bank_llm_arch_key = f"bank_llm_{selected}"
+import importlib as _ilib, channel_archive as _ch_arch_mod
+_ilib.reload(_ch_arch_mod)
+_bank_has_arch   = _ch_arch_mod.has_archive
+_bank_load_ch    = _ch_arch_mod.load_channel_results
+_bank_load_raw   = _ch_arch_mod.load_raw_data
+_bank_arch_at    = _ch_arch_mod.get_archived_at
+
+if "bank_collect_results" not in st.session_state and _bank_has_arch(_bank_arch_key):
+    st.session_state["bank_collect_results"] = _bank_load_ch(_bank_arch_key)
+    _cached_llm = _bank_load_raw(_bank_llm_arch_key)
+    if _cached_llm:
+        st.session_state["bank_llm_result"] = _cached_llm
+    _bat = _bank_arch_at(_bank_arch_key)
+    st.caption(f"📦 보존된 수집 결과 자동 로드 (최초 수집: {_bat})")
+
 if st.button("📡 은행 채널 수집 시작", type="primary", use_container_width=True, key="bank_collect"):
     prog_bar = st.progress(0)
     status = st.empty()
@@ -221,19 +269,28 @@ if st.button("📡 은행 채널 수집 시작", type="primary", use_container_w
             _we = datetime(_y, int(_m.group(3)), int(_m.group(4)), 23, 59)
         else:
             _ws, _we = None, None
-        collector = BankChannelCollector(week_start=_ws, week_end=_we)
+        collector = BankChannelCollector(week_start=_ws, week_end=_we,
+                                         youtube_api_key=os.getenv("YOUTUBE_API_KEY", ""))
         results = collector.collect_all(progress_callback=on_prog)
     st.session_state["bank_collect_results"] = results
 
     # LLM으로 마케팅 활동 판단
-    anthropic_key = os.getenv("ANTHROPIC_API_KEY", "")
-    if anthropic_key:
-        with st.spinner("Claude가 채널 내용 분석 중..."):
+    anthropic_key = os.getenv("ANTHROPIC_API_KEY", "") or st.session_state.get("bank_ant_key","")
+    gemini_key    = os.getenv("GEMINI_API_KEY", "")    or st.session_state.get("bank_gem_key","")
+    if anthropic_key or gemini_key:
+        os.environ["GEMINI_API_KEY"] = gemini_key
+        with st.spinner("LLM이 채널 내용 분석 중..."):
             from agents.bank.analyzer import extract_target_etfs_with_llm
             llm_result = extract_target_etfs_with_llm(results, anthropic_key)
     else:
         llm_result = {"marketing_detected": False, "etf_codes": [], "evidence": []}
     st.session_state["bank_llm_result"] = llm_result
+
+    # 아카이브 저장
+    if _days_ago_bank <= 14:
+        from channel_archive import save_channel_results as _bank_save, save_raw_data as _bank_save_raw
+        _bank_save(_bank_arch_key, results)
+        _bank_save_raw(_bank_llm_arch_key, llm_result)
 
     prog_bar.empty()
     status.empty()
@@ -249,26 +306,44 @@ if "bank_collect_results" in st.session_state:
 
     # LLM 판단 결과 표시
     if llm_result.get("marketing_detected"):
-        st.success(f"📣 마케팅 활동 감지")
+        evidence = llm_result.get("evidence", [])
+        st.success(f"📣 마케팅 활동 감지 — {len(evidence)}건")
         if llm_result.get("summary"):
             st.caption(llm_result["summary"])
 
-        # 감지 근거 — 채널별 링크
-        from collections import defaultdict
-        by_channel = defaultdict(list)
-        for ev in llm_result.get("evidence", []):
-            by_channel[ev.get("channel", "기타")].append(ev)
-
-        for ch_name, evs in by_channel.items():
-            with st.expander(f"📡 {ch_name}", expanded=True):
-                for ev in evs:
-                    title = ev.get("title", "")
-                    url   = ev.get("url", "")
-                    reason = ev.get("reason", "")
-                    link_md = f"[{title}]({url})" if url and url.startswith("http") else f"**{title}**"
-                    st.markdown(f"• {link_md}")
-                    if reason:
-                        st.caption(f"↳ {reason}")
+        # 이벤트 카드 보드
+        _type_cls  = {"이벤트":"ev-type-event","프로모션":"ev-type-promo","추천콘텐츠":"ev-type-content","수수료혜택":"ev-type-fee"}
+        _type_icon = {"이벤트":"🎁","프로모션":"💰","추천콘텐츠":"📺","수수료혜택":"🎯"}
+        if evidence:
+            cards_html = '<div class="ev-board">'
+            for ev in evidence[:8]:
+                mtype      = ev.get("marketing_type", "기타")
+                cls        = _type_cls.get(mtype, "ev-type-etc")
+                icon       = _type_icon.get(mtype, "📋")
+                title      = (ev.get("title") or "")[:60]
+                period     = ev.get("event_period") or ""
+                summary    = ev.get("event_summary") or ev.get("marketing_reason") or ev.get("reason") or ""
+                channel    = ev.get("channel", "")
+                url        = ev.get("url", "")
+                target_etf = ev.get("target_etf") or ""
+                title_html  = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>' if url and url.startswith("http") else title
+                period_html = f'<div class="ev-period">📅 {period}</div>' if period and period not in ("","null") else ""
+                etf_html    = f'<div class="ev-etf" style="color:#05b169;">🎯 {target_etf}</div>' if target_etf and target_etf != "null" else ""
+                img_html    = f'<div class="ev-card-img-placeholder" style="background:rgba(5,177,105,0.08);">🏦</div>'
+                cards_html += (
+                    f'<div class="ev-card" style="border-color:#05b16933;">'
+                    f'{img_html}'
+                    f'<div class="ev-card-body">'
+                    f'<span class="ev-card-type {cls}">{icon} {mtype}</span>'
+                    f'<div class="ev-title">{title_html}</div>'
+                    f'{period_html}'
+                    f'{etf_html}'
+                    f'<div class="ev-summary">{summary[:140]}</div>'
+                    f'<div class="ev-channel">📡 {channel}</div>'
+                    f'</div></div>'
+                )
+            cards_html += "</div>"
+            st.markdown(cards_html, unsafe_allow_html=True)
     else:
         st.info("이번 주 은행 채널에서 ETF 마케팅 활동 미감지")
 
@@ -338,37 +413,36 @@ else:
     st.caption("채널 감지 없음 — 전체 KODEX ETF 기준 DiD")
     bank_target_codes = all_kodex[_code_col].tolist()
 
-# 분석 결과 캐시 — parquet 영구 저장으로 앱 재시작해도 유지
+# 분석 결과 캐시 — pickle로 객체 전체 저장, 리로드 시 즉시 복원
+import pickle as _pickle
 import sys as _sys, os as _os
 _sys.path.insert(0, ROOT)
-from did_history import get_summary as _get_did_summary, save_results as _save_did
+from did_history import save_results as _save_did
 
 _cache_key = f"bank_did_{selected}_{len(bank_target_codes)}"
+_pkl_dir  = _os.path.join(ROOT, ".did_cache")
+_os.makedirs(_pkl_dir, exist_ok=True)
+_pkl_path = _os.path.join(_pkl_dir, f"bank_{selected.replace('.','_').replace('-','_')}.pkl")
 
-# 1. parquet에 이미 이 주차 결과가 있으면 재계산 없이 로드
-_cached_df = _get_did_summary("bank")
-_has_cache = (not _cached_df.empty
-              and selected in _cached_df["week"].values
-              and len(_cached_df[_cached_df["week"]==selected]) >= len(bank_target_codes) * 0.8)
-
-if _has_cache and st.session_state.get("bank_did_key") == _cache_key:
-    # session_state 캐시 우선 (ETFDiDResult 객체 포함)
+if st.session_state.get("bank_did_key") == _cache_key:
+    # 같은 세션 내 — session_state 사용
     summary = st.session_state.get("bank_did_result", {})
-elif _has_cache and not st.session_state.get("bank_did_result"):
-    # parquet엔 있는데 session_state 없으면 → 재계산 필요 (객체 복원 불가)
-    st.info("💾 이전 분석 결과 발견 — 빠르게 재계산 중...")
-    with st.spinner(f"KODEX ETF {len(bank_target_codes)}개 재계산 중..."):
-        summary = analyzer.analyze(all_sheets, bank_target_codes, selected)
+elif _os.path.exists(_pkl_path):
+    # 이전 실행 결과 pickle 복원 — 재계산 없음
+    with open(_pkl_path, "rb") as _f:
+        summary = _pickle.load(_f)
     st.session_state["bank_did_result"] = summary
     st.session_state["bank_did_key"] = _cache_key
-elif st.session_state.get("bank_did_key") == _cache_key:
-    summary = st.session_state.get("bank_did_result", {})
+    st.caption("💾 이전 분석 결과 복원 (캐시)")
 else:
-    with st.spinner(f"KODEX ETF {len(bank_target_codes)}개 은행 순매수 DiD 분석 중... (첫 실행만 오래 걸림)"):
+    with st.spinner(f"KODEX ETF {len(bank_target_codes)}개 은행 순매수 DiD 분석 중… (첫 실행만 소요)"):
         summary = analyzer.analyze(all_sheets, bank_target_codes, selected)
     st.session_state["bank_did_result"] = summary
     st.session_state["bank_did_key"] = _cache_key
-    # parquet 영구 저장
+    # pickle 저장 (다음 리로드 시 즉시 복원용)
+    with open(_pkl_path, "wb") as _f:
+        _pickle.dump(summary, _f)
+    # parquet 요약 저장
     _save_did(selected, [
         {"code": c, "name": r.kodex_name, "did": r.did_value,
          "judgement": r.judgement, "marketing_detected": True,

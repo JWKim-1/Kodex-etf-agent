@@ -88,6 +88,44 @@ def _listing_summary(cache: dict) -> str:
 
 # ── LLM 리포트 생성 ───────────────────────────────────────────────────────────
 
+def generate_report_no_llm(week: str, krx_text: str, history_text: str,
+                           listing_text: str) -> str:
+    """API 키 없을 때 데이터 그대로 마크다운 리포트로 포매팅."""
+    return f"""## 이번 주 핵심 요약
+> 📌 API 키 없음 — 수집 데이터를 그대로 표시합니다 (LLM 인사이트 없음)
+
+---
+
+## 채널별 마케팅 활동
+
+```
+{history_text}
+```
+
+---
+
+## 수급 시그널
+
+```
+{krx_text}
+```
+
+---
+
+## 신규상장 / 상폐 현황
+
+```
+{listing_text}
+```
+
+---
+
+## 다음 주 액션 제안
+
+> Anthropic 또는 Gemini API 키를 입력하면 AI가 위 데이터를 분석해 액션 제안을 생성합니다.
+"""
+
+
 def generate_report(week: str, krx_text: str, history_text: str,
                     listing_text: str, api_key: str) -> str:
     prompt = f"""당신은 삼성자산운용 KODEX ETF 마케팅 전략 담당자의 AI 어시스턴트입니다.
@@ -123,13 +161,8 @@ def generate_report(week: str, krx_text: str, history_text: str,
 
 간결하고 실무적으로 작성하세요. 데이터가 없는 섹션은 "감지 없음"으로 표기."""
 
-    client = ant.Anthropic(api_key=api_key)
-    msg = client.messages.create(
-        model="claude-opus-4-8",
-        max_tokens=2048,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return msg.content[0].text
+    from llm_client import call_llm
+    return call_llm(prompt, anthropic_key=api_key, gemini_key=os.getenv("GEMINI_API_KEY",""), max_tokens=2048)
 
 
 # ── UI ───────────────────────────────────────────────────────────────────────
@@ -137,9 +170,12 @@ def generate_report(week: str, krx_text: str, history_text: str,
 st.title("📋 주간 종합 리포트")
 st.caption("6개 채널 데이터를 통합 분석해 마케팅 인사이트 & 액션 제안을 생성합니다")
 
-api_key = os.getenv("ANTHROPIC_API_KEY", "")
-if not api_key:
-    api_key = st.text_input("Anthropic API Key", type="password", key="report_api_key")
+with st.sidebar:
+    st.header("⚙️ 설정")
+    api_key = st.text_input("Anthropic API Key", value=os.getenv("ANTHROPIC_API_KEY",""), type="password", key="report_ant_key", help="Anthropic Claude 사용 시")
+    gemini_key = st.text_input("Gemini API Key", value=os.getenv("GEMINI_API_KEY",""), type="password", key="report_gem_key", help="Google Gemini 무료 사용 시 (둘 중 하나만)")
+    if not api_key and gemini_key:
+        api_key = ""  # call_llm이 gemini_key 우선 처리
 
 # 주차 선택
 cache   = load_cache()
@@ -176,23 +212,35 @@ with st.expander("📂 데이터 소스 미리보기", expanded=False):
 
 st.markdown("---")
 
-if st.button("🤖  리포트 생성", type="primary", use_container_width=True, key="run_report"):
-    if not api_key:
-        st.error("API Key를 입력해주세요.")
-        st.stop()
+_has_key = bool(api_key or gemini_key)
+_btn_label = "🤖  AI 리포트 생성" if _has_key else "📄  데이터 리포트 보기 (API 없음)"
 
-    with st.spinner("6개 채널 데이터 통합 분석 중..."):
+if not _has_key:
+    st.info("💡 API 키 없이도 수집 데이터 기반 리포트를 볼 수 있습니다. Anthropic/Gemini 키 입력 시 AI 인사이트가 추가됩니다.")
+
+if st.button(_btn_label, type="primary", use_container_width=True, key="run_report"):
+    with st.spinner("데이터 통합 중..." if not _has_key else "6개 채널 데이터 통합 분석 중..."):
         krx_text     = _krx_summary(cache, selected_week)
         history_text = _history_summary(history, selected_week)
         listing_text = _listing_summary(cache)
 
-        report_md = generate_report(
-            week=selected_week,
-            krx_text=krx_text,
-            history_text=history_text,
-            listing_text=listing_text,
-            api_key=api_key,
-        )
+        if not _has_key:
+            report_md = generate_report_no_llm(
+                week=selected_week,
+                krx_text=krx_text,
+                history_text=history_text,
+                listing_text=listing_text,
+            )
+        else:
+            import os as _os
+            _os.environ["GEMINI_API_KEY"] = gemini_key
+            report_md = generate_report(
+                week=selected_week,
+                krx_text=krx_text,
+                history_text=history_text,
+                listing_text=listing_text,
+                api_key=api_key,
+            )
 
     st.session_state["report_md"] = report_md
     st.session_state["report_week"] = selected_week

@@ -1,7 +1,7 @@
 {
   "6.8-6.12": {
     "week": "6.8-6.12",
-    "collected_at": "2026-06-12 21:41:35",
+    "collected_at": "2026-06-14 21:52:05",
     "securities": {
       "collection": {
         "success": [
@@ -41,7 +41,7 @@
         "mirae_youtube": {
           "channel_name": "미래에셋증권 유튜브",
           "success": true,
-          "snippet": "미국 증시, 종전 기대에 물가 부담 딛고 상승 마감 | 데일리 라이브 | 2026.6.12(금) / 씨앗을 심은 소년: 준비하는 사람의 미래 | AI Animation / AI가 하는 연주회 | 2분완성 그림퀴즈 #shorts #ai"
+          "snippet": "분산 투자의 중요성 | 지금부터, 미래 #shorts / 그 말이 왜 이렇게 아팠을까 | 지금부터, 미래 #shorts / 오래된 연애가 끝나는 순간 | 지금부터, 미래 #shorts"
         },
         "mirae_blog": {
           "channel_name": "미래에셋증권 블로그 (how2invest)",
@@ -66,7 +66,7 @@
         "kis_youtube": {
           "channel_name": "한국투자증권 유튜브",
           "success": true,
-          "snippet": "[섹터 특집] 본업 우려를 이겨낼 보스톤 다이내믹스 기대 / [섹터 특집] 증시 변동성 확대, 믿을 것은 실적? / 📢지아의리포트🚀🚀우주: 스피어, 에이치브이엠❗❗스페이스X의 우주 데이터센터: 무엇을 상상하든 그 이상👀🙀"
+          "snippet": "[섹터 특집] 증시 변동성 확대, 믿을 것은 실적? / [섹터 특집] 본업 우려를 이겨낼 보스톤 다이내믹스 기대 / 📢지아의리포트🚀🚀우주: 스피어, 에이치브이엠❗❗스페이스X의 우주 데이터센터: 무엇을 상상하든 그 이상👀🙀"
         },
         "shinhan_youtube": {
           "channel_name": "신한투자증권 유튜브",
@@ -141,7 +141,7 @@
         "shinhan_youtube": {
           "channel_name": "신한은행 유튜브",
           "success": false,
-          "snippet": "[땡겨요] ‘땡기다보면, 알게돼!😉’ (주문편)ㅣ장나라X땡겨요 / [땡겨요] ‘나라’면 땡겨요 시킨다! 💙 (영수증편)ㅣ장나라X땡겨요 / [땡겨요] ‘땡기다보면, 알게돼!😉’ (30s)ㅣ장나라X땡겨요"
+          "snippet": "[땡겨요] ‘땡기다보면, 알게돼!😉’ (주문편)ㅣ장나라X땡겨요 / [땡겨요] ‘나라’면 땡겨요 시킨다! 💙 (영수증편)ㅣ장나라X땡겨요 / [땡겨요] ‘나라’도 땡겨요 시킨다! 💙 (15s)ㅣ장나라X땡겨요"
         },
         "hana_youtube": {
           "channel_name": "하나은행 유튜브",
@@ -176,7 +176,7 @@
         "google_news": {
           "channel_name": "구글 뉴스 (은행+ETF)",
           "success": false,
-          "snippet": "\"123조 증권에 뺏길라\"…은행들 퇴직연금 ETF 유치 '혈안' - v.daum.net / KB국민은행, 삼성자산운용 고객 대상 ‘경품 이벤트’ 실시 - 경기신문 / KB국민은행, 20대 고객 멤버십 확대 기념 이벤트 진행 - 팝콘뉴스"
+          "snippet": "\"123조 증권에 뺏길라\"…은행들 퇴직연금 ETF 유치 '혈안' - v.daum.net / KB국민은행, 삼성자산운용 고객 대상 ‘경품 이벤트’ 실시 - 경기신문 / KB국민은행, IRP 고객 대상 투자 이벤트…TDF·ETF 가입 시 경품 제공 - 인더스트리뉴스"
         }
       },
       "events": {
@@ -196,30 +196,24 @@
           "RISE ETF 유튜브 (KB자산운용)",
           "HANARO ETF 유튜브 (NH-Amundi)",
           "SOL ETF 유튜브 (신한자산운용)",
+          "ACE ETF 이벤트 공지",
           "RISE ETF 이벤트 페이지",
+          "SOL ETF 이벤트 공지",
           "SOL ETF 블로그 (네이버)",
           "ETF 운용사 뉴스 (네이버/구글)"
         ],
         "failed": [
           {
             "name": "TIGER ETF 이벤트 페이지",
-            "error": "SPA 구조로 정적 크롤링 불가"
-          },
-          {
-            "name": "ACE ETF 이벤트 공지",
             "error": "데이터 파싱 오류"
           },
           {
             "name": "HANARO ETF 이벤트 공지",
-            "error": "SPA 구조로 정적 크롤링 불가"
-          },
-          {
-            "name": "SOL ETF 이벤트 공지",
-            "error": "SPA 구조로 정적 크롤링 불가"
+            "error": "데이터 파싱 오류"
           }
         ],
-        "ok_count": 11,
-        "fail_count": 4
+        "ok_count": 13,
+        "fail_count": 2
       },
       "raw": {
         "samsung_fund_event": {
@@ -235,7 +229,7 @@
         "kodex_youtube": {
           "channel_name": "KODEX ETF 유튜브 (삼성자산운용)",
           "success": true,
-          "snippet": "반도체 투자를 2배 더 강력하게! 대한민국 레버리지의 기준! KODEX 단일종목레버리지ㅣ투자정보 / 당신이 응원하는 미국 대표지수⚽📣ㅣKODEX 미국S&amp;P500 ETF 🆚 KODEX 미국나스닥100 ETF / 🎁KODEX 홈페이지 이벤트🎁 Kodex ETF 순자산 200조 돌파 기념 이벤트🎉"
+          "snippet": "젠슨황이 콕 찍은 AI투자처! 광통신 네트워크 수퍼사이클이 온다 | KODEX 미국AI광통신네트워트 ETFㅣETF상품정보 / 반도체 투자를 2배 더 강력하게! 대한민국 레버리지의 기준! KODEX 단일종목레버리지ㅣ투자정보 / 당신이 응원하는 미국 대표지수⚽📣ㅣKODEX 미국S&amp;P500 ETF 🆚 KODEX 미국나스닥100 ETF"
         },
         "tiger_youtube": {
           "channel_name": "TIGER ETF 유튜브 (미래에셋자산운용)",
@@ -245,7 +239,7 @@
         "ace_youtube": {
           "channel_name": "ACE ETF 유튜브 (한국투자신탁운용)",
           "success": true,
-          "snippet": "🚨 스페이스X ETF 투자 전 꼭 확인하세요 모르면 손해 / 스페이스X IPO 참여하는 방법｜ACE 미국우주테크액티브 / 스페이스X IPO 참여하는 방법｜ACE 미국우주테크액티브"
+          "snippet": ""
         },
         "rise_youtube": {
           "channel_name": "RISE ETF 유튜브 (KB자산운용)",
@@ -269,8 +263,8 @@
         },
         "ace_event": {
           "channel_name": "ACE ETF 이벤트 공지",
-          "success": false,
-          "snippet": ""
+          "success": true,
+          "snippet": "[EVENT] ACE 미국우주테크액티브(0180V0) 매수 인증 이벤트 시즌 2 (~7/8)"
         },
         "rise_event": {
           "channel_name": "RISE ETF 이벤트 페이지",
@@ -284,8 +278,8 @@
         },
         "sol_event": {
           "channel_name": "SOL ETF 이벤트 공지",
-          "success": false,
-          "snippet": ""
+          "success": true,
+          "snippet": "[SOL ETF] 4월 팬덤 이벤트 | 절세계좌 투자는 SOL ETF와 함께!"
         },
         "sol_blog": {
           "channel_name": "SOL ETF 블로그 (네이버)",
@@ -315,30 +309,24 @@
           "RISE ETF 유튜브 (KB자산운용)",
           "HANARO ETF 유튜브 (NH-Amundi)",
           "SOL ETF 유튜브 (신한자산운용)",
+          "ACE ETF 이벤트 공지",
           "RISE ETF 이벤트 페이지",
+          "SOL ETF 이벤트 공지",
           "SOL ETF 블로그 (네이버)",
           "ETF 운용사 뉴스 (네이버/구글)"
         ],
         "failed": [
           {
             "name": "TIGER ETF 이벤트 페이지",
-            "error": "SPA 구조로 정적 크롤링 불가"
-          },
-          {
-            "name": "ACE ETF 이벤트 공지",
             "error": "데이터 파싱 오류"
           },
           {
             "name": "HANARO ETF 이벤트 공지",
-            "error": "SPA 구조로 정적 크롤링 불가"
-          },
-          {
-            "name": "SOL ETF 이벤트 공지",
-            "error": "SPA 구조로 정적 크롤링 불가"
+            "error": "데이터 파싱 오류"
           }
         ],
-        "ok_count": 11,
-        "fail_count": 4
+        "ok_count": 13,
+        "fail_count": 2
       },
       "raw": {
         "samsung_fund_event": {
@@ -354,7 +342,7 @@
         "kodex_youtube": {
           "channel_name": "KODEX ETF 유튜브 (삼성자산운용)",
           "success": true,
-          "snippet": "반도체 투자를 2배 더 강력하게! 대한민국 레버리지의 기준! KODEX 단일종목레버리지ㅣ투자정보 / 당신이 응원하는 미국 대표지수⚽📣ㅣKODEX 미국S&amp;P500 ETF 🆚 KODEX 미국나스닥100 ETF / 🎁KODEX 홈페이지 이벤트🎁 Kodex ETF 순자산 200조 돌파 기념 이벤트🎉"
+          "snippet": "젠슨황이 콕 찍은 AI투자처! 광통신 네트워크 수퍼사이클이 온다 | KODEX 미국AI광통신네트워트 ETFㅣETF상품정보 / 반도체 투자를 2배 더 강력하게! 대한민국 레버리지의 기준! KODEX 단일종목레버리지ㅣ투자정보 / 당신이 응원하는 미국 대표지수⚽📣ㅣKODEX 미국S&amp;P500 ETF 🆚 KODEX 미국나스닥100 ETF"
         },
         "tiger_youtube": {
           "channel_name": "TIGER ETF 유튜브 (미래에셋자산운용)",
@@ -364,7 +352,7 @@
         "ace_youtube": {
           "channel_name": "ACE ETF 유튜브 (한국투자신탁운용)",
           "success": true,
-          "snippet": "🚨 스페이스X ETF 투자 전 꼭 확인하세요 모르면 손해 / 스페이스X IPO 참여하는 방법｜ACE 미국우주테크액티브 / 스페이스X IPO 참여하는 방법｜ACE 미국우주테크액티브"
+          "snippet": ""
         },
         "rise_youtube": {
           "channel_name": "RISE ETF 유튜브 (KB자산운용)",
@@ -388,8 +376,8 @@
         },
         "ace_event": {
           "channel_name": "ACE ETF 이벤트 공지",
-          "success": false,
-          "snippet": ""
+          "success": true,
+          "snippet": "[EVENT] ACE 미국우주테크액티브(0180V0) 매수 인증 이벤트 시즌 2 (~7/8)"
         },
         "rise_event": {
           "channel_name": "RISE ETF 이벤트 페이지",
@@ -403,8 +391,8 @@
         },
         "sol_event": {
           "channel_name": "SOL ETF 이벤트 공지",
-          "success": false,
-          "snippet": ""
+          "success": true,
+          "snippet": "[SOL ETF] 4월 팬덤 이벤트 | 절세계좌 투자는 SOL ETF와 함께!"
         },
         "sol_blog": {
           "channel_name": "SOL ETF 블로그 (네이버)",

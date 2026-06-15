@@ -36,14 +36,21 @@ st.markdown("""
     color:#f43f5e; border-radius:100px; padding:4px 14px;
     font-size:.82rem; font-weight:600; margin-bottom:1.2rem;
 }
-.ev-board { display:flex; gap:12px; flex-wrap:wrap; margin:16px 0; }
+.ev-board { display:flex; gap:14px; flex-wrap:wrap; margin:16px 0; }
 .ev-card {
     flex:1; min-width:240px; max-width:340px;
     border:1px solid rgba(244,63,94,0.2); border-radius:14px;
-    padding:14px 16px; background:rgba(244,63,94,0.04);
-    transition:background .15s;
+    padding:0; overflow:hidden;
+    background:rgba(244,63,94,0.04);
+    transition:transform .15s, background .15s;
 }
-.ev-card:hover { background:rgba(244,63,94,0.08); }
+.ev-card:hover { transform:translateY(-2px); background:rgba(244,63,94,0.08); }
+.ev-card-img { width:100%; height:120px; object-fit:cover; display:block; }
+.ev-card-img-placeholder {
+    width:100%; height:72px;
+    display:flex; align-items:center; justify-content:center; font-size:2rem;
+}
+.ev-card-body { padding:12px 14px; }
 .ev-card-type {
     font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:100px;
     display:inline-block; margin-bottom:6px;
@@ -84,8 +91,14 @@ if not anthropic_key:
         st.header("⚙️ 설정")
         anthropic_key = st.text_input(
             "Anthropic API Key", value=os.getenv("ANTHROPIC_API_KEY", ""),
-            type="password", help="경쟁사 마케팅 감지용"
+            type="password", key="comp_ant_key", help="Anthropic Claude 사용 시"
         )
+        gemini_key = st.text_input(
+            "Gemini API Key", value=os.getenv("GEMINI_API_KEY", ""),
+            type="password", key="comp_gem_key", help="Google Gemini 무료 사용 시 (둘 중 하나만)"
+        )
+        if gemini_key: os.environ["GEMINI_API_KEY"] = gemini_key
+        api_key = anthropic_key or gemini_key
 
 # ── 주차 선택 ─────────────────────────────────────────────────────────────────
 today_date = datetime.now().date()
@@ -110,28 +123,26 @@ week_str = f"{week_start_date.month}/{week_start_date.day} ~ {week_end_date.mont
 st.markdown(f'<div class="comp-header">🏢 경쟁사 채널 모니터링</div>', unsafe_allow_html=True)
 st.markdown(f'<span class="comp-week-badge">📅 {week_str} 기준</span>', unsafe_allow_html=True)
 
-if st.button("🔍 경쟁사 채널 수집 및 분석", type="primary", use_container_width=True, key="comp_run"):
-    st.session_state["comp_analysis_run"] = True
+_archive_key = f"competitor_{selected_week_lbl}"
+_days_old = (today_date - week_start_date).days
+
+# 아카이브 있으면 버튼 없이 자동 진행
+if not st.session_state.get("comp_analysis_run", False):
+    if has_archive(_archive_key):
+        st.session_state["comp_analysis_run"] = True
 
 if not st.session_state.get("comp_analysis_run", False):
-    st.info("위 버튼을 눌러 경쟁사 ETF 운용사 채널 수집을 시작하세요.")
-    st.markdown("""
-    **수집 채널:**
-    - 🔵 **KODEX ETF** — 삼성자산운용 유튜브 + 이벤트 페이지
-    - 🟠 **TIGER ETF** — 미래에셋자산운용 유튜브 + 이벤트 페이지
-    - 🟢 **ACE ETF** — 한국투자신탁운용 유튜브 + 이벤트 공지
-    - 🟣 **RISE ETF** — KB자산운용 유튜브 + 이벤트 페이지
-    - 🔵 **HANARO ETF** — NH-Amundi자산운용 유튜브 + 이벤트 공지
-    - 🔴 **SOL ETF** — 신한자산운용 유튜브 + 이벤트 공지 + 네이버 블로그
-    - 📰 뉴스 (네이버/구글)
-    """)
-    st.stop()
+    if st.button("🔍 경쟁사 채널 수집 및 분석", type="primary", use_container_width=True, key="comp_run"):
+        st.session_state["comp_analysis_run"] = True
+    else:
+        st.info("📦 저장된 데이터 없음 — 버튼을 눌러 채널 수집을 시작합니다.")
+        st.markdown("""
+        **수집 채널:** KODEX · TIGER · ACE · RISE · HANARO · SOL 유튜브 + 이벤트 + 뉴스
+        """)
+        st.stop()
 
 # ── STEP 1: 채널 수집 ─────────────────────────────────────────────────────────
 st.markdown('<div class="step-header">Step 1 · 경쟁사 채널 수집</div>', unsafe_allow_html=True)
-
-_archive_key = f"competitor_{selected_week_lbl}"
-_days_old = (today_date - week_start_date).days
 
 if has_archive(_archive_key):
     collection_results = load_channel_results(_archive_key)
@@ -139,7 +150,7 @@ if has_archive(_archive_key):
     st.caption(f"📦 보존된 결과 (최초 수집: {_archived_at})")
 else:
     collector = DataCollector(
-        youtube_api_key="",
+        youtube_api_key=os.getenv("YOUTUBE_API_KEY", ""),
         naver_client_id=os.getenv("NAVER_CLIENT_ID", ""),
         naver_client_secret=os.getenv("NAVER_CLIENT_SECRET", ""),
         anthropic_api_key=anthropic_key,
@@ -192,8 +203,10 @@ def extract_competitor_events(collection_results: dict, api_key: str) -> dict:
     """
     경쟁사 채널에서 LLM으로 마케팅 이벤트 추출.
     이벤트명·기간·내용·대상 ETF 구조화.
+    event_details에 image_url이 있으면 vision LLM으로 배너 이미지도 분석.
     """
     marketing_texts = []
+    collected_image_urls = []  # 배너 이미지 URL 수집
     for r in collection_results.values():
         if not r.success or not r.data: continue
         d = r.data
@@ -209,6 +222,17 @@ def extract_competitor_events(collection_results: dict, api_key: str) -> dict:
         elif "articles" in d:
             lines = [f"- {a['title']} {a.get('link','')}" for a in d["articles"][:5]]
             if lines: marketing_texts.append(f"{label}\n" + "\n".join(lines))
+        # event_details: 이미지 URL + 텍스트 모두 수집
+        for ev in d.get("event_details", []):
+            title = ev.get("title", "")
+            url   = ev.get("url", "")
+            img   = ev.get("image_url", "")
+            if title:
+                lines_ev = [f"- {title}"]
+                if url: lines_ev.append(f"  URL: {url}")
+                marketing_texts.append(f"{label}\n" + "\n".join(lines_ev))
+            if img and img.startswith("http"):
+                collected_image_urls.append(img)
 
     if not marketing_texts:
         return {"marketing_detected": False, "events": [], "summary": "수집된 텍스트 없음"}
@@ -217,16 +241,26 @@ def extract_competitor_events(collection_results: dict, api_key: str) -> dict:
 
 {chr(10).join(marketing_texts)}
 
-[분석 기준]
-- 각 운용사가 자사 ETF를 대상으로 진행하는 마케팅 활동을 감지하세요
-- 이벤트, 프로모션, 수수료 혜택, 매수 유도 CTA, 특정 ETF 직접 추천 등이 대상
-- 시황 분석, ETF 교육, 단순 ETF 언급 등은 제외
-- 텍스트에서 이벤트 기간을 추출하고, 없으면 null로 표시
+[ETF 마케팅 활동 판단 기준]
+포함 (is_etf_marketing=true):
+- 특정 ETF 매수/투자 유도 이벤트, 프로모션, 경품 증정
+- 수수료 면제/할인 혜택 (특정 ETF 대상)
+- ETF 신규 출시·상장 홍보
+- ETF 매수 조건부 리워드/캐시백
+
+제외 (is_etf_marketing=false):
+- 일반 시황·경제 분석 콘텐츠 (ETF 언급만 있음)
+- 투자 교육 콘텐츠 (ETF 개념 설명, 재테크 팁 등)
+- 채용 공고, 사회공헌, 기업 IR, 스포츠 후원
+- 부동산·주식·채권 등 ETF 외 상품 안내
+- 단순 뉴스 보도 (운용사가 마케팅 주체가 아닌 경우)
+
+모든 항목에 is_etf_marketing을 판단해 포함하세요.
 
 JSON만 출력:
 {{
   "marketing_detected": true,
-  "summary": "감지된 경쟁사 마케팅 활동 전체 요약 (2-3문장)",
+  "summary": "감지된 경쟁사 ETF 마케팅 활동 전체 요약 (2-3문장)",
   "events": [
     {{
       "channel": "채널명 (예: TIGER ETF 유튜브)",
@@ -236,42 +270,136 @@ JSON만 출력:
       "marketing_type": "이벤트|프로모션|추천콘텐츠|수수료혜택|기타",
       "event_period": "YYYY-MM-DD ~ YYYY-MM-DD 또는 기간 설명 (없으면 null)",
       "event_summary": "이벤트 핵심 내용: 어떤 혜택, 조건, 대상 ETF 등 1-2문장",
-      "target_etf": "대상 ETF 이름 또는 카테고리 (예: TIGER 미국S&P500, null 가능)"
+      "target_etf": "대상 ETF 이름 또는 카테고리 (예: TIGER 미국S&P500, null 가능)",
+      "is_etf_marketing": true
     }}
   ]
 }}"""
 
     try:
-        client = ant.Anthropic(api_key=api_key or os.getenv("ANTHROPIC_API_KEY",""))
-        msg = client.messages.create(
-            model="claude-opus-4-8",
-            max_tokens=1024,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = msg.content[0].text
+        from llm_client import call_llm, call_llm_with_images
+        gem_key = os.getenv("GEMINI_API_KEY", "")
+        if collected_image_urls:
+            img_note = f"\n\n[첨부 이미지 {len(collected_image_urls)}개: 이벤트 배너 이미지입니다. 이미지에서 이벤트 기간·대상 ETF·혜택 조건을 추가로 추출해주세요.]"
+            text = call_llm_with_images(
+                prompt + img_note,
+                collected_image_urls,
+                anthropic_key=api_key,
+                gemini_key=gem_key,
+                max_tokens=1500,
+            )
+        else:
+            text = call_llm(prompt, anthropic_key=api_key, gemini_key=gem_key, max_tokens=1024)
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
             return json.loads(m.group())
     except Exception as e:
         logger.warning(f"경쟁사 LLM 분석 실패: {e}")
 
-    return {"marketing_detected": False, "events": [], "summary": f"LLM 분석 실패"}
+    return {"marketing_detected": False, "events": [], "summary": "LLM 분석 실패"}
 
 
-with st.spinner("LLM으로 경쟁사 마케팅 이벤트 분석 중..."):
-    comp_result = extract_competitor_events(collection_results, anthropic_key)
+def _inject_images(comp_result: dict, collection_results: dict) -> dict:
+    """LLM 결과 events에 image_url을 collection_results event_details에서 URL 매칭으로 주입."""
+    if not comp_result.get("events"):
+        return comp_result
+    # URL → image_url 역색인 만들기
+    url_to_img: dict = {}
+    for r in collection_results.values():
+        if not r.success or not r.data: continue
+        for ev in r.data.get("event_details", []):
+            u = ev.get("url","")
+            img = ev.get("image_url","")
+            if u and img:
+                url_to_img[u] = img
+    # title 매칭용 dict도 (URL이 약간 달라질 수 있어서)
+    title_to_img: dict = {}
+    for r in collection_results.values():
+        if not r.success or not r.data: continue
+        for ev in r.data.get("event_details", []):
+            t = ev.get("title","")[:40]
+            img = ev.get("image_url","")
+            if t and img:
+                title_to_img[t] = img
+    for ev in comp_result["events"]:
+        if ev.get("image_url"): continue
+        url = ev.get("url","")
+        title = (ev.get("title") or "")[:40]
+        ev["image_url"] = url_to_img.get(url) or title_to_img.get(title) or ""
+    return comp_result
+
+
+def keyword_fallback_competitor(collection_results: dict) -> dict:
+    """API 키 없을 때 제목 키워드 기반으로 경쟁사 이벤트 감지."""
+    events = []
+    _prov_keys = ["TIGER","ACE","RISE","HANARO","SOL","KODEX"]
+    for r in collection_results.values():
+        if not r.success or not r.data: continue
+        d = r.data
+        items = []
+        for v in d.get("videos",[]):       items.append({"title":v.get("title",""),  "url":v.get("url",""),  "image_url":""})
+        for p in d.get("posts",[]):        items.append({"title":p.get("title",""),  "url":p.get("link",""), "image_url":""})
+        for a in d.get("articles",[]):     items.append({"title":a.get("title",""),  "url":a.get("link",""), "image_url":""})
+        for ev in d.get("event_details",[]): items.append({"title":ev.get("title",""),"url":ev.get("url",""),"image_url":ev.get("image_url","")})
+        for item in items:
+            t = item["title"]
+            if not any(kw in t for kw in ["이벤트","프로모션","혜택","ETF","투자","매수","출시","신규"]): continue
+            prov = next((p for p in _prov_keys if p in r.channel_name.upper()), "기타")
+            ev_type = "이벤트" if "이벤트" in t else "프로모션" if ("혜택" in t or "프로모션" in t) else "추천콘텐츠"
+            events.append({
+                "provider": prov,
+                "channel": r.channel_name,
+                "title": t[:80],
+                "url": item.get("url",""),
+                "image_url": item.get("image_url",""),
+                "marketing_type": ev_type,
+                "event_summary": f"{r.channel_name} 마케팅 콘텐츠 감지",
+                "event_period": None,
+                "target_etf": None,
+            })
+    if events:
+        return {"marketing_detected": True, "events": events,
+                "summary": f"키워드 기반 감지 (API 키 없음) — {len(events)}건"}
+    return {"marketing_detected": False, "events": [], "summary": "감지 없음 (키워드 방식)"}
+
+
+_use_api = anthropic_key or os.getenv("GEMINI_API_KEY","")
+
+if _use_api:
+    with st.spinner("LLM으로 경쟁사 마케팅 이벤트 분석 중..."):
+        comp_result = extract_competitor_events(collection_results, anthropic_key or "")
+    comp_result = _inject_images(comp_result, collection_results)
+else:
+    st.info("💡 API 키 미입력 — 키워드 기반으로 경쟁사 이벤트를 감지합니다. (LLM 보다 정밀도 낮음)")
+    comp_result = keyword_fallback_competitor(collection_results)
+    # 키워드 폴백은 이미 event_details에서 image_url 직접 넣었으므로 별도 주입 불필요
 
 st.markdown('<div class="comp-divider"></div>', unsafe_allow_html=True)
 
 if not comp_result.get("marketing_detected"):
-    st.info("이번 주 경쟁사 마케팅 활동 감지 없음")
-    if comp_result.get("summary"):
-        st.caption(comp_result["summary"])
+    summary_txt = comp_result.get("summary", "")
+    if "실패" in summary_txt or not summary_txt:
+        st.error("LLM 분석 실패 — API 키를 확인하거나 다시 시도하세요.")
+    else:
+        st.info("이번 주 경쟁사 마케팅 활동 감지 없음")
+    if summary_txt:
+        st.caption(summary_txt)
     st.stop()
 
 # ── 이벤트 보드 메인 ─────────────────────────────────────────────────────────
-events = comp_result.get("events", [])
-st.success(f"📣 경쟁사 마케팅 이벤트 {len(events)}건 감지")
+all_events = comp_result.get("events", [])
+
+# ETF 마케팅 필터링 (LLM이 is_etf_marketing 판단한 경우에만 적용)
+_has_filter_field = any("is_etf_marketing" in ev for ev in all_events)
+if _has_filter_field:
+    events = [ev for ev in all_events if ev.get("is_etf_marketing", True)]
+    filtered_out = len(all_events) - len(events)
+else:
+    events = all_events
+    filtered_out = 0
+
+_filter_note = f" (ETF 마케팅 외 {filtered_out}건 제외)" if filtered_out > 0 else ""
+st.success(f"📣 경쟁사 ETF 마케팅 이벤트 {len(events)}건 감지{_filter_note}")
 if comp_result.get("summary"):
     st.caption(comp_result["summary"])
 
@@ -303,35 +431,37 @@ for prov, prov_events in by_provider.items():
 
     cards_html = '<div class="ev-board">'
     for ev in prov_events:
-        mtype    = ev.get("marketing_type", "기타")
-        cls      = _type_cls.get(mtype, "ev-type-etc")
-        ev_icon  = _type_icon.get(mtype, "📋")
-        title    = (ev.get("title") or "")[:60]
-        period   = ev.get("event_period") or ""
-        summary  = ev.get("event_summary") or ""
-        channel  = ev.get("channel", "")
-        url      = ev.get("url", "")
+        mtype      = ev.get("marketing_type", "기타")
+        cls        = _type_cls.get(mtype, "ev-type-etc")
+        ev_icon    = _type_icon.get(mtype, "📋")
+        title      = (ev.get("title") or "")[:60]
+        period     = ev.get("event_period") or ""
+        summary    = ev.get("event_summary") or ""
+        channel    = ev.get("channel", "")
+        url        = ev.get("url", "")
         target_etf = ev.get("target_etf") or ""
+        img_url    = ev.get("image_url","")
 
-        title_html = (
-            f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>'
-            if url and url.startswith("http") else title
-        )
-        period_html = f'<div class="ev-period">📅 {period}</div>' if period and period != "null" else ""
-        etf_html    = (
-            f'<div style="font-size:.7rem;color:{pinfo["color"]};margin-top:4px;">🎯 {target_etf}</div>'
-            if target_etf and target_etf != "null" else ""
-        )
+        title_html  = (f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>'
+                       if url and url.startswith("http") else title)
+        period_html = f'<div class="ev-period">📅 {period}</div>' if period and period not in ("","null") else ""
+        etf_html    = (f'<div style="font-size:.7rem;color:{pinfo["color"]};margin-top:4px;">🎯 {target_etf}</div>'
+                       if target_etf and target_etf != "null" else "")
+        img_html    = (f'<img class="ev-card-img" src="{img_url}" onerror="this.style.display=\'none\'">'
+                       if img_url else f'<div class="ev-card-img-placeholder" style="background:{pinfo["bg"]};">{ev_icon}</div>')
 
-        cards_html += f"""
-        <div class="ev-card" style="border-color:{pinfo["color"]}33;background:{pinfo["bg"]};">
-          <span class="ev-card-type {cls}">{ev_icon} {mtype}</span>
-          <div class="ev-title">{title_html}</div>
-          {period_html}
-          <div class="ev-summary">{summary[:140]}</div>
-          {etf_html}
-          <div class="ev-channel">📡 {channel}</div>
-        </div>"""
+        cards_html += (
+            f'<div class="ev-card" style="border-color:{pinfo["color"]}33;">'
+            f'{img_html}'
+            f'<div class="ev-card-body">'
+            f'<span class="ev-card-type {cls}">{ev_icon} {mtype}</span>'
+            f'<div class="ev-title">{title_html}</div>'
+            f'{period_html}'
+            f'<div class="ev-summary">{summary[:140]}</div>'
+            f'{etf_html}'
+            f'<div class="ev-channel">📡 {channel}</div>'
+            f'</div></div>'
+        )
     cards_html += "</div>"
     st.markdown(cards_html, unsafe_allow_html=True)
 

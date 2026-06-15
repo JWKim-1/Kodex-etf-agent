@@ -154,7 +154,7 @@ week_labels_sorted = sorted(
 )
 
 if not week_labels_sorted:
-    st.warning("KRX 캐시 데이터가 없습니다. 먼저 증권사/은행 채널 탭에서 분석을 실행해 주세요.")
+    st.warning("캐시 데이터가 없습니다. 주차를 선택하면 자동 수집됩니다.")
     st.stop()
 
 today = date.today()
@@ -196,12 +196,16 @@ if selected_week in trend_cache:
     df_trend = trend_cache[selected_week]
     st.caption("📦 캐시된 데이터 사용")
 else:
-    with st.spinner("KRX에서 주간 ETF 데이터 수집 중… (약 30~60초)"):
+    from krx_data_fetcher import fetch_etf_market_summary_naver
+    with st.spinner("네이버 금융에서 ETF 데이터 수집 중…"):
         try:
-            df_trend = fetch_etf_market_summary(week_start_date, week_end_date)
+            df_trend = fetch_etf_market_summary_naver()
             if not df_trend.empty:
                 save_trend_cache(selected_week, df_trend)
-                st.success(f"수집 완료: {len(df_trend):,}개 ETF")
+                st.success(f"✅ 수집 완료: {len(df_trend):,}개 ETF")
+            else:
+                st.error("네이버 금융 데이터를 불러오지 못했습니다.")
+                df_trend = pd.DataFrame()
         except Exception as e:
             st.error(f"수집 실패: {e}")
             df_trend = pd.DataFrame()
@@ -346,7 +350,7 @@ if not top10_vol.empty:
 
 # ── 새로고침 안내 ─────────────────────────────────────────────────────────────
 st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
-if st.button("🔄 데이터 새로고침 (KRX 재수집)", key="trend_refresh"):
+if st.button("🔄 데이터 새로고침", key="trend_refresh"):
     trend_cache_local = load_trend_cache()
     if selected_week in trend_cache_local:
         del trend_cache_local[selected_week]
@@ -363,4 +367,4 @@ if st.button("🔄 데이터 새로고침 (KRX 재수집)", key="trend_refresh")
                 _os.remove(TREND_CACHE_FILE)
     st.rerun()
 
-st.caption(f"데이터 출처: KRX (pykrx) · {week_str} 기준 · 삼성자산운용 ETF 마케팅 AI Agent")
+st.caption(f"데이터 출처: 네이버 금융 · {week_str} 기준 · 삼성자산운용 ETF 마케팅 AI Agent")

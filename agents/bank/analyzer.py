@@ -870,7 +870,9 @@ def extract_target_etfs_with_llm(collection_results: Dict, anthropic_api_key: st
 
     marketing_texts = []
     for result in collection_results.values():
-        if not result.success or not result.data:
+        # bank ChannelResult는 .detected 필드 사용 (공용 .success 없음)
+        ok = getattr(result, "success", None) if hasattr(result, "success") else getattr(result, "detected", False)
+        if not ok or not result.data:
             continue
         d = result.data
         label = f"[{result.channel_name}]"
@@ -936,24 +938,23 @@ JSON만 출력:
       "reason": "이 콘텐츠가 마케팅 활동으로 판단된 이유 (1문장)",
       "marketing_type": "이벤트|프로모션|추천콘텐츠|수수료혜택|기타 중 하나",
       "marketing_reason": "단순 키워드 노출이 아닌 마케팅 활동으로 분류한 구체적 근거 (이벤트 기간 명시·혜택 내용·매수 유도 문구 등)",
+      "event_period": "YYYY-MM-DD ~ YYYY-MM-DD (텍스트에서 기간 언급 없으면 null)",
+      "event_summary": "이벤트·프로모션 핵심 내용 1-2문장 (어떤 혜택인지, 대상 ETF, 조건 등)",
+      "target_etf": "대상 ETF 이름 (예: KODEX 200, null 가능)",
       "etf_codes": ["069500"]
     }}
   ]
 }}"""
 
     try:
-        key = anthropic_api_key or __import__("os").getenv("ANTHROPIC_API_KEY", "")
-        client = ant.Anthropic(api_key=key)
-        msg = client.messages.create(
-            model="claude-opus-4-8",
-            max_tokens=512,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = msg.content[0].text
+        from llm_client import call_llm
+        gem_key = __import__("os").getenv("GEMINI_API_KEY", "")
+        text = call_llm(prompt, anthropic_key=anthropic_api_key, gemini_key=gem_key, max_tokens=512)
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
             return json.loads(m.group())
     except Exception as e:
         logger.warning(f"LLM ETF 추출 실패: {e}")
+        return {"marketing_detected": False, "etf_codes": [], "summary": f"LLM 분석 실패: {e}"}
 
-    return {"marketing_detected": False, "etf_codes": [], "summary": f"LLM 분석 실패: {e}"}
+    return {"marketing_detected": False, "etf_codes": [], "summary": "LLM 분석 실패"}

@@ -118,6 +118,45 @@ body, p, h1, h2, h3, h4, h5, h6,
     animation: dino-run 2.4s linear infinite;
     opacity:0.5;
 }
+/* ── 이벤트 카드 보드 (증권/개인/은행/히스토리 공용) ── */
+.ev-board { display:flex; gap:14px; flex-wrap:wrap; margin:14px 0 20px; }
+.ev-card {
+    flex:1; min-width:240px; max-width:340px;
+    border-radius:14px; padding:0; overflow:hidden;
+    border:1px solid rgba(255,255,255,0.08);
+    background:rgba(255,255,255,0.03);
+    transition:transform .15s, background .15s;
+}
+.ev-card:hover { transform:translateY(-2px); background:rgba(255,255,255,0.06); }
+.ev-card-img {
+    width:100%; height:120px; object-fit:cover;
+    display:block; background:linear-gradient(135deg,#1a1d23,#16181c);
+}
+.ev-card-img-placeholder {
+    width:100%; height:80px;
+    background:linear-gradient(135deg,rgba(0,82,255,0.15),rgba(77,159,255,0.08));
+    display:flex; align-items:center; justify-content:center;
+    font-size:2rem;
+}
+.ev-card-body { padding:12px 14px; }
+.ev-card-type {
+    font-size:.63rem; font-weight:700; padding:2px 8px; border-radius:100px;
+    display:inline-block; margin-bottom:6px;
+}
+.ev-type-event   { background:rgba(0,198,255,0.15);color:#00c6ff;border:1px solid rgba(0,198,255,0.3); }
+.ev-type-promo   { background:rgba(5,177,105,0.15);color:#05b169;border:1px solid rgba(5,177,105,0.3); }
+.ev-type-content { background:rgba(255,200,50,0.15);color:#f0c040;border:1px solid rgba(255,200,50,0.3); }
+.ev-type-fee     { background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3); }
+.ev-type-etc     { background:rgba(255,255,255,0.08);color:#aaa;border:1px solid rgba(255,255,255,0.15); }
+.ev-org-badge {
+    font-size:.62rem; font-weight:700; padding:2px 8px; border-radius:100px;
+    display:inline-block; margin-bottom:6px; margin-left:4px;
+}
+.ev-title { font-size:.88rem; font-weight:700; color:#e8eaed; margin-bottom:4px; line-height:1.4; }
+.ev-period { font-size:.72rem; color:#4d9fff; margin:3px 0; }
+.ev-etf    { font-size:.70rem; margin:3px 0; }
+.ev-summary { font-size:.77rem; color:#aaa; line-height:1.5; margin:6px 0 0; }
+.ev-channel { font-size:.65rem; color:#555; margin-top:6px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -232,14 +271,15 @@ if st.session_state.selected_mode is None:
 
     with col6:
         st.markdown("""
-        <div class="mode-card disabled">
+        <div class="mode-card">
             <div class="mode-icon">🏷️</div>
             <div class="mode-title">ETF 사후관리</div>
-            <div class="mode-desc">신규 상장 자동 감지 · 상장 폐지 모니터링 · AUM 추이 분석으로 중장기 투자자 소통 자료 생성</div>
-            <div class="coming-soon">🔒 추후 출시 예정</div>
+            <div class="mode-desc">신규상장 자동 감지 · 상폐 모니터링 · 만기청산 분류 · 주차별 ETF 수 추이</div>
         </div>
         """, unsafe_allow_html=True)
-        st.button("ETF 사후관리 (준비 중)", key="btn_lifecycle", use_container_width=True, disabled=True)
+        if st.button("ETF 사후관리 →", key="btn_lifecycle", use_container_width=True, type="primary"):
+            st.session_state.selected_mode = "lifecycle"
+            st.rerun()
 
     st.markdown("<div style='margin:16px 0 4px;'></div>", unsafe_allow_html=True)
     if st.button(
@@ -275,6 +315,15 @@ if st.session_state.selected_mode is None:
 
     st.markdown("---")
     st.caption("삼성자산운용 ETF 마케팅 모니터링 AI Agent · Powered by Claude")
+    st.stop()
+
+# ETF 사후관리 모드
+if st.session_state.selected_mode == "lifecycle":
+    with st.sidebar:
+        if st.button("← 채널 선택", key="back_lifecycle"):
+            st.session_state.selected_mode = None
+            st.rerun()
+    exec(open(os.path.join(os.path.dirname(__file__), "agents/lifecycle/app_lifecycle.py"), encoding="utf-8").read())
     st.stop()
 
 # 채널 수집 히스토리 모드
@@ -348,7 +397,7 @@ with st.sidebar:
         type="password",
         help="마케팅 감지 정확도 향상. 없으면 키워드 방식으로 대체 (선택사항)"
     )
-    youtube_key  = ""
+    youtube_key  = os.getenv("YOUTUBE_API_KEY", "")
     naver_id     = os.getenv("NAVER_CLIENT_ID", "")
     naver_secret = os.getenv("NAVER_CLIENT_SECRET", "")
     st.divider()
@@ -452,6 +501,7 @@ def keyword_fallback(collection_results, all_kodex_etfs: dict) -> dict:
             # full_text 있으면 본문까지 활용, 없으면 제목만
             text = ev.get("full_text", ev.get("title",""))
             items.append({"title": ev.get("title",""), "url": ev.get("url",""),
+                          "image_url": ev.get("image_url",""),
                           "text": text,
                           "channel_reason": "삼성자산운용 공식 이벤트 페이지에 '진행중' 이벤트로 등록됨 (이벤트 제목·기간 명시)"})
         if not d.get("event_details"):
@@ -485,13 +535,22 @@ def keyword_fallback(collection_results, all_kodex_etfs: dict) -> dict:
                 for code in matched_codes:
                     if code not in found:
                         found.append(code)
+                channel_reason = item.get("channel_reason", "")
+                _title = item.get("title","")
+                ev_type = "이벤트" if "이벤트" in channel_reason or "이벤트" in _title else \
+                          "프로모션" if "프로모션" in _title or "혜택" in _title else \
+                          "추천콘텐츠" if "유튜브" in channel_reason else "기타"
                 evidence.append({
                     "channel": r.channel_name,
-                    "title": item["title"][:80],
+                    "title": _title[:80],
                     "url": item["url"],
+                    "image_url": item.get("image_url",""),
+                    "marketing_type": ev_type,
+                    "event_summary": channel_reason,
                     "reason": f"감지: {', '.join(matched_names[:3])}",
-                    "marketing_reason": item.get("channel_reason", ""),
+                    "marketing_reason": channel_reason,
                     "etf_codes": matched_codes[:3],
+                    "target_etf": ", ".join(matched_names[:2]),
                 })
 
     if found:
@@ -735,6 +794,12 @@ st.markdown("")
 if st.button("🚀 분석 시작", type="primary", use_container_width=True):
     st.session_state["analysis_run"] = True
 
+# 아카이브 있으면 버튼 없이 자동 진행
+if not st.session_state.get("analysis_run", False):
+    from channel_archive import has_archive as _has_arch
+    if _has_arch(current_sheet):
+        st.session_state["analysis_run"] = True
+
 if not st.session_state.get("analysis_run", False):
     st.stop()
 
@@ -884,62 +949,47 @@ else:
 
         # ── 이벤트 보드 ──────────────────────────────────────────────────────
         evidence = llm_result.get("evidence", [])
-        events_with_info = [ev for ev in (evidence or []) if ev.get("event_summary") or ev.get("event_period")]
+        # top-level etf_codes를 개별 evidence 항목에 fallback으로 채워줌
+        _top_codes = llm_result.get("etf_codes", [])
+        for _ev in (evidence or []):
+            if not _ev.get("etf_codes") and _top_codes:
+                _ev["etf_codes"] = _top_codes
+        events_with_info = [ev for ev in (evidence or []) if ev.get("event_summary") or ev.get("event_period") or ev.get("etf_codes")]
         if events_with_info:
-            st.markdown("""
-            <style>
-            .ev-board { display:flex; gap:12px; flex-wrap:wrap; margin:12px 0; }
-            .ev-card {
-                flex:1; min-width:220px; max-width:320px;
-                border:1px solid rgba(0,82,255,0.25); border-radius:14px;
-                padding:14px 16px; background:rgba(0,82,255,0.05);
-            }
-            .ev-card-type {
-                font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:100px;
-                display:inline-block; margin-bottom:6px;
-            }
-            .ev-type-event   { background:rgba(0,198,255,0.15);color:#00c6ff;border:1px solid rgba(0,198,255,0.3); }
-            .ev-type-promo   { background:rgba(5,177,105,0.15);color:#05b169;border:1px solid rgba(5,177,105,0.3); }
-            .ev-type-content { background:rgba(255,200,50,0.15);color:#f0c040;border:1px solid rgba(255,200,50,0.3); }
-            .ev-type-fee     { background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3); }
-            .ev-type-etc     { background:rgba(255,255,255,0.08);color:#aaa;border:1px solid rgba(255,255,255,0.15); }
-            .ev-title { font-size:0.88rem; font-weight:700; color:#e8eaed; margin-bottom:4px; line-height:1.4; }
-            .ev-period { font-size:0.75rem; color:#4d9fff; margin:4px 0; }
-            .ev-summary { font-size:0.78rem; color:#aaa; line-height:1.5; margin:6px 0 0; }
-            .ev-channel { font-size:0.68rem; color:#666; margin-top:6px; }
-            </style>
-            """, unsafe_allow_html=True)
-
-            _type_cls = {
-                "이벤트": "ev-type-event",
-                "프로모션": "ev-type-promo",
-                "추천콘텐츠": "ev-type-content",
-                "수수료혜택": "ev-type-fee",
-            }
-            _type_icon = {
-                "이벤트": "🎁", "프로모션": "💰",
-                "추천콘텐츠": "📺", "수수료혜택": "🎯",
-            }
+            _type_cls  = {"이벤트":"ev-type-event","프로모션":"ev-type-promo","추천콘텐츠":"ev-type-content","수수료혜택":"ev-type-fee"}
+            _type_icon = {"이벤트":"🎁","프로모션":"💰","추천콘텐츠":"📺","수수료혜택":"🎯"}
+            _ch_icon   = {"삼성자산운용 이벤트 페이지":"🎪","삼성증권 이벤트":"🏦","네이버/구글 뉴스":"📰","증권사 유튜브":"▶️"}
             cards_html = '<div class="ev-board">'
-            for ev in events_with_info[:6]:
-                mtype = ev.get("marketing_type", "기타")
-                cls = _type_cls.get(mtype, "ev-type-etc")
-                icon = _type_icon.get(mtype, "📋")
-                title = ev.get("title", "")[:60]
-                period = ev.get("event_period") or ""
-                summary = ev.get("event_summary") or ev.get("reason") or ""
-                channel = ev.get("channel", "")
-                url = ev.get("url", "")
-                title_html = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>' if url and url.startswith("http") else title
-                period_html = f'<div class="ev-period">📅 {period}</div>' if period and period != "null" else ""
-                cards_html += f"""
-                <div class="ev-card">
-                  <span class="ev-card-type {cls}">{icon} {mtype}</span>
-                  <div class="ev-title">{title_html}</div>
-                  {period_html}
-                  <div class="ev-summary">{summary[:120]}</div>
-                  <div class="ev-channel">출처: {channel}</div>
-                </div>"""
+            for ev in events_with_info[:8]:
+                mtype   = ev.get("marketing_type","기타")
+                cls     = _type_cls.get(mtype,"ev-type-etc")
+                icon    = _type_icon.get(mtype,"📋")
+                title   = ev.get("title","")[:60]
+                period  = ev.get("event_period") or ""
+                summary = ev.get("event_summary") or ev.get("marketing_reason") or ""
+                channel = ev.get("channel","")
+                url     = ev.get("url","")
+                target  = ev.get("target_etf") or ""
+                ev_etf_codes = ev.get("etf_codes",[])
+                ev_etf_names = [all_kodex_etfs.get(c,c) for c in ev_etf_codes if c]
+                etf_label = target or (", ".join(ev_etf_names[:2]) if ev_etf_names else "")
+                img_url = ev.get("image_url","")
+                title_html  = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>' if url and url.startswith("http") else title
+                period_html = f'<div class="ev-period">📅 {period}</div>' if period and period not in ("","null") else ""
+                etf_html    = f'<div class="ev-etf" style="color:#4d9fff;">🎯 {etf_label}</div>' if etf_label else ""
+                img_html    = f'<img class="ev-card-img" src="{img_url}" onerror="this.style.display=\'none\'">' if img_url else f'<div class="ev-card-img-placeholder">🎯</div>'
+                cards_html += (
+                    f'<div class="ev-card">'
+                    f'{img_html}'
+                    f'<div class="ev-card-body">'
+                    f'<span class="ev-card-type {cls}">{icon} {mtype}</span>'
+                    f'<div class="ev-title">{title_html}</div>'
+                    f'{period_html}'
+                    f'{etf_html}'
+                    f'<div class="ev-summary">{summary[:140]}</div>'
+                    f'<div class="ev-channel">📡 {channel}</div>'
+                    f'</div></div>'
+                )
             cards_html += "</div>"
             st.markdown(cards_html, unsafe_allow_html=True)
 

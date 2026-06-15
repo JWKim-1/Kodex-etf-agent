@@ -367,9 +367,8 @@ def extract_target_etfs_with_llm(collection_results: Dict,
                                   anthropic_api_key: str = "",
                                   channel_context: str = "삼성증권") -> Dict:
     """채널 컨텍스트만 파라미터로 받아 3채널 공용으로 사용."""
-    import anthropic as ant
-
     marketing_texts = []
+    collected_image_urls = []
     for result in collection_results.values():
         if not result.success or not result.data:
             continue
@@ -389,6 +388,10 @@ def extract_target_etfs_with_llm(collection_results: Dict,
             marketing_texts.append(f"{label}\n" + "\n".join(lines))
         elif "events" in d and d["events"]:
             marketing_texts.append(f"{label}\n" + "\n".join(d["events"][:5]))
+        for ev in d.get("event_details", []):
+            img = ev.get("image_url", "")
+            if img and img.startswith("http"):
+                collected_image_urls.append(img)
 
     if not marketing_texts:
         return {"marketing_detected": False, "etf_codes": [], "summary": "수집된 마케팅 텍스트 없음"}
@@ -410,6 +413,7 @@ JSON만 출력:
     "channel": "채널명",
     "title": "콘텐츠 제목",
     "url": "링크",
+    "event_period": "YYYY-MM-DD ~ YYYY-MM-DD 또는 기간 설명 (없으면 null)",
     "reason": "마케팅으로 판단한 이유 (1문장)",
     "marketing_type": "이벤트|프로모션|추천콘텐츠|수수료혜택|기타",
     "etf_codes": ["069500"]
@@ -417,13 +421,19 @@ JSON만 출력:
 }}"""
 
     try:
-        key = anthropic_api_key or __import__("os").getenv("ANTHROPIC_API_KEY", "")
-        client = ant.Anthropic(api_key=key)
-        msg = client.messages.create(
-            model="claude-opus-4-8", max_tokens=512,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = msg.content[0].text
+        from llm_client import call_llm, call_llm_with_images
+        gem_key = __import__("os").getenv("GEMINI_API_KEY", "")
+        if collected_image_urls:
+            img_note = f"\n\n[첨부 이미지 {len(collected_image_urls)}개: 이벤트 배너. 이미지에서 이벤트 기간·대상 ETF·혜택 조건을 추출해주세요.]"
+            text = call_llm_with_images(
+                prompt + img_note,
+                collected_image_urls,
+                anthropic_key=anthropic_api_key,
+                gemini_key=gem_key,
+                max_tokens=800,
+            )
+        else:
+            text = call_llm(prompt, anthropic_key=anthropic_api_key, gemini_key=gem_key, max_tokens=512)
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
             return json.loads(m.group())

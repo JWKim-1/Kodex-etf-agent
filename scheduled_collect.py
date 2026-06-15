@@ -143,13 +143,8 @@ JSON만 출력:
 }}"""
 
     try:
-        client = ant.Anthropic(api_key=api_key or os.getenv("ANTHROPIC_API_KEY", ""))
-        msg = client.messages.create(
-            model="claude-opus-4-8",
-            max_tokens=2048,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = msg.content[0].text
+        from llm_client import call_llm
+        text = call_llm(prompt, anthropic_key=api_key, gemini_key=os.getenv("GEMINI_API_KEY",""), max_tokens=2048)
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
             return json.loads(m.group())
@@ -195,6 +190,7 @@ def run():
     naver_sec = os.getenv("NAVER_CLIENT_SECRET", "")
 
     collector = DataCollector(
+        youtube_api_key=os.getenv("YOUTUBE_API_KEY", ""),
         naver_client_id=naver_id,
         naver_client_secret=naver_sec,
         anthropic_api_key=api_key,
@@ -251,11 +247,14 @@ def run():
         logger.error(f"증권사 수집 실패: {e}")
         entry["securities"] = {"error": str(e)}
 
+    bank_results = None
+    bank_summary = {"success": [], "failed": [], "ok_count": 0, "fail_count": 0}
     # ── 2. 은행 채널 수집 (은행 세션) ────────────────────────────────────────
     logger.info("은행 채널 수집 중...")
     try:
         BankChannelCollector = _load_bank_collector()
-        bank_collector = BankChannelCollector(week_start=week_start_dt, week_end=week_end_dt)
+        bank_collector = BankChannelCollector(week_start=week_start_dt, week_end=week_end_dt,
+                                               youtube_api_key=os.getenv("YOUTUBE_API_KEY", ""))
         bank_results = bank_collector.collect_all()
         bank_summary = collection_summary(bank_results)
         logger.info(f"  은행: 성공 {bank_summary['ok_count']}개 / 실패 {bank_summary['fail_count']}개")
@@ -293,6 +292,22 @@ def run():
     }
 
     save_history(history)
+
+    # ── channel_archive.json 에도 저장 → 앱 자동 로드 지원 ───────────────────
+    try:
+        from channel_archive import save_channel_results, save_raw_data
+        if sec_results:
+            save_channel_results(week_label, sec_results)
+        if bank_results:
+            save_channel_results(f"bank_{week_label}", bank_results)
+            if api_key and entry.get("bank", {}).get("events"):
+                save_raw_data(f"bank_llm_{week_label}", entry["bank"]["events"])
+        if etf_results:
+            save_channel_results(f"mass_{week_label}", etf_results)
+            save_channel_results(f"competitor_{week_label}", etf_results)
+        logger.info("channel_archive 저장 완료")
+    except Exception as e:
+        logger.warning(f"channel_archive 저장 실패 (무시): {e}")
 
     logger.info(
         f"=== 완료: {week_label} | "

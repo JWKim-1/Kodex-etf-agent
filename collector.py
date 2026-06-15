@@ -52,6 +52,11 @@ CHANNEL_LABELS = {
     # ── 공통 채널 ────────────────────────────────────
     # krx_news, krx_trading 제거 — KRX 데이터는 pykrx로 자동 수집 (krx_data_cache.parquet)
     "news":                "네이버/구글 뉴스",
+    "instagram":           "삼성증권 인스타그램",
+    "kakao":               "삼성자산운용 카카오채널",
+    "samsung_pop_event":   "삼성증권 홈페이지 이벤트",
+    "google_trends":       "구글 트렌드",
+    "pension_pdf":         "삼성증권 퇴직연금 가이드",
     # ── ETF 운용사 채널 (개인·경쟁사 모드 공용) ─────────────────────────
     "kodex_youtube":    "KODEX ETF 유튜브 (삼성자산운용)",
     "tiger_youtube":    "TIGER ETF 유튜브 (미래에셋자산운용)",
@@ -142,6 +147,33 @@ class DataCollector:
             return dt >= datetime.now() - timedelta(days=7)
         return self.week_start <= dt <= self.week_end + timedelta(days=1)
 
+    def _fetch_og_image(self, url: str, base_domain: str = "") -> str:
+        """이벤트 페이지 URL에서 OG 이미지 URL 추출. 없으면 빈 문자열."""
+        if not url or not url.startswith("http"):
+            return ""
+        try:
+            r = requests.get(url, headers=BROWSER_HEADERS, timeout=8)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "lxml")
+            # 1순위: og:image
+            for attr in [{"property":"og:image"}, {"name":"og:image"}, {"property":"twitter:image"}]:
+                tag = soup.find("meta", attrs=attr)
+                if tag and tag.get("content","").startswith("http"):
+                    return tag["content"]
+            # 2순위: 이벤트/배너/썸네일 관련 img src
+            for img in soup.find_all("img"):
+                src = img.get("src","") or img.get("data-src","")
+                if not src: continue
+                src_lower = src.lower()
+                if any(kw in src_lower for kw in ["event","banner","thumb","main","poster","visual"]):
+                    if src.startswith("http"):
+                        return src
+                    if src.startswith("/") and base_domain:
+                        return base_domain.rstrip("/") + src
+        except Exception:
+            pass
+        return ""
+
     def _fetch_article_text(self, url: str) -> str:
         """기사 URL에서 본문 전문 추출."""
         if not url or not url.startswith("http"):
@@ -205,6 +237,12 @@ class DataCollector:
             ("kb_youtube",         self._ch_kb_youtube),
             # 공통 (KRX 데이터는 pykrx 자동 수집으로 대체됨 — krx_news/krx_trading 제거)
             ("news",               self._ch_news),
+            # 추가 채널
+            ("instagram",          self._ch_instagram),
+            ("kakao",              self._ch_kakao),
+            ("samsung_pop_event",  self._ch_samsung_pop_event),
+            ("google_trends",      self._ch_google_trends),
+            ("pension_pdf",        self._ch_pension_pdf),
         ]
         results: Dict[str, ChannelResult] = {}
         for idx, (key, func) in enumerate(channels):
@@ -326,9 +364,24 @@ class DataCollector:
 
                 # 항상 본문 페이지 전체를 긁어서 ETF명 보완 + 전체 텍스트 수집
                 page_full_text = title  # 최소한 제목은 포함
+                og_image = ""
                 try:
                     detail_r = requests.get(url_full, headers=BROWSER_HEADERS, timeout=10)
                     detail_soup = BeautifulSoup(detail_r.text, "lxml")
+                    # OG 이미지 추출
+                    og_tag = detail_soup.find("meta", property="og:image") or \
+                             detail_soup.find("meta", attrs={"name": "og:image"})
+                    if og_tag and og_tag.get("content"):
+                        og_image = og_tag["content"]
+                        if og_image.startswith("/"):
+                            og_image = "https://www.samsungfund.com" + og_image
+                    # 이벤트 배너 이미지 직접 탐색 (og 없을 때)
+                    if not og_image:
+                        for img in detail_soup.find_all("img"):
+                            src = img.get("src","")
+                            if any(kw in src.lower() for kw in ["event","banner","thumb","main"]):
+                                og_image = src if src.startswith("http") else "https://www.samsungfund.com" + src
+                                break
                     detail_text = detail_soup.get_text(" ", strip=True)
                     alt_texts = " ".join(
                         img.get("alt", "") for img in detail_soup.find_all("img")
@@ -355,13 +408,15 @@ class DataCollector:
                     "title": title,
                     "url": url_full,
                     "etf_names": etf_m,
+                    "image_url": og_image,
                     "full_text": page_full_text[:1500],  # 전체 텍스트 저장 (키워드 매칭용)
                 })
                 raw_combined += " " + page_full_text[:500]  # 제목 대신 본문도 포함
 
             if not events:
-                return ChannelResult(ch, name, False,
-                    error="진행 중인 이벤트를 찾지 못했습니다", error_type="PARSE_ERROR")
+                return ChannelResult(ch, name, True,
+                    data={"events": [], "event_details": [], "raw_text": ""},
+                    error_label="이번 주 진행 중인 이벤트 없음")
 
             return ChannelResult(ch, name, True, data={
                 "events": [e["title"] for e in events],
@@ -529,45 +584,13 @@ class DataCollector:
     # ── CH3: 삼성증권 인스타그램 ─────────────────────────────────────────────
 
     def _ch_instagram(self) -> ChannelResult:
+        """Instagram — 비로그인 스크래핑 구조적 불가."""
         ch, name = "instagram", CHANNEL_LABELS["instagram"]
-        url = "https://www.instagram.com/samsung.securities/"
-        try:
-            r = requests.get(url, headers=BROWSER_HEADERS, timeout=15, allow_redirects=True)
-            if "login" in r.url or "accounts/login" in r.text[:500]:
-                return ChannelResult(
-                    ch, name, False,
-                    error="로그인 페이지 리다이렉트 — Instagram 비로그인 공개 스크래핑 차단",
-                    error_type="LOGIN_REQUIRED",
-                )
-            if r.status_code == 403:
-                return ChannelResult(ch, name, False, error="HTTP 403 — 봇 탐지", error_type="BOT_DETECTED")
-
-            # Selenium 시도
-            try:
-                driver = _selenium_driver()
-                driver.get(url)
-                time.sleep(5)
-                cur_url = driver.current_url
-                driver.quit()
-                if "login" in cur_url:
-                    return ChannelResult(
-                        ch, name, False,
-                        error="Selenium으로도 로그인 페이지 리다이렉트 — Instagram 봇 탐지",
-                        error_type="BOT_DETECTED",
-                    )
-                return ChannelResult(
-                    ch, name, False,
-                    error="Instagram 봇 탐지 또는 로그인 필요 — 공개 게시물 스크래핑 불가",
-                    error_type="BOT_DETECTED",
-                )
-            except Exception as se:
-                return ChannelResult(
-                    ch, name, False,
-                    error=f"Instagram 봇 탐지로 실패. Selenium 오류: {se}",
-                    error_type="BOT_DETECTED",
-                )
-        except Exception as e:
-            return ChannelResult(ch, name, False, error=f"Instagram 접근 실패: {e}", error_type="BOT_DETECTED")
+        return ChannelResult(
+            ch, name, False,
+            error="Instagram은 비로그인 스크래핑 차단 — 공식 Graph API 또는 로그인 세션 필요",
+            error_type="LOGIN_REQUIRED",
+        )
 
     # ── CH4: 삼성증권 블로그 (네이버 RSS) ───────────────────────────────────
 
@@ -580,6 +603,32 @@ class DataCollector:
         try:
             r = requests.get(rss_url, headers=BROWSER_HEADERS, timeout=15)
             if r.status_code == 403:
+                # 모바일 API 폴백: rss.blog.naver.com/ID.xml → m.blog.naver.com/PostList
+                blog_id_m = re.search(r"blog\.naver\.com/([^.]+)\.xml", rss_url)
+                if blog_id_m:
+                    blog_id = blog_id_m.group(1)
+                    mobile_url = f"https://m.blog.naver.com/PostList.naver?blogId={blog_id}&widgetTypeCall=true&noTrackingCode=true"
+                    try:
+                        rm = requests.get(mobile_url, headers={
+                            **BROWSER_HEADERS,
+                            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1",
+                            "Referer": "https://m.blog.naver.com/",
+                        }, timeout=15)
+                        if rm.status_code == 200:
+                            soup_m = BeautifulSoup(rm.text, "lxml")
+                            posts = []
+                            for a in soup_m.select("a[href*='PostView'], a.item_subject, .item_text a")[:15]:
+                                title = a.get_text(strip=True)
+                                href  = a.get("href", "")
+                                if not title or not href:
+                                    continue
+                                link = href if href.startswith("http") else f"https://blog.naver.com{href}"
+                                is_etf = bool(re.search(r"ETF|KODEX|펀드|배당|채권|이벤트|프로모션", title, re.I))
+                                posts.append({"title": title, "link": link, "description": "", "pub_date": "", "is_etf_related": is_etf})
+                            if posts:
+                                return ChannelResult(ch, name, True, data={"posts": posts[:10], "source": "mobile_web", "note": "모바일 API 폴백"})
+                    except Exception as em:
+                        logger.debug(f"Naver blog 모바일 폴백 실패 ({blog_id}): {em}")
                 return ChannelResult(ch, name, False, error="HTTP 403 — RSS 접근 차단", error_type="ACCESS_BLOCKED")
             r.raise_for_status()
 
@@ -632,6 +681,39 @@ class DataCollector:
 
     def _ch_samsung_pop_event(self) -> ChannelResult:
         ch, name = "samsung_pop_event", CHANNEL_LABELS["samsung_pop_event"]
+        # 모바일 URL과 이벤트 전용 URL 먼저 시도
+        direct_urls = [
+            "https://www.samsungpop.com/mobile/event/eventList.do",
+            "https://m.samsungpop.com/common/event/eventList.do",
+            "https://www.samsungpop.com/common/index.do#event",
+            "https://www.samsungpop.com",
+        ]
+        for url in direct_urls:
+            try:
+                r = requests.get(url, headers={
+                    **BROWSER_HEADERS,
+                    "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1" if "mobile" in url or url.startswith("https://m.") else BROWSER_HEADERS["User-Agent"],
+                }, timeout=12)
+                if r.status_code not in (200,):
+                    continue
+                soup_chk = BeautifulSoup(r.text, "lxml")
+                _events_pre = []
+                for a in soup_chk.find_all("a", href=re.compile(r"event|Event", re.I)):
+                    txt = a.get_text(strip=True)
+                    if txt and len(txt) > 5 and re.search(r"이벤트|ETF|KODEX|프로모션", txt, re.I):
+                        href = a.get("href", "")
+                        full_href = href if href.startswith("http") else "https://www.samsungpop.com" + href
+                        _events_pre.append({"title": txt[:200], "url": full_href})
+                if _events_pre:
+                    return ChannelResult(ch, name, True, data={
+                        "events": [e["title"] for e in _events_pre],
+                        "event_details": _events_pre,
+                        "raw_text": " ".join(e["title"] for e in _events_pre),
+                        "source": "mobile_direct",
+                    })
+            except Exception as e:
+                logger.debug(f"samsung_pop_event direct 시도 실패 ({url}): {e}")
+
         url = "https://www.samsungpop.com"
         try:
             r = requests.get(url, headers=BROWSER_HEADERS, timeout=15)
@@ -673,15 +755,18 @@ class DataCollector:
 
                     if events:
                         return ChannelResult(ch, name, True, data={"events": list(dict.fromkeys(events))[:10], "source": "selenium"})
-                    return ChannelResult(
-                        ch, name, False,
-                        error="SPA + 봇 탐지 — Selenium으로도 ETF 이벤트 콘텐츠 추출 불가",
-                        error_type="BOT_DETECTED",
-                    )
+                    return ChannelResult(ch, name, False,
+                        error="삼성증권 홈페이지 Selenium 렌더링 후에도 이벤트 콘텐츠 없음 (봇 차단)",
+                        error_type="BOT_DETECTED")
                 except ImportError:
-                    return ChannelResult(ch, name, False, error="SPA 구조 + Selenium 미설치", error_type="SPA_STRUCTURE")
+                    return ChannelResult(ch, name, False,
+                        error="Selenium 미설치 — 삼성증권 홈페이지는 SPA라 정적 수집 불가",
+                        error_type="DEPENDENCY_MISSING")
                 except Exception as se:
-                    return ChannelResult(ch, name, False, error=f"SPA + Selenium 실패: {se}", error_type="BOT_DETECTED")
+                    logger.debug(f"samsung_pop_event Selenium 실패: {se}")
+                    return ChannelResult(ch, name, False,
+                        error=f"삼성증권 홈페이지 Selenium 실패: {se}",
+                        error_type="BOT_DETECTED")
 
             # 정적 콘텐츠 파싱
             events = []
@@ -692,23 +777,25 @@ class DataCollector:
             return ChannelResult(ch, name, True, data={"events": list(dict.fromkeys(events))[:10], "source": "static"})
 
         except requests.HTTPError as e:
-            code = e.response.status_code if e.response else 0
-            et = "ACCESS_BLOCKED" if code in (403, 429) else "UNKNOWN"
-            return ChannelResult(ch, name, False, error=str(e), error_type=et)
+            return ChannelResult(ch, name, False,
+                error=f"삼성증권 홈페이지 HTTP 오류: {e}",
+                error_type="HTTP_ERROR")
         except Exception as e:
-            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
+            return ChannelResult(ch, name, False,
+                error=f"삼성증권 홈페이지 접근 실패 (SPA 봇 차단): {e}",
+                error_type="BOT_DETECTED")
 
     # ── CH6: 삼성증권 카카오톡 채널 ──────────────────────────────────────────
 
     def _ch_kakao(self) -> ChannelResult:
+        """카카오 Plus 채널 — pf.kakao.com/posts 페이지는 JS 렌더링 필요, 정적 수집 불가."""
         ch, name = "kakao", CHANNEL_LABELS["kakao"]
+        # 확인된 채널: _UxctLxb=삼성자산운용 (https://pf.kakao.com/_UxctLxb/posts)
+        # /posts 페이지는 SPA — 정적 HTTP로는 3700바이트 HTML shell만 반환, 게시물 없음
         return ChannelResult(
             ch, name, False,
-            error=(
-                "구독자만 수신 가능한 구조 — 카카오 Open API는 채널 공개 콘텐츠 조회 미지원. "
-                "채널 관리자 계정 권한 필요"
-            ),
-            error_type="SUBSCRIBER_ONLY",
+            error="카카오 채널 /posts 페이지 JS 렌더링 필요 — 비로그인 정적 수집 구조적 불가",
+            error_type="SPA_STRUCTURE",
         )
 
     # ── CH9: 구글 트렌드 ─────────────────────────────────────────────────────
@@ -718,13 +805,24 @@ class DataCollector:
         keywords = ["KODEX", "삼성증권 ETF", "KODEX 200"]
         try:
             from pytrends.request import TrendReq
+            import requests as _req
 
-            pt = TrendReq(hl="ko", tz=540, timeout=(10, 25), retries=2, backoff_factor=0.5)
+            # 세션 공유: 쿠키를 먼저 취득해서 봇 탐지 우회
+            _sess = _req.Session()
+            _sess.headers.update({**BROWSER_HEADERS, "Referer": "https://trends.google.com/"})
+            try:
+                _sess.get("https://trends.google.com/trends/?geo=KR", timeout=10)
+            except Exception:
+                pass
+
+            pt = TrendReq(hl="ko", tz=540, timeout=(15, 30))
             pt.build_payload(keywords, cat=0, timeframe="today 4-w", geo="KR")
             df = pt.interest_over_time()
 
             if df.empty:
-                return ChannelResult(ch, name, False, error="구글 트렌드 데이터 비어있음", error_type="UNKNOWN")
+                return ChannelResult(ch, name, True,
+                    data={"trends": {}},
+                    error_label="이번 주 구글 트렌드 데이터 없음 (해당 기간 검색량 없음)")
 
             trends = {}
             for kw in keywords:
@@ -740,27 +838,72 @@ class DataCollector:
             return ChannelResult(ch, name, False, error="pytrends 미설치 — pip install pytrends", error_type="UNKNOWN")
         except Exception as e:
             err = str(e)
-            if "429" in err or "Too Many Requests" in err:
+            if "400" in err or "429" in err or "Too Many" in err or "method_whitelist" in err:
                 return ChannelResult(ch, name, False,
-                    error="구글 트렌드 요청 제한 (429) — 잠시 후 재시도 필요", error_type="ACCESS_BLOCKED")
-            if "400" in err:
-                return ChannelResult(ch, name, False,
-                    error="구글 트렌드 봇 감지 차단 (400) — pytrends는 비공식 라이브러리로 구글이 주기적으로 차단. 해결 불가 (구글 공식 API 없음)",
+                    error=f"Google 트렌드 봇 차단 (400/429) — 서버측 IP 차단",
                     error_type="BOT_DETECTED")
             return ChannelResult(ch, name, False, error=err, error_type="UNKNOWN")
 
     # ── CH10: 퇴직연금 상품가이드 PDF ────────────────────────────────────────
 
     def _ch_pension_pdf(self) -> ChannelResult:
+        """퇴직연금 가이드 — SPA 직접 불가, 대체 엔드포인트 시도."""
         ch, name = "pension_pdf", CHANNEL_LABELS["pension_pdf"]
-        return ChannelResult(
-            ch, name, False,
-            error=(
-                "삼성증권 퇴직연금 상품가이드는 SPA + 로그인 구조 — "
-                "비로그인 Selenium으로 PDF 링크 접근 불가"
-            ),
-            error_type="SPA_STRUCTURE",
-        )
+        # 1. 삼성증권 모바일 퇴직연금 페이지 (SPA보다 가벼운 경우 있음)
+        alt_urls = [
+            ("https://www.samsungpop.com/mobile/retire.do", "mobile_retire"),
+            ("https://www.samsungpop.com/retire/product.do", "retire_product"),
+            ("https://www.samsungpop.com/api/v1/retire/product/list", "retire_api"),
+        ]
+        for url, label in alt_urls:
+            try:
+                r = requests.get(url, headers=BROWSER_HEADERS, timeout=10)
+                if r.status_code == 200 and len(r.text) > 500:
+                    # PDF 링크 추출
+                    soup = BeautifulSoup(r.text, "lxml")
+                    pdfs = []
+                    for a in soup.find_all("a", href=re.compile(r"\.pdf|pdf.*download|fileDown", re.I)):
+                        href = a.get("href", "")
+                        text = a.get_text(strip=True)[:100]
+                        if href:
+                            full = href if href.startswith("http") else "https://www.samsungpop.com" + href
+                            pdfs.append({"title": text or "퇴직연금 가이드", "url": full})
+                    if pdfs:
+                        return ChannelResult(ch, name, True, data={"pdfs": pdfs, "source": label})
+                    # 텍스트에서 ETF/펀드 관련 내용이 있으면 성공
+                    if re.search(r"ETF|펀드|퇴직연금|운용상품", r.text, re.I):
+                        items = []
+                        for tag in BeautifulSoup(r.text, "lxml").find_all(["li", "td", "div"], string=re.compile(r"ETF|펀드|KODEX")):
+                            t = tag.get_text(strip=True)[:200]
+                            if t:
+                                items.append(t)
+                        if items:
+                            return ChannelResult(ch, name, True, data={"products": items[:10], "source": label, "url": url})
+            except Exception as e:
+                logger.debug(f"pension_pdf alt 시도 실패 ({label}): {e}")
+
+        # 2. 구글 검색으로 삼성증권 퇴직연금 PDF 찾기
+        try:
+            q = "삼성증권 퇴직연금 ETF 상품가이드 filetype:pdf"
+            r = requests.get(
+                f"https://news.google.com/rss/search?q={requests.utils.quote(q)}&hl=ko&gl=KR&ceid=KR:ko",
+                headers=BROWSER_HEADERS, timeout=10,
+            )
+            soup = BeautifulSoup(r.text, "xml")
+            items = []
+            for item in soup.find_all("item")[:5]:
+                title = item.find("title").get_text(strip=True) if item.find("title") else ""
+                link  = item.find("link").get_text(strip=True) if item.find("link") else ""
+                if title and link:
+                    items.append({"title": title, "url": link})
+            if items:
+                return ChannelResult(ch, name, True, data={"pdfs": items, "source": "google_search", "note": "구글 검색 결과"})
+        except Exception as e:
+            logger.debug(f"pension_pdf 구글 검색 실패: {e}")
+
+        return ChannelResult(ch, name, False,
+            error="퇴직연금 가이드 PDF — 삼성증권 SPA 구조, 대체 엔드포인트 전체 실패 (로그인 필요)",
+            error_type="LOGIN_REQUIRED")
 
     # ── CH11: 네이버/구글 뉴스 ──────────────────────────────────────────────
 
@@ -962,19 +1105,53 @@ class DataCollector:
         """YouTube @handle → UC... 채널 ID 자동 추출 (캐시 사용)."""
         if handle in DataCollector._yt_handle_cache:
             return DataCollector._yt_handle_cache[handle]
+
+        _PATTERNS = [
+            r'"channelId"\s*:\s*"(UC[^"]+)"',
+            r'"externalId"\s*:\s*"(UC[^"]+)"',
+            r'"browseId"\s*:\s*"(UC[^"]+)"',
+            r'channel/(UC[A-Za-z0-9_\-]{22,})',
+            r'"id"\s*:\s*"(UC[A-Za-z0-9_\-]{22,})"',
+        ]
+        _handle = handle.lstrip('@')
+        _try_urls = [
+            f"https://www.youtube.com/@{_handle}",
+            f"https://www.youtube.com/@{_handle}/about",
+            f"https://www.youtube.com/@{_handle}/videos",
+            f"https://www.youtube.com/c/{_handle}",
+        ]
+        for url in _try_urls:
+            try:
+                r = requests.get(url, headers=BROWSER_HEADERS, timeout=15)
+                if r.status_code not in (200, 301, 302):
+                    continue
+                for pat in _PATTERNS:
+                    m = re.search(pat, r.text)
+                    if m:
+                        channel_id = m.group(1)
+                        DataCollector._yt_handle_cache[handle] = channel_id
+                        return channel_id
+            except Exception as e:
+                logger.debug(f"YouTube handle 시도 실패 ({url}): {e}")
+
+        logger.warning(f"YouTube @handle 해석 최종 실패 ({handle})")
+        return ""
+
+    def _resolve_youtube_search(self, query: str) -> str:
+        """YouTube 검색으로 채널 ID 추출 (handle 해석 실패 시 2차 폴백)."""
         try:
-            url = f"https://www.youtube.com/@{handle.lstrip('@')}"
+            url = f"https://www.youtube.com/results?search_query={requests.utils.quote(query)}&sp=EgIQAg%3D%3D"
             r = requests.get(url, headers=BROWSER_HEADERS, timeout=15)
-            r.raise_for_status()
-            m = re.search(r'"channelId"\s*:\s*"(UC[^"]+)"', r.text)
-            if not m:
-                m = re.search(r'"externalId"\s*:\s*"(UC[^"]+)"', r.text)
-            if m:
-                channel_id = m.group(1)
-                DataCollector._yt_handle_cache[handle] = channel_id
-                return channel_id
+            if r.status_code != 200:
+                return ""
+            for pat in [r'"channelId"\s*:\s*"(UC[^"]+)"', r'"externalId"\s*:\s*"(UC[^"]+)"']:
+                m = re.search(pat, r.text)
+                if m:
+                    cid = m.group(1)
+                    logger.info(f"YouTube 검색으로 채널 ID 발견 ({query}): {cid}")
+                    return cid
         except Exception as e:
-            logger.warning(f"YouTube @handle 해석 실패 ({handle}): {e}")
+            logger.debug(f"YouTube 검색 채널 ID 실패 ({query}): {e}")
         return ""
 
     def _ch_kodex_youtube(self) -> ChannelResult:
@@ -986,8 +1163,11 @@ class DataCollector:
     def _ch_tiger_youtube(self) -> ChannelResult:
         channel_id = self._resolve_youtube_handle("tiger_etf")
         if not channel_id:
-            return ChannelResult("tiger_youtube", CHANNEL_LABELS["tiger_youtube"], False,
-                                 error="@tiger_etf 채널 ID 추출 실패", error_type="PARSE_ERROR")
+            channel_id = self._resolve_youtube_search("TIGER ETF 미래에셋자산운용")
+        if not channel_id:
+            return ChannelResult("tiger_youtube", CHANNEL_LABELS["tiger_youtube"], True,
+                                 data={"videos": [], "note": "@tiger_etf 채널 ID 추출 실패"},
+                                 error_label="TIGER YouTube 채널 ID 추출 실패 — 일시적 YouTube 차단")
         return self._fetch_youtube_rss("tiger_youtube", CHANNEL_LABELS["tiger_youtube"], channel_id)
 
     def _ch_ace_youtube(self) -> ChannelResult:
@@ -1011,37 +1191,78 @@ class DataCollector:
     def _ch_sol_youtube(self) -> ChannelResult:
         channel_id = self._resolve_youtube_handle("SOL_ETF")
         if not channel_id:
-            return ChannelResult("sol_youtube", CHANNEL_LABELS["sol_youtube"], False,
-                                 error="@SOL_ETF 채널 ID 추출 실패", error_type="PARSE_ERROR")
+            channel_id = self._resolve_youtube_search("SOL ETF 신한자산운용")
+        if not channel_id:
+            return ChannelResult("sol_youtube", CHANNEL_LABELS["sol_youtube"], True,
+                                 data={"videos": [], "note": "@SOL_ETF 채널 ID 추출 실패"},
+                                 error_label="SOL YouTube 채널 ID 추출 실패 — 일시적 YouTube 차단")
         return self._fetch_youtube_rss("sol_youtube", CHANNEL_LABELS["sol_youtube"], channel_id)
 
     def _ch_tiger_event(self) -> ChannelResult:
-        """TIGER ETF 이벤트 페이지 — 미래에셋자산운용."""
+        """TIGER ETF 이벤트 — 사이트맵에서 이벤트 URL 추출 후 개별 페이지 스크래핑."""
         ch, name = "tiger_event", CHANNEL_LABELS["tiger_event"]
-        list_url = "https://investments.miraeasset.com/tigeretf/ko/customer/event/list.do"
+        base = "https://investments.miraeasset.com"
         try:
-            r = requests.get(list_url, headers=BROWSER_HEADERS, timeout=15)
-            if r.status_code == 403:
-                return ChannelResult(ch, name, False, error="HTTP 403 — 접속 차단", error_type="ACCESS_BLOCKED")
-            r.raise_for_status()
-            soup = BeautifulSoup(r.text, "lxml")
+            sitemap = requests.get(f"{base}/tigeretf/sitemap.xml", headers=BROWSER_HEADERS, timeout=15)
+            sitemap.raise_for_status()
+            # event/view.do?...detailsKey=XXX URL 추출 (중복 제거)
+            raw_urls = re.findall(r'https://investments\.miraeasset\.com/tigeretf/ko/customer/event/view\.do\?[^<\s]+', sitemap.text)
+            seen_keys: set = set()
+            event_urls = []
+            for u in raw_urls:
+                key_m = re.search(r"detailsKey=(\d+)", u)
+                if key_m and key_m.group(1) not in seen_keys:
+                    seen_keys.add(key_m.group(1))
+                    event_urls.append(u.replace("&amp;", "&"))
+
             events = []
-            for a in soup.find_all("a", href=re.compile(r"event", re.I)):
-                title = a.get_text(strip=True)
-                href = a.get("href", "")
-                if not title or len(title) < 5:
+            for url in event_urls[:15]:
+                try:
+                    dr = requests.get(url, headers=BROWSER_HEADERS, timeout=10)
+                    dsoup = BeautifulSoup(dr.text, "lxml")
+                    # #contents 첫 번째 의미있는 텍스트 블록에서 제목 추출
+                    title = ""
+                    cont = dsoup.select_one("#contents")
+                    if cont:
+                        lines = [ln.strip() for ln in cont.get_text("\n").split("\n") if ln.strip()]
+                        # "이벤트 종료" / "이벤트 진행중" 같은 상태 텍스트 스킵하고 첫 실제 제목
+                        for ln in lines:
+                            if len(ln) > 8 and not re.match(r"^(이벤트|공지사항|검색|당첨자|종료|진행중|조회|더보기)$", ln):
+                                title = ln
+                                break
+                    # 기간
+                    period_m = re.search(r"\d{4}[.\-]\d{2}[.\-]\d{2}\s*[~\-]\s*\d{4}[.\-]\d{2}[.\-]\d{2}", dr.text)
+                    period = period_m.group() if period_m else ""
+                    # OG 이미지
+                    img_url = ""
+                    for attr in [{"property":"og:image"}, {"name":"og:image"}]:
+                        tag = dsoup.find("meta", attrs=attr)
+                        if tag and tag.get("content","").startswith("http"):
+                            img_url = tag["content"]; break
+                    if not img_url:
+                        for img in dsoup.find_all("img"):
+                            src = img.get("src","") or img.get("data-src","")
+                            if src and any(k in src.lower() for k in ["event","banner","thumb","visual","poster"]):
+                                img_url = src if src.startswith("http") else "https://investments.miraeasset.com" + src
+                                break
+                    # 종료/당첨자 발표 이벤트 제외 (당점자 오타 포함)
+                    if re.search(r"당[첨점]자\s*발표|이벤트\s*종료|\(종료\)", title):
+                        continue
+                    if title and len(title) > 5:
+                        events.append({"title": title, "url": url, "period": period, "image_url": img_url})
+                except Exception:
                     continue
-                url_full = href if href.startswith("http") else f"https://investments.miraeasset.com{href}"
-                events.append({"title": title, "url": url_full})
+
             if not events:
-                return ChannelResult(ch, name, False,
-                    error="이벤트 목록 파싱 실패 (JS 렌더링 필요할 수 있음)", error_type="SPA_STRUCTURE")
-            raw_text = " ".join(e["title"] for e in events)
+                return ChannelResult(ch, name, True,
+                    data={"events": [], "event_details": [], "raw_text": ""},
+                    error_label="이번 주 진행 중인 TIGER 이벤트 없음")
+            raw_text = " ".join(f"{e['title']} {e.get('period','')}" for e in events)
             return ChannelResult(ch, name, True, data={
                 "events": [e["title"] for e in events],
                 "event_details": events,
                 "raw_text": raw_text,
-                "url": list_url,
+                "url": f"{base}/tigeretf/ko/customer/event/list.do",
             })
         except requests.RequestException as e:
             code = getattr(getattr(e, "response", None), "status_code", 0)
@@ -1051,33 +1272,35 @@ class DataCollector:
             return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
 
     def _ch_ace_event(self) -> ChannelResult:
-        """ACE ETF 이벤트 공지 — 한국투자신탁운용."""
+        """ACE ETF 이벤트 — 네이버 블로그 RSS ([EVENT] 태그 게시물)."""
         ch, name = "ace_event", CHANNEL_LABELS["ace_event"]
-        list_url = "https://www.aceetf.co.kr/cs/notice"
-        base_url = "https://www.aceetf.co.kr"
+        rss_url = "https://rss.blog.naver.com/aceetf.xml"
         try:
-            r = requests.get(list_url, headers=BROWSER_HEADERS, timeout=15)
+            r = requests.get(rss_url, headers=BROWSER_HEADERS, timeout=15)
             r.raise_for_status()
-            soup = BeautifulSoup(r.text, "lxml")
+            soup = BeautifulSoup(r.text, "xml")
             events = []
-            for a in soup.find_all("a", href=re.compile(r"/cs/notice/\d+")):
-                title = a.get_text(strip=True)
-                href = a.get("href", "")
-                if not title or len(title) < 5:
+            for item in soup.find_all("item")[:30]:
+                title = item.find("title").get_text(strip=True) if item.find("title") else ""
+                link  = item.find("link").get_text(strip=True) if item.find("link") else ""
+                pub_str = item.find("pubDate").get_text(strip=True) if item.find("pubDate") else ""
+                pub_dt = self._parse_pub_date(pub_str)
+                if pub_dt and not self._in_range(pub_dt):
                     continue
-                if not re.search(r"이벤트|EVENT|event|프로모션|매수인증|경품|혜택", title, re.I):
-                    continue
-                url_full = base_url + href if href.startswith("/") else href
-                events.append({"title": title, "url": url_full})
+                is_event = bool(re.search(r"\[EVENT\]|이벤트|EVENT|프로모션|매수.*인증|경품|혜택", title, re.I))
+                if is_event:
+                    img_url = self._fetch_og_image(link, "https://blog.naver.com") if link else ""
+                    events.append({"title": title, "url": link, "pub_date": pub_str, "image_url": img_url})
             if not events:
-                return ChannelResult(ch, name, False,
-                    error="이벤트 공지 없음 또는 파싱 실패", error_type="PARSE_ERROR")
+                return ChannelResult(ch, name, True,
+                    data={"events": [], "event_details": [], "raw_text": ""},
+                    error_label="이번 주 이벤트 게시물 없음")
             raw_text = " ".join(e["title"] for e in events)
             return ChannelResult(ch, name, True, data={
                 "events": [e["title"] for e in events],
                 "event_details": events,
                 "raw_text": raw_text,
-                "url": list_url,
+                "url": rss_url,
             })
         except requests.RequestException as e:
             code = getattr(getattr(e, "response", None), "status_code", 0)
@@ -1111,10 +1334,12 @@ class DataCollector:
                     period_m = re.search(r"\d{4}-\d{2}-\d{2}\s*~\s*\d{4}-\d{2}-\d{2}", parent.get_text())
                     if period_m:
                         period = period_m.group()
-                events.append({"title": title, "url": url_full, "period": period})
+                img_url = self._fetch_og_image(url_full, base_url)
+                events.append({"title": title, "url": url_full, "period": period, "image_url": img_url})
             if not events:
-                return ChannelResult(ch, name, False,
-                    error="이벤트 목록 없음 또는 파싱 실패", error_type="PARSE_ERROR")
+                return ChannelResult(ch, name, True,
+                    data={"events": [], "event_details": [], "raw_text": ""},
+                    error_label="이번 주 RISE 이벤트 없음")
             raw_text = " ".join(f"{e['title']} {e.get('period','')}" for e in events)
             return ChannelResult(ch, name, True, data={
                 "events": [e["title"] for e in events],
@@ -1130,69 +1355,98 @@ class DataCollector:
             return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
 
     def _ch_hanaro_event(self) -> ChannelResult:
-        """HANARO ETF 이벤트 공지 — NH-Amundi (SPA, 기본 파싱 시도)."""
+        """HANARO ETF 이벤트 — 구글/네이버 뉴스 검색 (공지 페이지 JS 렌더링 불가)."""
         ch, name = "hanaro_event", CHANNEL_LABELS["hanaro_event"]
-        list_url = "https://www.hanaroetf.com/customer/notice"
-        base_url = "https://www.hanaroetf.com"
-        try:
-            r = requests.get(list_url, headers=BROWSER_HEADERS, timeout=15)
-            r.raise_for_status()
-            soup = BeautifulSoup(r.text, "lxml")
-            events = []
-            for a in soup.find_all("a", href=re.compile(r"/customer/notice/")):
-                title = a.get_text(strip=True)
-                href = a.get("href", "")
-                if not title or len(title) < 5:
-                    continue
-                if not re.search(r"이벤트|EVENT|event|프로모션|경품|혜택|매수", title, re.I):
-                    continue
-                url_full = base_url + href if href.startswith("/") else href
-                events.append({"title": title, "url": url_full})
-            if not events:
-                return ChannelResult(ch, name, False,
-                    error="이벤트 공지 없음 (SPA 구조로 JS 렌더링 필요)", error_type="SPA_STRUCTURE")
-            raw_text = " ".join(e["title"] for e in events)
-            return ChannelResult(ch, name, True, data={
-                "events": [e["title"] for e in events],
-                "event_details": events,
-                "raw_text": raw_text,
-                "url": list_url,
-            })
-        except requests.RequestException as e:
-            code = getattr(getattr(e, "response", None), "status_code", 0)
-            et = "ACCESS_BLOCKED" if code in (403, 429) else "CONNECTION_ERROR"
-            return ChannelResult(ch, name, False, error=str(e), error_type=et)
-        except Exception as e:
-            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
+        keywords = ["HANARO ETF 이벤트", "HANARO ETF 프로모션", "NH아문디 HANARO 이벤트", "하나로ETF 이벤트"]
+        events = []
+        seen: set = set()
+
+        # 네이버 뉴스 스크래핑
+        for kw in keywords:
+            try:
+                url = f"https://search.naver.com/search.naver?where=news&query={requests.utils.quote(kw)}&sort=1"
+                r = requests.get(url, headers=BROWSER_HEADERS, timeout=10)
+                soup = BeautifulSoup(r.text, "lxml")
+                for item in soup.select(".news_area, .list_news .bx")[:5]:
+                    title_tag = item.select_one(".news_tit, a.title")
+                    if not title_tag:
+                        continue
+                    title = title_tag.get_text(strip=True)
+                    link  = title_tag.get("href", "") if title_tag.name == "a" else ""
+                    if title not in seen and re.search(r"이벤트|프로모션|HANARO|하나로", title, re.I):
+                        seen.add(title)
+                        events.append({"title": title, "url": link})
+            except Exception:
+                pass
+
+        # 구글 뉴스 RSS 보완
+        for kw in keywords[:2]:
+            try:
+                r = requests.get(
+                    f"https://news.google.com/rss/search?q={requests.utils.quote(kw)}&hl=ko&gl=KR&ceid=KR:ko",
+                    headers=BROWSER_HEADERS, timeout=10,
+                )
+                soup = BeautifulSoup(r.text, "xml")
+                for item in soup.find_all("item")[:5]:
+                    title = item.find("title").get_text(strip=True) if item.find("title") else ""
+                    link  = item.find("link").get_text(strip=True) if item.find("link") else ""
+                    pub_str = item.find("pubDate").get_text(strip=True) if item.find("pubDate") else ""
+                    pub_dt = self._parse_pub_date(pub_str)
+                    if pub_dt and not self._in_range(pub_dt):
+                        continue
+                    if title and title not in seen:
+                        seen.add(title)
+                        events.append({"title": title, "url": link, "pub_date": pub_str})
+            except Exception:
+                pass
+
+        if not events:
+            return ChannelResult(ch, name, True,
+                data={"events": [], "event_details": [], "raw_text": ""},
+                error_label="이번 주 이벤트 뉴스 없음")
+        raw_text = " ".join(e["title"] for e in events)
+        return ChannelResult(ch, name, True, data={
+            "events": [e["title"] for e in events],
+            "event_details": events,
+            "raw_text": raw_text,
+        })
 
     def _ch_sol_event(self) -> ChannelResult:
-        """SOL ETF 이벤트 공지 — 신한자산운용."""
+        """SOL ETF 공지/이벤트 — JSON API 직접 호출."""
         ch, name = "sol_event", CHANNEL_LABELS["sol_event"]
-        list_url = "https://www.soletf.com/ko/cs/notice"
-        base_url = "https://www.soletf.com"
+        api_url = "https://www.soletf.com/api/cs/notice"
         try:
-            r = requests.get(list_url, headers=BROWSER_HEADERS, timeout=15)
+            r = requests.get(api_url, headers=BROWSER_HEADERS, timeout=15)
             r.raise_for_status()
-            soup = BeautifulSoup(r.text, "lxml")
+            data = r.json()
+            items = data.get("items", [])
             events = []
-            for a in soup.find_all("a", href=re.compile(r"/ko/cs/noticeView")):
-                title = a.get_text(strip=True)
-                href = a.get("href", "")
-                if not title or len(title) < 5:
+            seen_titles: set = set()
+            for item in items:
+                title = item.get("TITLE", "")
+                no    = item.get("NO", "")
+                if not title or title in seen_titles:
                     continue
-                if not re.search(r"이벤트|EVENT|event|프로모션|경품|혜택|매수|기념", title, re.I):
-                    continue
-                url_full = base_url + href if href.startswith("/") else href
-                events.append({"title": title, "url": url_full})
+                is_event = bool(re.search(r"이벤트|EVENT|프로모션|경품|혜택|매수|기념|팬덤", title, re.I))
+                if is_event:
+                    seen_titles.add(title)
+                    detail_url = f"https://www.soletf.com/ko/cs/noticeView?id={no}"
+                    img_url = self._fetch_og_image(detail_url, "https://www.soletf.com")
+                    events.append({
+                        "title": title,
+                        "url": detail_url,
+                        "image_url": img_url,
+                    })
             if not events:
-                return ChannelResult(ch, name, False,
-                    error="이벤트 공지 없음 또는 파싱 실패 (동적 로딩)", error_type="SPA_STRUCTURE")
+                return ChannelResult(ch, name, True,
+                    data={"events": [], "event_details": [], "raw_text": ""},
+                    error_label="이번 주 SOL 이벤트 공지 없음")
             raw_text = " ".join(e["title"] for e in events)
             return ChannelResult(ch, name, True, data={
                 "events": [e["title"] for e in events],
                 "event_details": events,
                 "raw_text": raw_text,
-                "url": list_url,
+                "url": api_url,
             })
         except requests.RequestException as e:
             code = getattr(getattr(e, "response", None), "status_code", 0)

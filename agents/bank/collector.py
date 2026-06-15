@@ -81,9 +81,11 @@ class BankChannelCollector:
     기준 컬럼: 은행 (금융투자 아님 — 증권사와 완전 격리)
     """
 
-    def __init__(self, week_start: datetime = None, week_end: datetime = None):
+    def __init__(self, week_start: datetime = None, week_end: datetime = None,
+                 youtube_api_key: str = ""):
         from dotenv import load_dotenv
         load_dotenv()
+        self.youtube_api_key = youtube_api_key or os.getenv("YOUTUBE_API_KEY", "")
         self.naver_client_id = os.getenv("NAVER_CLIENT_ID", "")
         self.naver_client_secret = os.getenv("NAVER_CLIENT_SECRET", "")
 
@@ -121,42 +123,64 @@ class BankChannelCollector:
 
     def _fetch_youtube_rss(self, key: str, ch_id: str) -> ChannelResult:
         name = CHANNEL_LABELS[key]
+        etf_keywords = ["ETF", "KODEX", "코덱스", "IRP", "연금저축펀드", "ETF 이벤트", "ETF 추천"]
+
+        # ── YouTube Data API v3 우선 ──────────────────────────────────────────
+        if self.youtube_api_key:
+            try:
+                from googleapiclient.discovery import build
+                yt = build("youtube", "v3", developerKey=self.youtube_api_key)
+                pub_after = self.week_start.strftime("%Y-%m-%dT%H:%M:%SZ")
+                pub_before = (self.week_end + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+                search = yt.search().list(
+                    part="id,snippet", channelId=ch_id, type="video",
+                    publishedAfter=pub_after, publishedBefore=pub_before,
+                    maxResults=10, order="date",
+                ).execute()
+                videos = []
+                for item in search.get("items", []):
+                    vid_id = item["id"].get("videoId", "")
+                    title = item.get("snippet", {}).get("title", "")
+                    pub = item.get("snippet", {}).get("publishedAt", "")
+                    is_etf = any(k in title for k in etf_keywords)
+                    videos.append({
+                        "title": title, "pub_date": pub,
+                        "link": f"https://youtu.be/{vid_id}", "etf_related": is_etf,
+                    })
+                etf_videos = [v for v in videos if v["etf_related"]]
+                return ChannelResult(key, name, len(etf_videos) > 0, data={
+                    "videos": videos, "etf_videos": etf_videos,
+                    "total": len(videos), "source": "api",
+                })
+            except Exception as e:
+                logger.warning(f"YouTube API 실패 → RSS ({name}): {e}")
+
+        # ── RSS 폴백 ──────────────────────────────────────────────────────────
         url = f"https://www.youtube.com/feeds/videos.xml?channel_id={ch_id}"
         try:
             r = requests.get(url, headers=BROWSER_HEADERS, timeout=10)
             root = ET.fromstring(r.text)
             ns = {"atom": "http://www.w3.org/2005/Atom"}
-            entries = root.findall("atom:entry", ns)
-
-            # 유튜브는 ETF 직접 마케팅 키워드만 — 시황/일반 금융 콘텐츠 제외
-            etf_keywords = ["ETF", "KODEX", "코덱스", "IRP", "연금저축펀드", "ETF 이벤트", "ETF 추천"]
             videos = []
-            for e in entries:
+            for e in root.findall("atom:entry", ns):
                 title_el = e.find("atom:title", ns)
-                pub_el = e.find("atom:published", ns)
-                link_el = e.find("atom:link", ns)
+                pub_el   = e.find("atom:published", ns)
+                link_el  = e.find("atom:link", ns)
                 if title_el is None:
                     continue
-                title = title_el.text or ""
+                title   = title_el.text or ""
                 pub_str = pub_el.text if pub_el is not None else ""
-                pub_dt = self._parse_date(pub_str)
-                link = link_el.get("href", "") if link_el is not None else ""
-
+                pub_dt  = self._parse_date(pub_str)
+                link    = link_el.get("href", "") if link_el is not None else ""
                 if pub_dt is not None and not self._in_range(pub_dt):
                     continue
-
                 is_etf = any(k in title for k in etf_keywords)
-                videos.append({
-                    "title": title, "pub_date": pub_str,
-                    "link": link, "etf_related": is_etf,
-                })
+                videos.append({"title": title, "pub_date": pub_str, "link": link, "etf_related": is_etf})
 
             etf_videos = [v for v in videos if v["etf_related"]]
-            detected = len(etf_videos) > 0
-            return ChannelResult(key, name, detected, data={
-                "videos": videos[:15],
-                "etf_videos": etf_videos,
-                "total": len(videos),
+            return ChannelResult(key, name, len(etf_videos) > 0, data={
+                "videos": videos[:15], "etf_videos": etf_videos,
+                "total": len(videos), "source": "rss",
             })
         except Exception as e:
             return ChannelResult(key, name, False, error=str(e))

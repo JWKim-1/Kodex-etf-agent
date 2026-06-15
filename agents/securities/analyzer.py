@@ -498,14 +498,9 @@ JSON만 출력:
 }}"""
 
     try:
-        key = anthropic_api_key or __import__("os").getenv("ANTHROPIC_API_KEY", "")
-        client = ant.Anthropic(api_key=key)
-        msg = client.messages.create(
-            model="claude-opus-4-8",
-            max_tokens=512,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = msg.content[0].text
+        from llm_client import call_llm
+        gem_key = __import__("os").getenv("GEMINI_API_KEY", "")
+        text = call_llm(prompt, anthropic_key=anthropic_api_key, gemini_key=gem_key, max_tokens=512)
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
             return json.loads(m.group())

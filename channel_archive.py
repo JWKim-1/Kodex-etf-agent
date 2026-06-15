@@ -43,14 +43,14 @@ def save_channel_results(week_label: str, collection_results: Dict[str, "Channel
     snapshot = {}
     for key, r in collection_results.items():
         snapshot[key] = {
-            "channel": r.channel,
-            "channel_name": r.channel_name,
-            "success": r.success,
-            "data": r.data,
-            "error": r.error,
-            "error_type": r.error_type,
-            "error_label": r.error_label,
-            "collected_at": r.collected_at,
+            "channel": getattr(r, "channel", None) or getattr(r, "channel_key", key),
+            "channel_name": getattr(r, "channel_name", key),
+            "success": getattr(r, "success", None) if getattr(r, "success", None) is not None else getattr(r, "detected", False),
+            "data": getattr(r, "data", None),
+            "error": getattr(r, "error", None),
+            "error_type": getattr(r, "error_type", None),
+            "error_label": getattr(r, "error_label", None),
+            "collected_at": getattr(r, "collected_at", None),
         }
     archive[week_label] = {
         "archived_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -68,6 +68,26 @@ def load_channel_results(week_label: str) -> Optional[Dict[str, "ChannelResult"]
     entry = archive.get(week_label)
     if not entry:
         return None
+
+    is_bank = week_label.startswith("bank_")
+
+    if is_bank:
+        import importlib.util, pathlib
+        _p = pathlib.Path(__file__).parent / "agents" / "bank" / "collector.py"
+        _spec = importlib.util.spec_from_file_location("bank_collector", _p)
+        _mod = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)
+        BankCR = _mod.ChannelResult
+        restored = {}
+        for key, snap in entry.get("channels", {}).items():
+            restored[key] = BankCR(
+                channel_key=snap.get("channel", key),
+                channel_name=snap.get("channel_name", key),
+                detected=snap.get("success", False),
+                data=snap.get("data") or {},
+                error=snap.get("error"),
+            )
+        return restored
 
     from collector import ChannelResult  # 지연 import (순환참조 방지)
 
@@ -91,3 +111,22 @@ def get_archived_at(week_label: str) -> Optional[str]:
     archive = _load_all()
     entry = archive.get(week_label)
     return entry.get("archived_at") if entry else None
+
+
+def save_raw_data(key: str, data: Any):
+    """LLM 분석 결과 등 임의 dict를 아카이브에 저장."""
+    archive = _load_all()
+    archive[key] = {
+        "archived_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "raw": data,
+    }
+    _save_all(archive)
+
+
+def load_raw_data(key: str) -> Optional[Any]:
+    """저장된 raw dict 반환 (없으면 None)."""
+    archive = _load_all()
+    entry = archive.get(key)
+    if entry and "raw" in entry:
+        return entry["raw"]
+    return None

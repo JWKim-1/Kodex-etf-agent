@@ -20,21 +20,36 @@ from collector import DataCollector
 from agents.mass.analyzer import MassAnalyzer
 from analyzer import extract_target_etfs_with_llm
 from krx_data_fetcher import load_cache_recent, load_cache, save_cache, _parse_week_label
-from channel_archive import has_archive, save_channel_results, load_channel_results, get_archived_at
+import importlib as _ilib
+import channel_archive as _ch_arch_mod
+_ilib.reload(_ch_arch_mod)
+has_archive         = _ch_arch_mod.has_archive
+save_channel_results = _ch_arch_mod.save_channel_results
+load_channel_results = _ch_arch_mod.load_channel_results
+get_archived_at     = _ch_arch_mod.get_archived_at
+save_raw_data       = _ch_arch_mod.save_raw_data
+load_raw_data       = _ch_arch_mod.load_raw_data
+from analyzer import COMPARISON_MAP, auto_map_competitors
 
 logger = logging.getLogger(__name__)
 
 # ── 사이드바에서 변수 가져오기 (app.py exec context에서 상속됨) ──────────────
-anthropic_key = st.session_state.get("_anthropic_key", "")
-if not anthropic_key:
-    with st.sidebar:
-        st.header("⚙️ 설정")
-        anthropic_key = st.text_input(
-            "Anthropic API Key",
-            value=os.getenv("ANTHROPIC_API_KEY", ""),
-            type="password",
-            help="마케팅 감지 LLM 분석용"
-        )
+with st.sidebar:
+    st.header("⚙️ 설정")
+    anthropic_key = st.text_input(
+        "Anthropic API Key",
+        value=os.getenv("ANTHROPIC_API_KEY", ""),
+        type="password",
+        key="mass_ant_key",
+        help="Anthropic Claude 사용 시 입력"
+    )
+    gemini_key = st.text_input(
+        "Gemini API Key",
+        value=os.getenv("GEMINI_API_KEY", ""),
+        type="password",
+        key="mass_gem_key",
+        help="Google Gemini 무료 사용 시 입력 (둘 중 하나만 있으면 됨)"
+    )
 
 # ── KRX 데이터 로드 ───────────────────────────────────────────────────────────
 @st.cache_data(ttl=300)
@@ -109,11 +124,17 @@ if not _has_individual:
 st.header("🎯 개인 채널 분석")
 st.caption(f"채널: 삼성자산운용 직접 채널 (KODEX 유튜브·이벤트·뉴스) | 기준: 개인 순매수 | {week_range_str}")
 
-if st.button("🚀 분석 시작", type="primary", use_container_width=True, key="mass_run"):
-    st.session_state["mass_analysis_run"] = True
+# 아카이브 있으면 버튼 없이 자동 진행
+if not st.session_state.get("mass_analysis_run", False):
+    if has_archive(f"mass_{current_sheet}") or has_archive(f"mass_llm_{current_sheet}"):
+        st.session_state["mass_analysis_run"] = True
 
 if not st.session_state.get("mass_analysis_run", False):
-    st.stop()
+    if st.button("🚀 분석 시작", type="primary", use_container_width=True, key="mass_run"):
+        st.session_state["mass_analysis_run"] = True
+    else:
+        st.info("📦 저장된 데이터 없음 — 버튼을 눌러 채널 수집을 시작합니다.")
+        st.stop()
 
 # ── STEP 1: 채널 수집 ─────────────────────────────────────────────────────────
 st.markdown('<div class="step-header">Step 1 · 삼성자산운용 채널 수집</div>', unsafe_allow_html=True)
@@ -128,7 +149,7 @@ if has_archive(f"mass_{current_sheet}"):
     st.caption(f"📦 보존된 결과 사용 (최초 수집: {_archived_at})")
 else:
     collector = DataCollector(
-        youtube_api_key="",
+        youtube_api_key=os.getenv("YOUTUBE_API_KEY", ""),
         naver_client_id=os.getenv("NAVER_CLIENT_ID", ""),
         naver_client_secret=os.getenv("NAVER_CLIENT_SECRET", ""),
         anthropic_api_key=anthropic_key,
@@ -167,27 +188,70 @@ all_kodex_etfs = {
     if "KODEX" in str(row.get("종목명", ""))
 }
 
-with st.spinner("LLM 분석 중..."):
-    if anthropic_key:
-        # 프롬프트를 개인 채널 기준으로 조정
+_mass_llm_arch_key = f"mass_llm_{current_sheet}"
+
+# 캐시에서 LLM 결과 먼저 확인
+_cached_llm = load_raw_data(_mass_llm_arch_key)
+if _cached_llm:
+    llm_result = _cached_llm
+    st.caption("📦 LLM 분석 결과: 캐시 사용")
+elif anthropic_key:
+    with st.spinner("LLM 분석 중..."):
         llm_result = extract_target_etfs_with_llm(
             collection_results, anthropic_key,
             channel_context="삼성자산운용 KODEX ETF 직접 채널 (유튜브, 이벤트, 뉴스)"
         )
-    else:
-        detected_etfs = []
-        for r in collection_results.values():
-            if r.success and r.data:
-                etf_names = r.data.get("etf_names", [])
-                for n in etf_names:
-                    for code, name in all_kodex_etfs.items():
-                        if any(kw in n for kw in name.split()[:2]):
-                            detected_etfs.append(code)
-        llm_result = {
-            "marketing_detected": bool(detected_etfs),
-            "etf_codes": list(set(detected_etfs))[:3],
-            "summary": "키워드 기반 감지 (API 키 없음)",
-        }
+    if _days_old <= 14:
+        save_raw_data(_mass_llm_arch_key, llm_result)
+else:
+    _kw_evidence = []
+    _kw_etf_codes = []
+    _ETF_KW = ["ETF", "KODEX", "이벤트", "프로모션", "혜택", "매수", "출시", "상장", "수익률"]
+    for r in collection_results.values():
+        if not r.success or not r.data:
+            continue
+        items = []
+        for v in r.data.get("videos", []):
+            items.append({"title": v.get("title",""), "url": v.get("url",""),
+                          "pub_date": v.get("published",""), "type": "추천콘텐츠"})
+        for e in r.data.get("event_details", []):
+            items.append({"title": e.get("title",""), "url": e.get("url",""),
+                          "pub_date": e.get("pub_date",""), "type": "이벤트"})
+        for p in r.data.get("posts", []):
+            items.append({"title": p.get("title",""), "url": p.get("link", p.get("url","")),
+                          "pub_date": p.get("pub_date",""), "type": "추천콘텐츠"})
+        for item in items:
+            t = item["title"]
+            if not any(kw in t for kw in _ETF_KW):
+                continue
+            # ETF 코드 매칭
+            matched_codes = []
+            for code, name in all_kodex_etfs.items():
+                kw = name.replace("KODEX","").strip()[:6]
+                if len(kw) >= 2 and kw in t:
+                    matched_codes.append(code)
+                    _kw_etf_codes.append(code)
+            mtype = item["type"]
+            if "이벤트" in t or "프로모션" in t or "혜택" in t:
+                mtype = "이벤트"
+            _kw_evidence.append({
+                "title": t[:60],
+                "url": item["url"],
+                "channel": r.channel_name,
+                "marketing_type": mtype,
+                "event_period": None,
+                "event_summary": f"{r.channel_name}에서 감지된 콘텐츠",
+                "etf_codes": matched_codes,
+            })
+    llm_result = {
+        "marketing_detected": bool(_kw_evidence),
+        "etf_codes": list(dict.fromkeys(_kw_etf_codes))[:5],
+        "evidence": _kw_evidence[:8],
+        "summary": f"키워드 기반 감지 (API 키 없음) — {len(_kw_evidence)}건 · ETF 귀속은 부정확할 수 있음",
+    }
+
+_type_cls  = {"이벤트":"ev-type-event","프로모션":"ev-type-promo","추천콘텐츠":"ev-type-content","수수료혜택":"ev-type-fee"}
+_type_icon = {"이벤트":"🎁","프로모션":"💰","추천콘텐츠":"📺","수수료혜택":"🎯"}
 
 if llm_result.get("marketing_detected"):
     etf_names_det = [all_kodex_etfs.get(c, c) for c in llm_result.get("etf_codes", [])]
@@ -195,12 +259,14 @@ if llm_result.get("marketing_detected"):
     if llm_result.get("summary"):
         st.caption(llm_result["summary"])
 
-    # ── 이벤트 보드 ───────────────────────────────────────────────────────────
+    # 이벤트 보드
     evidence = llm_result.get("evidence", [])
-    events_with_info = [ev for ev in (evidence or []) if ev.get("event_summary") or ev.get("event_period")]
+    _top_codes = llm_result.get("etf_codes", [])
+    for _ev in (evidence or []):
+        if not _ev.get("etf_codes") and _top_codes:
+            _ev["etf_codes"] = _top_codes
+    events_with_info = [ev for ev in (evidence or []) if ev.get("event_summary") or ev.get("event_period") or ev.get("etf_codes")]
     if events_with_info:
-        _type_cls = {"이벤트":"ev-type-event","프로모션":"ev-type-promo","추천콘텐츠":"ev-type-content","수수료혜택":"ev-type-fee"}
-        _type_icon = {"이벤트":"🎁","프로모션":"💰","추천콘텐츠":"📺","수수료혜택":"🎯"}
         cards_html = '<div class="ev-board">'
         for ev in events_with_info[:6]:
             mtype = ev.get("marketing_type","기타")
@@ -211,13 +277,17 @@ if llm_result.get("marketing_detected"):
             summary = ev.get("event_summary") or ev.get("reason") or ""
             channel = ev.get("channel","")
             url = ev.get("url","")
+            ev_etf_codes = ev.get("etf_codes", [])
+            ev_etf_names = [all_kodex_etfs.get(c, c) for c in ev_etf_codes if c]
             title_html = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>' if url and url.startswith("http") else title
             period_html = f'<div class="ev-period">📅 {period}</div>' if period and period != "null" else ""
+            etf_html = f'<div style="font-size:.7rem;color:#f0c040;margin-top:4px;">🎯 {", ".join(ev_etf_names)}</div>' if ev_etf_names else ""
             cards_html += f"""
             <div class="ev-card">
               <span class="ev-card-type {cls}">{icon} {mtype}</span>
               <div class="ev-title">{title_html}</div>
               {period_html}
+              {etf_html}
               <div class="ev-summary">{summary[:120]}</div>
               <div class="ev-channel">출처: {channel}</div>
             </div>"""
@@ -243,34 +313,191 @@ if not target_codes:
         st.warning("감지된 마케팅 없음 — 종료합니다.")
         st.stop()
 
-# ── STEP 3: DiD 계산 ─────────────────────────────────────────────────────────
-st.markdown('<div class="step-header">Step 3 · 개인 순매수 DiD 계산</div>', unsafe_allow_html=True)
-st.caption("기준 컬럼: **개인 순매수** | LP 노이즈 없음 | 4주 베이스라인")
+# ════════════════════════════════════════════════════════════════════
+# STEP 3: 비교군 자동 매핑
+# ════════════════════════════════════════════════════════════════════
+st.markdown('<div class="step-header">Step 3 · 비교군 매핑</div>', unsafe_allow_html=True)
+
+_code_col2 = "단축코드" if "단축코드" in current_df.columns else "종목코드"
+etf_universe = current_df[[_code_col2, "종목명"]].rename(columns={_code_col2: "종목코드"}).dropna(subset=["종목명"])
 
 analyzer = MassAnalyzer()
-did_results = analyzer.analyze(all_sheets, target_codes, current_sheet)
+
+with st.expander("🔗 비교군 매핑", expanded=True):
+    st.caption("📌 매핑 근거: 사전 매핑(수익률 상관계수 0.7+ 검증) → 없으면 실시간 이름 유사도 탐색 → 운용사별 최대 2개")
+    for code in target_codes:
+        row_etf = analyzer.loader.get_etf_row(current_df, code, code)
+        etf_name = row_etf.name if row_etf else code
+
+        if code in COMPARISON_MAP:
+            comps = COMPARISON_MAP[code]["competitors"]
+        else:
+            comps = auto_map_competitors(etf_name, code, etf_universe)
+
+        _pc = {"KODEX":"#4d9fff","TIGER":"#f4a261","ACE":"#e76f51","PLUS":"#2a9d8f","SOL":"#e9c46a","RISE":"#6b9fff","HANARO":"#a78bfa"}
+        total_cards = 1 + len(comps)
+        card_w = f"flex:1; min-width:0; max-width:calc(100%/{total_cards});"
+
+        def _card(provider, name, code_str, color, label=""):
+            initial = provider[0] if provider else "?"
+            return (
+                f'<div style="{card_w} border:2px solid {color}; border-radius:24px; '
+                f'padding:16px 14px; text-align:center; background:#16181c;">'
+                f'<div class="prov-badge" style="background:{color}20;color:{color};margin:0 auto 8px;">{initial}</div>'
+                f'<div style="font-size:0.7rem;color:{color};font-weight:700;margin-bottom:3px;letter-spacing:.05em;">{provider}</div>'
+                f'<div style="font-size:1rem;font-weight:700;color:#e8eaed;line-height:1.2;">{name}</div>'
+                f'<div style="font-size:0.68rem;color:#5b616e;margin-top:4px;">{code_str}</div>'
+                f'</div>'
+            )
+
+        cards_html = '<div style="display:flex; gap:12px; margin:10px 0;">'
+        cards_html += _card("KODEX", etf_name.replace("KODEX ",""), code, "#0052ff")
+        if comps:
+            for comp in comps:
+                c = _pc.get(comp['provider'], "#adb5bd")
+                short_name = comp["name"].replace("TIGER ","").replace("PLUS ","").replace("ACE ","").replace("SOL ","").replace("RISE ","").replace("HANARO ","")
+                cards_html += _card(comp['provider'], short_name, comp["code"], c)
+            cards_html += '</div>'
+            st.markdown(cards_html, unsafe_allow_html=True)
+            if len(comps) == 1:
+                st.caption("※ 동일 유형 ETF 시장에 1종만 존재 — 통상 2개 비교군 기준이나 1개만 매핑됨")
+        else:
+            cards_html += '</div>'
+            st.markdown(cards_html, unsafe_allow_html=True)
+            st.warning("⚫ 비교군 없음 — DiD 측정 불가")
+        st.divider()
+
+# ════════════════════════════════════════════════════════════════════
+# STEP 4: 베이스라인 (직전 4주 평균)
+# ════════════════════════════════════════════════════════════════════
+st.markdown('<div class="step-header">Step 4 · 베이스라인 (직전 4주 평균) · 개인 순매수</div>', unsafe_allow_html=True)
+
+current_idx = sheet_names.index(current_sheet)
+history_sheets = {k: all_sheets[k] for k in sheet_names[:current_idx]}
+
+with st.expander("📊 베이스라인 상세", expanded=False):
+    for code in target_codes:
+        row_etf = analyzer.loader.get_etf_row(current_df, code, code)
+        etf_name = row_etf.name if row_etf else code
+        bl = analyzer._compute_baseline(code, etf_name, history_sheets)
+        cur = analyzer.loader.get_etf_row(current_df, code, etf_name)
+
+        st.markdown(f"**{etf_name}**")
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("이번주 개인",    f"{cur.individual/1e6:.1f}M" if cur else "N/A")
+        c2.metric("4주평균 개인",   f"{bl.ind_avg/1e6:.1f}M")
+        c3.metric("이번주 금융투자", f"{cur.financial_investment/1e6:.1f}M" if cur else "N/A")
+        c4.metric("데이터 주수",    f"{bl.weeks_used}주")
+
+        if bl.history:
+            hdf = pd.DataFrame(bl.history).rename(columns={"week":"시트","fi":"금융투자","ind":"개인"})
+
+            fig_bl = go.Figure()
+            fig_bl.add_trace(go.Scatter(
+                x=hdf["시트"], y=hdf["개인"]/1e6,
+                mode="lines+markers", name="개인",
+                line=dict(color="#f0c040", width=2),
+                hovertemplate="%{x}<br>개인: %{y:.1f}M<extra></extra>",
+            ))
+            fig_bl.add_trace(go.Scatter(
+                x=hdf["시트"], y=hdf["금융투자"]/1e6,
+                mode="lines+markers", name="금융투자",
+                line=dict(color="#4d9fff", width=2, dash="dot"),
+                hovertemplate="%{x}<br>금융투자: %{y:.1f}M<extra></extra>",
+            ))
+            if cur:
+                fig_bl.add_trace(go.Scatter(
+                    x=[current_sheet], y=[cur.individual/1e6],
+                    mode="markers", name="이번주(개인)",
+                    marker=dict(color="#f0c040", size=12, symbol="star"),
+                ))
+                fig_bl.add_trace(go.Scatter(
+                    x=[current_sheet], y=[cur.financial_investment/1e6],
+                    mode="markers", name="이번주(금융투자)",
+                    marker=dict(color="#4d9fff", size=12, symbol="star"),
+                ))
+            fig_bl.update_layout(
+                title=f"{etf_name} 순매수 추세 (단위: M)",
+                template="plotly_dark", height=280,
+                margin=dict(t=40, b=20),
+                legend=dict(orientation="h", y=-0.25),
+            )
+            st.plotly_chart(fig_bl, use_container_width=True)
+            st.dataframe(hdf, use_container_width=True, hide_index=True)
+        st.divider()
+
+# ════════════════════════════════════════════════════════════════════
+# STEP 5: DiD 계산
+# ════════════════════════════════════════════════════════════════════
+st.markdown('<div class="step-header">Step 5 · DiD 계산 (이중차분법) · 개인 순매수</div>', unsafe_allow_html=True)
+
+with st.spinner("DiD 분석 중..."):
+    did_results = analyzer.analyze(all_sheets, target_codes, current_sheet)
 
 if not did_results:
     st.warning("DiD 계산 결과 없음")
     st.stop()
 
-# ── 결과 표시 ─────────────────────────────────────────────────────────────────
-st.markdown('<div class="step-header">Step 4 · 결과</div>', unsafe_allow_html=True)
+def did_pct(v):
+    if v is None: return "N/A"
+    return f"{v*100:+.1f}%"
 
-for code, res in did_results.items():
-    did_val = getattr(res, "did_score", None) or getattr(res, "did", None)
-    etf_name = getattr(res, "etf_name", code)
-    sign = "+" if (did_val or 0) >= 0 else ""
-    color = "#05b169" if (did_val or 0) >= 0 else "#cf202f"
+color_map = {"🟢":"#28a745","🟡":"#ffc107","⚪":"#6c757d","🔴":"#dc3545","⚫":"#343a40"}
 
-    st.markdown(f"""
-    <div style="border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px 20px;margin:8px 0;">
-      <div style="font-size:1rem;font-weight:700;margin-bottom:4px;">{etf_name}</div>
-      <div style="font-size:1.8rem;font-weight:800;color:{color};font-family:'JetBrains Mono',monospace;">
-        {sign}{(did_val or 0)*100:.1f}% <span style="font-size:0.9rem;opacity:.6;">DiD</span>
-      </div>
-      <div style="font-size:0.8rem;opacity:.5;margin-top:4px;">개인 순매수 기준</div>
-    </div>
-    """, unsafe_allow_html=True)
+summary_cols = st.columns(len(did_results))
+for col, (code, res) in zip(summary_cols, did_results.items()):
+    c = color_map.get(res.judgement_emoji, "#6c757d")
+    with col:
+        st.markdown(
+            f"<div style='border:2px solid {c};border-radius:8px;padding:14px;text-align:center;'>"
+            f"<div style='font-size:2rem;'>{res.judgement_emoji}</div>"
+            f"<div style='font-weight:700;font-size:0.85rem;'>{res.kodex_name}</div>"
+            f"<div style='font-size:1.4rem;font-weight:800;color:{c};'>{did_pct(res.did_value)}</div>"
+            f"<div style='font-size:0.78rem;color:#555;'>{res.judgement}</div>"
+            f"</div>", unsafe_allow_html=True)
+
+st.markdown("")
+
+etf_names_did = [r.kodex_name for r in did_results.values()]
+did_vals       = [r.did_value for r in did_results.values()]
+bar_colors     = [color_map.get(r.judgement_emoji, "#6c757d") for r in did_results.values()]
+short_names    = [n.replace("KODEX ", "") for n in etf_names_did]
+did_pct_vals   = [v * 100 for v in did_vals]
+
+fig_did = go.Figure()
+for name, short, val_raw, val_pct, color in zip(etf_names_did, short_names, did_vals, did_pct_vals, bar_colors):
+    label = f"{val_pct:+.0f}%"
+    tpos = "inside" if val_pct < -20 else "outside"
+    fig_did.add_trace(go.Bar(
+        y=[short], x=[val_pct],
+        orientation="h",
+        marker_color=color,
+        marker_line_width=0,
+        text=label,
+        textposition=tpos,
+        textfont=dict(size=12, color="white"),
+        hovertemplate=f"<b>{name}</b><br>평소 대비 {val_pct:+.0f}%<br>(DiD={val_raw:+.3f})<extra></extra>",
+        showlegend=False,
+    ))
+
+_max_abs = max(abs(v) for v in did_pct_vals) if did_pct_vals else 100
+_x_range = max(_max_abs * 1.3, 120)
+fig_did.add_vline(x=0,    line_dash="solid", line_color="rgba(200,200,200,0.5)", line_width=1.5)
+fig_did.add_vline(x=100,  line_dash="dot",   line_color="#28a745", line_width=1.5,
+                  annotation=dict(text="+100%", font_color="#28a745", font_size=10, y=1.08))
+fig_did.add_vline(x=30,   line_dash="dot",   line_color="#ffc107", line_width=1.5,
+                  annotation=dict(text="+30%", font_color="#ffc107", font_size=10, y=1.08))
+fig_did.add_vline(x=-30,  line_dash="dot",   line_color="#dc3545", line_width=1.5,
+                  annotation=dict(text="-30%", font_color="#dc3545", font_size=10, y=1.08))
+fig_did.update_layout(
+    title="📊 개인 순매수 DiD 결과 (평소 대비 변화율)",
+    template="plotly_dark",
+    height=max(200, 80 * len(did_results) + 100),
+    xaxis=dict(title="변화율 (%)", range=[-_x_range, _x_range], zeroline=False),
+    yaxis=dict(autorange="reversed"),
+    margin=dict(t=60, b=40, l=10, r=60),
+    bargap=0.3,
+)
+st.plotly_chart(fig_did, use_container_width=True)
 
 st.caption("삼성자산운용 ETF 마케팅 AI Agent · 개인 채널 분석")

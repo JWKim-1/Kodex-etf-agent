@@ -1,7 +1,7 @@
 {
   "6.8-6.12": {
     "week": "6.8-6.12",
-    "collected_at": "2026-06-14 21:52:05",
+    "collected_at": "2026-06-15 22:21:57",
     "securities": {
       "collection": {
         "success": [
@@ -18,76 +18,160 @@
           "KB증권 유튜브",
           "네이버/구글 뉴스"
         ],
-        "failed": [],
+        "failed": [
+          {
+            "name": "삼성증권 인스타그램",
+            "error": "로그인 필요"
+          },
+          {
+            "name": "삼성자산운용 카카오채널",
+            "error": "SPA 구조로 정적 크롤링 불가"
+          },
+          {
+            "name": "삼성증권 홈페이지 이벤트",
+            "error": "봇 탐지"
+          },
+          {
+            "name": "구글 트렌드",
+            "error": "봇 탐지"
+          },
+          {
+            "name": "삼성증권 퇴직연금 가이드",
+            "error": "로그인 필요"
+          }
+        ],
         "ok_count": 12,
-        "fail_count": 0
+        "fail_count": 5
       },
       "raw": {
         "samsung_fund_event": {
           "channel_name": "삼성자산운용 이벤트 페이지",
           "success": true,
-          "snippet": " KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF 신규상장 이벤트 Kodex Kodex ETF 삼성펀드 Kodex ETF 삼성펀드 KODEX 페이지로 이동할 수 있어요 ETF분배금 현황 KR EN 마이페이지 검색 메뉴 Kodex search 인기키워드 KODEX200 액티브 fang Kodex ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! KR EN 검색 메뉴 닫기 로그인 해주세요 로그인 마이페이지 최근 본 상품 ETF분배금 현황 "
+          "snippet": " KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF 신규상장 이벤트 Kodex Kodex ETF 삼성펀드 Kodex ETF 삼성펀드 KODEX 페이지로 이동할 수 있어요 ETF분배금 현황 KR EN 마이페이지 검색 메뉴 Kodex search 인기키워드 KODEX200 액티브 fang Kodex ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! KR EN 검색 메뉴 닫기 로그인 해주세요 로그인 마이페이지 최근 본 상품 ETF분배금 현황 ",
+          "error": null
         },
         "samsung_youtube": {
           "channel_name": "삼성증권 유튜브",
           "success": true,
-          "snippet": "[마감브리핑]  지정학적 우려 완화되며 상승 (2026년 6월 12일) / [리서치 핵심터치] 삼성SDI, 예상보다 빠른 3분기 흑자 전환 기대 / 수퍼 베이비의 당찬 미래를 위해!"
+          "snippet": "[마감브리핑] 종전 합의에 상승 마감 (2026년 6월 15일) / 주간 투자 전략(6월 3주): 왝더독(Wag The Dog): 꼬리의 소음과 몸통의 건재함 / [보이스피싱 예방] 의심하고 끊고 확인하고!",
+          "error": null
         },
         "samsung_blog": {
           "channel_name": "삼성증권 블로그 (네이버)",
           "success": true,
-          "snippet": ""
+          "snippet": "",
+          "error": null
         },
         "mirae_youtube": {
           "channel_name": "미래에셋증권 유튜브",
           "success": true,
-          "snippet": "분산 투자의 중요성 | 지금부터, 미래 #shorts / 그 말이 왜 이렇게 아팠을까 | 지금부터, 미래 #shorts / 오래된 연애가 끝나는 순간 | 지금부터, 미래 #shorts"
+          "snippet": "분산 투자의 중요성 | 지금부터, 미래 #shorts / 그 말이 왜 이렇게 아팠을까 | 지금부터, 미래 #shorts / 오래된 연애가 끝나는 순간 | 지금부터, 미래 #shorts",
+          "error": null
         },
         "mirae_blog": {
           "channel_name": "미래에셋증권 블로그 (how2invest)",
           "success": true,
-          "snippet": ""
+          "snippet": "",
+          "error": null
         },
         "kiwoom_youtube": {
           "channel_name": "키움증권 유튜브",
           "success": true,
-          "snippet": "워런버핏도 언급한 바로 이 투자법! / AI 메모리 부족, 하반기에는 더 부족하다는데..더 오를까? / 롤러코스피 장세, 반도체 랠리 다시 시작될까?"
+          "snippet": "워런버핏도 언급한 바로 이 투자법! / AI 메모리 부족, 하반기에는 더 부족하다는데..더 오를까? / 롤러코스피 장세, 반도체 랠리 다시 시작될까?",
+          "error": null
         },
         "kiwoom_blog": {
           "channel_name": "키움증권 블로그 (네이버)",
           "success": true,
-          "snippet": ""
+          "snippet": "",
+          "error": null
         },
         "toss_youtube": {
           "channel_name": "토스증권 유튜브",
           "success": true,
-          "snippet": "🔥 위고비 다음은? &#39;노화 치료&#39;가 온다"
+          "snippet": "🔥 위고비 다음은? &#39;노화 치료&#39;가 온다",
+          "error": null
         },
         "kis_youtube": {
           "channel_name": "한국투자증권 유튜브",
           "success": true,
-          "snippet": "[섹터 특집] 증시 변동성 확대, 믿을 것은 실적? / [섹터 특집] 본업 우려를 이겨낼 보스톤 다이내믹스 기대 / 📢지아의리포트🚀🚀우주: 스피어, 에이치브이엠❗❗스페이스X의 우주 데이터센터: 무엇을 상상하든 그 이상👀🙀"
+          "snippet": "[섹터 특집] 증시 변동성 확대, 믿을 것은 실적? / [섹터 특집] 본업 우려를 이겨낼 보스톤 다이내믹스 기대 / 📢지아의리포트🚀🚀우주: 스피어, 에이치브이엠❗❗스페이스X의 우주 데이터센터: 무엇을 상상하든 그 이상👀🙀",
+          "error": null
         },
         "shinhan_youtube": {
           "channel_name": "신한투자증권 유튜브",
           "success": true,
-          "snippet": "[소문으로 들었SOL] ep.01 | 육아용품 시장이 대세라는 소문을 타고! /신한투자증권 / 진정한 한식 취향 토크의 품격! #K푸드 #신한투자증권 #shorts | 장 후 NIGHT / 스페이스X 상장의 의미? | 우주산업 투자 완전정리 | 밸류체인부터 국내 수혜주까지 /신한투자증권"
+          "snippet": "[소문으로 들었SOL] ep.01 | 육아용품 시장이 대세라는 소문을 타고! /신한투자증권 / 진정한 한식 취향 토크의 품격! #K푸드 #신한투자증권 #shorts | 장 후 NIGHT / 스페이스X 상장의 의미? | 우주산업 투자 완전정리 | 밸류체인부터 국내 수혜주까지 /신한투자증권",
+          "error": null
         },
         "kb_youtube": {
           "channel_name": "KB증권 유튜브",
           "success": true,
-          "snippet": "내 몸값은 주식일까, 채권일까? / 포트폴리오에 직장 리스크까지 계산해야한다? / 오늘의 증시 (6월 12일 금요일)"
+          "snippet": "내 몸값은 주식일까, 채권일까? / 포트폴리오에 직장 리스크까지 계산해야한다? / 오늘의 증시 (6월 12일 금요일)",
+          "error": null
         },
         "news": {
           "channel_name": "네이버/구글 뉴스",
           "success": true,
-          "snippet": "[더밸류 브리핑] 오늘의 삼성 금융 소식...삼성증권·삼성자산운용 / [송윤서의 '주'경야독] 하루 앞으로 다가온 스페이스X 상장…반도체 수... / 스페이스X 상장 'D-2'.…국내 우주 ETF에 뭉칫돈 유입"
+          "snippet": "[더밸류 브리핑] 오늘의 삼성 금융 소식...삼성증권·삼성자산운용 / [송윤서의 '주'경야독] 하루 앞으로 다가온 스페이스X 상장…반도체 수... / 스페이스X 상장 'D-2'.…국내 우주 ETF에 뭉칫돈 유입",
+          "error": null
+        },
+        "instagram": {
+          "channel_name": "삼성증권 인스타그램",
+          "success": false,
+          "snippet": "",
+          "error": "Instagram은 비로그인 스크래핑 차단 — 공식 Graph API 또는 로그인 세션 필요"
+        },
+        "kakao": {
+          "channel_name": "삼성자산운용 카카오채널",
+          "success": false,
+          "snippet": "",
+          "error": "카카오 채널 /posts 페이지 JS 렌더링 필요 — 비로그인 정적 수집 구조적 불가"
+        },
+        "samsung_pop_event": {
+          "channel_name": "삼성증권 홈페이지 이벤트",
+          "success": false,
+          "snippet": "",
+          "error": "삼성증권 홈페이지 Selenium 렌더링 후에도 이벤트 콘텐츠 없음 (봇 차단)"
+        },
+        "google_trends": {
+          "channel_name": "구글 트렌드",
+          "success": false,
+          "snippet": "",
+          "error": "Google 트렌드 봇 차단 (400/429) — 서버측 IP 차단"
+        },
+        "pension_pdf": {
+          "channel_name": "삼성증권 퇴직연금 가이드",
+          "success": false,
+          "snippet": "",
+          "error": "퇴직연금 가이드 PDF — 삼성증권 SPA 구조, 대체 엔드포인트 전체 실패 (로그인 필요)"
         }
       },
       "events": {
-        "marketing_detected": null,
-        "events": [],
-        "summary": "LLM 분석 미실행 (API 키 없음)"
+        "marketing_detected": true,
+        "summary": "삼성자산운용이 KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF 신규상장을 중심으로 적극적인 마케팅을 전개하고 있으며, 6월~8월 릴레이 이벤트를 통해 고객 참여를 유도하고 있다. 대부분의 증권사는 시황 분석 및 교육 콘텐츠 중심의 마케팅으로 직접적인 ETF 매수 유도는 제한적이다.",
+        "events": [
+          {
+            "channel": "삼성자산운용 공식 웹사이트",
+            "provider": "삼성자산운용",
+            "title": "KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF 신규상장 이벤트",
+            "url": null,
+            "marketing_type": "신규상장",
+            "event_period": "2026-06-09 ~ 2026-07-31",
+            "event_summary": "KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF 신규상장 기념 이벤트로 고객 참여 유도",
+            "target_etf": "KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF"
+          },
+          {
+            "channel": "삼성자산운용 공식 웹사이트",
+            "provider": "삼성자산운용",
+            "title": "[6~8월 릴레이 이벤트] Kodex ETF 순자산 200조 돌파 기념",
+            "url": null,
+            "marketing_type": "프로모션",
+            "event_period": null,
+            "event_summary": "KODEX ETF 순자산 200조 돌파 기념 6월부터 8월까지 진행되는 릴레이 이벤트",
+            "target_etf": "KODEX ETF (전체)"
+          }
+        ]
       }
     },
     "bank": {
@@ -136,53 +220,62 @@
         "kb_youtube": {
           "channel_name": "KB국민은행 유튜브",
           "success": false,
-          "snippet": "[KB국민은행 × aespa] 외국인 고객님도 걱정 없는 은행 업무, ‘KB Global Star’⭐ / 미래를 채우는 첫 시작, 청년미래적금!✨💛 / [KB골든라이프 × 국민감독 장항준] 천만 관객 국민감독이 선택한 KB골든라이프(15s)"
+          "snippet": "[KB국민은행 × aespa] 외국인 고객님도 걱정 없는 은행 업무, ‘KB Global Star’⭐ / 미래를 채우는 첫 시작, 청년미래적금!✨💛 / [KB골든라이프 × 국민감독 장항준] 천만 관객 국민감독이 선택한 KB골든라이프(15s)",
+          "error": null
         },
         "shinhan_youtube": {
           "channel_name": "신한은행 유튜브",
           "success": false,
-          "snippet": "[땡겨요] ‘땡기다보면, 알게돼!😉’ (주문편)ㅣ장나라X땡겨요 / [땡겨요] ‘나라’면 땡겨요 시킨다! 💙 (영수증편)ㅣ장나라X땡겨요 / [땡겨요] ‘나라’도 땡겨요 시킨다! 💙 (15s)ㅣ장나라X땡겨요"
+          "snippet": "[땡겨요] ‘땡기다보면, 알게돼!😉’ (주문편)ㅣ장나라X땡겨요 / [땡겨요] ‘나라’면 땡겨요 시킨다! 💙 (영수증편)ㅣ장나라X땡겨요 / [땡겨요] ‘나라’도 땡겨요 시킨다! 💙 (15s)ㅣ장나라X땡겨요",
+          "error": null
         },
         "hana_youtube": {
           "channel_name": "하나은행 유튜브",
           "success": false,
-          "snippet": "한·중·일 최고 선수들이 한자리에 하나은행 인비테이셔널🏆 / 아시아 NO.1 골프축제 하나은행 인비테이셔널"
+          "snippet": "한·중·일 최고 선수들이 한자리에 하나은행 인비테이셔널🏆 / 아시아 NO.1 골프축제 하나은행 인비테이셔널",
+          "error": null
         },
         "woori_youtube": {
           "channel_name": "우리은행 유튜브",
           "success": false,
-          "snippet": "[모닝경제Plus]  6월 FOMC 관전포인트! 주식시장에 미칠 영향은? / 외국인 관광객 전용 선불카드 NOL World Card 출시! / [모닝경제Plus]  반도체 주가 급반등! 금리 부담에도 계속 갈까?"
+          "snippet": "[모닝경제Plus]  6월 FOMC 관전포인트! 주식시장에 미칠 영향은? / 외국인 관광객 전용 선불카드 NOL World Card 출시! / [모닝경제Plus]  반도체 주가 급반등! 금리 부담에도 계속 갈까?",
+          "error": null
         },
         "nh_youtube": {
           "channel_name": "NH농협은행 유튜브",
           "success": false,
-          "snippet": "[제철대첩] EP.1 🥒 김희은 ❤️ 윤대현 미슐랭 쀼의 오이대첩 / [제철대첩] EP.0 첫만남, 비빔장의 난! 비빔장에 파인애플이? 김희은표 ‘과일 비빔장’ / [제철대첩] EP.0 첫만남, 비빔장의 난! 비빔밥에서 비빔면 맛이? 정호영표 ‘만능 비빔장’"
+          "snippet": "[제철대첩] EP.1 🥒 김희은 ❤️ 윤대현 미슐랭 쀼의 오이대첩 / [제철대첩] EP.0 첫만남, 비빔장의 난! 비빔장에 파인애플이? 김희은표 ‘과일 비빔장’ / [제철대첩] EP.0 첫만남, 비빔장의 난! 비빔밥에서 비빔면 맛이? 정호영표 ‘만능 비빔장’",
+          "error": null
         },
         "nh_blog": {
           "channel_name": "NH농협은행 블로그",
           "success": false,
-          "snippet": ""
+          "snippet": "",
+          "error": null
         },
         "hana_blog": {
           "channel_name": "하나은행 블로그",
           "success": true,
-          "snippet": ""
+          "snippet": "",
+          "error": null
         },
         "naver_news": {
           "channel_name": "네이버 뉴스 (은행+ETF)",
           "success": false,
-          "snippet": "AI·포용금융·디지털 전환 가속…금융권, 서비스 혁신과 사회적 가치 확... / [경제소식] 새마을금고 영업점 1712곳 '무더위 쉼터' 운영 / [경제소식] 하나은행 '소상공인 경쟁력 강화' 지원"
+          "snippet": "퇴직연금도 증시바람… 은행권, 123조 실적배당형 ETF 쟁탈전 / [금융가 산책] KB국민은행, 일용직근로자 '바로송금' 서비스 출시 / [경제소식] 우리금융, 자립준비청년 금융특강 홀로서기 지원",
+          "error": null
         },
         "google_news": {
           "channel_name": "구글 뉴스 (은행+ETF)",
           "success": false,
-          "snippet": "\"123조 증권에 뺏길라\"…은행들 퇴직연금 ETF 유치 '혈안' - v.daum.net / KB국민은행, 삼성자산운용 고객 대상 ‘경품 이벤트’ 실시 - 경기신문 / KB국민은행, IRP 고객 대상 투자 이벤트…TDF·ETF 가입 시 경품 제공 - 인더스트리뉴스"
+          "snippet": "퇴직연금도 증시바람…은행권, 123조 실적배당형 ETF 쟁탈전 - 네이트 / \"123조 증권에 뺏길라\"…은행들 퇴직연금 ETF 유치 '혈안' - v.daum.net / KB국민은행, 삼성자산운용 고객 대상 ‘경품 이벤트’ 실시 - 경기신문",
+          "error": null
         }
       },
       "events": {
-        "marketing_detected": null,
-        "events": [],
-        "summary": "LLM 분석 미실행 (API 키 없음)"
+        "marketing_detected": false,
+        "summary": "하나은행의 마케팅 채널에서 수집된 콘텐츠는 금융교육(하나금융 머니쇼), 스포츠 스폰십(KPGA 골프대회, 축구국가대표팀), 상품 추천(Best 11 적금), 문화행사(어린이 바둑 페스티벌) 등 다양한 활동을 포함하고 있으나, ETF 매수 유도를 목적으로 하는 이벤트, 프로모션, 수수료 혜택 등은 감지되지 않습니다.",
+        "events": []
       }
     },
     "mass": {
@@ -196,106 +289,114 @@
           "RISE ETF 유튜브 (KB자산운용)",
           "HANARO ETF 유튜브 (NH-Amundi)",
           "SOL ETF 유튜브 (신한자산운용)",
+          "TIGER ETF 이벤트 페이지",
           "ACE ETF 이벤트 공지",
           "RISE ETF 이벤트 페이지",
+          "HANARO ETF 이벤트 공지",
           "SOL ETF 이벤트 공지",
           "SOL ETF 블로그 (네이버)",
           "ETF 운용사 뉴스 (네이버/구글)"
         ],
-        "failed": [
-          {
-            "name": "TIGER ETF 이벤트 페이지",
-            "error": "데이터 파싱 오류"
-          },
-          {
-            "name": "HANARO ETF 이벤트 공지",
-            "error": "데이터 파싱 오류"
-          }
-        ],
-        "ok_count": 13,
-        "fail_count": 2
+        "failed": [],
+        "ok_count": 15,
+        "fail_count": 0
       },
       "raw": {
         "samsung_fund_event": {
           "channel_name": "삼성자산운용 이벤트 페이지",
           "success": true,
-          "snippet": " KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF 신규상장 이벤트 Kodex Kodex ETF 삼성펀드 Kodex ETF 삼성펀드 KODEX 페이지로 이동할 수 있어요 ETF분배금 현황 KR EN 마이페이지 검색 메뉴 Kodex search 인기키워드 KODEX200 액티브 fang Kodex ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! KR EN 검색 메뉴 닫기 로그인 해주세요 로그인 마이페이지 최근 본 상품 ETF분배금 현황 "
+          "snippet": " KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF 신규상장 이벤트 Kodex Kodex ETF 삼성펀드 Kodex ETF 삼성펀드 KODEX 페이지로 이동할 수 있어요 ETF분배금 현황 KR EN 마이페이지 검색 메뉴 Kodex search 인기키워드 KODEX200 액티브 fang Kodex ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! KR EN 검색 메뉴 닫기 로그인 해주세요 로그인 마이페이지 최근 본 상품 ETF분배금 현황 ",
+          "error": null
         },
         "news": {
           "channel_name": "네이버/구글 뉴스",
           "success": true,
-          "snippet": "[더밸류 브리핑] 오늘의 삼성 금융 소식...삼성증권·삼성자산운용 / [송윤서의 '주'경야독] 하루 앞으로 다가온 스페이스X 상장…반도체 수... / 스페이스X 상장 'D-2'.…국내 우주 ETF에 뭉칫돈 유입"
+          "snippet": "[더밸류 브리핑] 오늘의 삼성 금융 소식...삼성증권·삼성자산운용 / [송윤서의 '주'경야독] 하루 앞으로 다가온 스페이스X 상장…반도체 수... / 스페이스X 상장 'D-2'.…국내 우주 ETF에 뭉칫돈 유입",
+          "error": null
         },
         "kodex_youtube": {
           "channel_name": "KODEX ETF 유튜브 (삼성자산운용)",
           "success": true,
-          "snippet": "젠슨황이 콕 찍은 AI투자처! 광통신 네트워크 수퍼사이클이 온다 | KODEX 미국AI광통신네트워트 ETFㅣETF상품정보 / 반도체 투자를 2배 더 강력하게! 대한민국 레버리지의 기준! KODEX 단일종목레버리지ㅣ투자정보 / 당신이 응원하는 미국 대표지수⚽📣ㅣKODEX 미국S&amp;P500 ETF 🆚 KODEX 미국나스닥100 ETF"
+          "snippet": "젠슨황이 콕 찍은 AI투자처! 광통신 네트워크 수퍼사이클이 온다 | KODEX 미국AI광통신네트워트 ETFㅣETF상품정보 / 반도체 투자를 2배 더 강력하게! 대한민국 레버리지의 기준! KODEX 단일종목레버리지ㅣ투자정보 / 당신이 응원하는 미국 대표지수⚽📣ㅣKODEX 미국S&amp;P500 ETF 🆚 KODEX 미국나스닥100 ETF",
+          "error": null
         },
         "tiger_youtube": {
           "channel_name": "TIGER ETF 유튜브 (미래에셋자산운용)",
           "success": true,
-          "snippet": "스페이스 X 상장 기념! 미국 우주테크 기업 전망  / TIGER ETF LIVE"
+          "snippet": "스페이스 X 상장 기념! 미국 우주테크 기업 전망  / TIGER ETF LIVE",
+          "error": null
         },
         "ace_youtube": {
           "channel_name": "ACE ETF 유튜브 (한국투자신탁운용)",
           "success": true,
-          "snippet": ""
+          "snippet": "",
+          "error": null
         },
         "rise_youtube": {
           "channel_name": "RISE ETF 유튜브 (KB자산운용)",
           "success": true,
-          "snippet": "삼성전자 레버리지부터 피지컬AI까지! 주간 순매수 TOP5 🏆"
+          "snippet": "삼성전자 레버리지부터 피지컬AI까지! 주간 순매수 TOP5 🏆",
+          "error": null
         },
         "hanaro_youtube": {
           "channel_name": "HANARO ETF 유튜브 (NH-Amundi)",
           "success": true,
-          "snippet": "우리 삼성전기? 절대 월클 맞습니다 AI 수혜주입니다 | ETF 백서 📖 EP4. 삼성전기"
+          "snippet": "우리 삼성전기? 절대 월클 맞습니다 AI 수혜주입니다 | ETF 백서 📖 EP4. 삼성전기",
+          "error": null
         },
         "sol_youtube": {
           "channel_name": "SOL ETF 유튜브 (신한자산운용)",
           "success": true,
-          "snippet": ""
+          "snippet": "",
+          "error": null
         },
         "tiger_event": {
           "channel_name": "TIGER ETF 이벤트 페이지",
-          "success": false,
-          "snippet": ""
+          "success": true,
+          "snippet": "",
+          "error": "이번 주 진행 중인 TIGER 이벤트 없음"
         },
         "ace_event": {
           "channel_name": "ACE ETF 이벤트 공지",
           "success": true,
-          "snippet": "[EVENT] ACE 미국우주테크액티브(0180V0) 매수 인증 이벤트 시즌 2 (~7/8)"
+          "snippet": "",
+          "error": "이번 주 이벤트 게시물 없음"
         },
         "rise_event": {
           "channel_name": "RISE ETF 이벤트 페이지",
           "success": true,
-          "snippet": "종료 RISE 시드키트 이벤트 이벤트 기간 2026-05-12 ~ 2026-06-07 2026-05-12 ~ 2026-06-07 종료 RISE 현대차고정피지컬AI ETF 상장 기념 매수 인증 이벤트 이벤트 기간 2026-05-12 ~ 2026-05-31 2026-05-12 ~ 2026-05-31 종료 KB자산운용 X KB증권 라이브 웹세미나 이벤트 기간 2026-04-30 ~ 2026-05-07 2026-04-30 ~ 2026-05-07 종료 RISE 데고커시리즈 월중분배 변경 기념 매수인증 이벤트 이벤트 기간 2026-04-08 "
+          "snippet": "종료 RISE 시드키트 이벤트 이벤트 기간 2026-05-12 ~ 2026-06-07 2026-05-12 ~ 2026-06-07 종료 RISE 현대차고정피지컬AI ETF 상장 기념 매수 인증 이벤트 이벤트 기간 2026-05-12 ~ 2026-05-31 2026-05-12 ~ 2026-05-31 종료 KB자산운용 X KB증권 라이브 웹세미나 이벤트 기간 2026-04-30 ~ 2026-05-07 2026-04-30 ~ 2026-05-07 종료 RISE 데고커시리즈 월중분배 변경 기념 매수인증 이벤트 이벤트 기간 2026-04-08 ",
+          "error": null
         },
         "hanaro_event": {
           "channel_name": "HANARO ETF 이벤트 공지",
-          "success": false,
-          "snippet": ""
+          "success": true,
+          "snippet": "NH-Amundi자산운용, 'HANARO ETF Monthly Report' 발간 - 뉴스핌",
+          "error": null
         },
         "sol_event": {
           "channel_name": "SOL ETF 이벤트 공지",
           "success": true,
-          "snippet": "[SOL ETF] 4월 팬덤 이벤트 | 절세계좌 투자는 SOL ETF와 함께!"
+          "snippet": "[SOL ETF] 4월 팬덤 이벤트 | 절세계좌 투자는 SOL ETF와 함께!",
+          "error": null
         },
         "sol_blog": {
           "channel_name": "SOL ETF 블로그 (네이버)",
           "success": true,
-          "snippet": "[당첨자 발표] 6월 SOL 라이브 세미나 : 반도체 투자에 관심 있다면? [당첨자 발표] SOL ETF와 함께하는 국장 투자! | 국내투자 ETF 순매수 이벤트 SpaceX 상장, 그리고 그 이후: SOL 우주항공밸류체인(0207G0), SOL 미국우주항공TOP10(0181L0) [SOL ETF] 6월 중순 분배금 안내 ① (지급 예정일 6월 16일) 꿈이 아닌 실적에 투자하는 우주 ETF | SOL 우주항공밸류체인 (0207G0) SOL 우주항공밸류체인 ETF 신규 상장 기념 초성 퀴즈 이벤트 │ SOL 우주항공밸류체인 ETF("
+          "snippet": "[당첨자 발표] 6월 SOL 라이브 세미나 : 반도체 투자에 관심 있다면? [당첨자 발표] SOL ETF와 함께하는 국장 투자! | 국내투자 ETF 순매수 이벤트 SpaceX 상장, 그리고 그 이후: SOL 우주항공밸류체인(0207G0), SOL 미국우주항공TOP10(0181L0) [SOL ETF] 6월 중순 분배금 안내 ① (지급 예정일 6월 16일) 꿈이 아닌 실적에 투자하는 우주 ETF | SOL 우주항공밸류체인 (0207G0) SOL 우주항공밸류체인 ETF 신규 상장 기념 초성 퀴즈 이벤트 │ SOL 우주항공밸류체인 ETF(",
+          "error": null
         },
         "etf_am_news": {
           "channel_name": "ETF 운용사 뉴스 (네이버/구글)",
           "success": true,
-          "snippet": "[증권 Pick] 이번주 상장 소식 모아보기 [더밸류 브리핑] 오늘의 삼성 금융 소식...삼성증권·삼성자산운용 [증권 뉴스브리핑] 검찰, 선행매매 의혹 삼성전자 압색/코스닥시장위원... 스페이스X 상장 D-1…우주ETF 매수 열풍 [송윤서의 '주'경야독] 하루 앞으로 다가온 스페이스X 상장…반도체 수... [경제소식] 새마을금고 영업점 1712곳 '무더위 쉼터' 운영 [여의도단신]삼성자산운용·키움증권·한국투자증권 [증권가로수] KB증권/한투증권/삼성운용/마스턴운용/미래에셋운용/메리... [금융권 이모저모]우리은행, 방한 외국인 디지"
+          "snippet": "[증권 Pick] 이번주 상장 소식 모아보기 [더밸류 브리핑] 오늘의 삼성 금융 소식...삼성증권·삼성자산운용 [증권 뉴스브리핑] 검찰, 선행매매 의혹 삼성전자 압색/코스닥시장위원... 스페이스X 상장 D-1…우주ETF 매수 열풍 [송윤서의 '주'경야독] 하루 앞으로 다가온 스페이스X 상장…반도체 수... [경제소식] 새마을금고 영업점 1712곳 '무더위 쉼터' 운영 [Invest]환율 앞엔 장사없다?...미래에셋ETF, '스페이스X 편입' 공지 삭제 [체크!ETF]스페이스X 잡아라…미래·한투 '우주테크' ETF 경쟁 후끈 [스페이",
+          "error": null
         }
       },
       "events": {
-        "marketing_detected": null,
+        "marketing_detected": false,
         "events": [],
-        "summary": "LLM 분석 미실행 (API 키 없음)"
+        "summary": "LLM 분석 실패"
       }
     },
     "competitor": {
@@ -309,106 +410,235 @@
           "RISE ETF 유튜브 (KB자산운용)",
           "HANARO ETF 유튜브 (NH-Amundi)",
           "SOL ETF 유튜브 (신한자산운용)",
+          "TIGER ETF 이벤트 페이지",
           "ACE ETF 이벤트 공지",
           "RISE ETF 이벤트 페이지",
+          "HANARO ETF 이벤트 공지",
           "SOL ETF 이벤트 공지",
           "SOL ETF 블로그 (네이버)",
           "ETF 운용사 뉴스 (네이버/구글)"
         ],
-        "failed": [
-          {
-            "name": "TIGER ETF 이벤트 페이지",
-            "error": "데이터 파싱 오류"
-          },
-          {
-            "name": "HANARO ETF 이벤트 공지",
-            "error": "데이터 파싱 오류"
-          }
-        ],
-        "ok_count": 13,
-        "fail_count": 2
+        "failed": [],
+        "ok_count": 15,
+        "fail_count": 0
       },
       "raw": {
         "samsung_fund_event": {
           "channel_name": "삼성자산운용 이벤트 페이지",
           "success": true,
-          "snippet": " KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF 신규상장 이벤트 Kodex Kodex ETF 삼성펀드 Kodex ETF 삼성펀드 KODEX 페이지로 이동할 수 있어요 ETF분배금 현황 KR EN 마이페이지 검색 메뉴 Kodex search 인기키워드 KODEX200 액티브 fang Kodex ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! KR EN 검색 메뉴 닫기 로그인 해주세요 로그인 마이페이지 최근 본 상품 ETF분배금 현황 "
+          "snippet": " KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF 신규상장 이벤트 Kodex Kodex ETF 삼성펀드 Kodex ETF 삼성펀드 KODEX 페이지로 이동할 수 있어요 ETF분배금 현황 KR EN 마이페이지 검색 메뉴 Kodex search 인기키워드 KODEX200 액티브 fang Kodex ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! KR EN 검색 메뉴 닫기 로그인 해주세요 로그인 마이페이지 최근 본 상품 ETF분배금 현황 ",
+          "error": null
         },
         "news": {
           "channel_name": "네이버/구글 뉴스",
           "success": true,
-          "snippet": "[더밸류 브리핑] 오늘의 삼성 금융 소식...삼성증권·삼성자산운용 / [송윤서의 '주'경야독] 하루 앞으로 다가온 스페이스X 상장…반도체 수... / 스페이스X 상장 'D-2'.…국내 우주 ETF에 뭉칫돈 유입"
+          "snippet": "[더밸류 브리핑] 오늘의 삼성 금융 소식...삼성증권·삼성자산운용 / [송윤서의 '주'경야독] 하루 앞으로 다가온 스페이스X 상장…반도체 수... / 스페이스X 상장 'D-2'.…국내 우주 ETF에 뭉칫돈 유입",
+          "error": null
         },
         "kodex_youtube": {
           "channel_name": "KODEX ETF 유튜브 (삼성자산운용)",
           "success": true,
-          "snippet": "젠슨황이 콕 찍은 AI투자처! 광통신 네트워크 수퍼사이클이 온다 | KODEX 미국AI광통신네트워트 ETFㅣETF상품정보 / 반도체 투자를 2배 더 강력하게! 대한민국 레버리지의 기준! KODEX 단일종목레버리지ㅣ투자정보 / 당신이 응원하는 미국 대표지수⚽📣ㅣKODEX 미국S&amp;P500 ETF 🆚 KODEX 미국나스닥100 ETF"
+          "snippet": "젠슨황이 콕 찍은 AI투자처! 광통신 네트워크 수퍼사이클이 온다 | KODEX 미국AI광통신네트워트 ETFㅣETF상품정보 / 반도체 투자를 2배 더 강력하게! 대한민국 레버리지의 기준! KODEX 단일종목레버리지ㅣ투자정보 / 당신이 응원하는 미국 대표지수⚽📣ㅣKODEX 미국S&amp;P500 ETF 🆚 KODEX 미국나스닥100 ETF",
+          "error": null
         },
         "tiger_youtube": {
           "channel_name": "TIGER ETF 유튜브 (미래에셋자산운용)",
           "success": true,
-          "snippet": "스페이스 X 상장 기념! 미국 우주테크 기업 전망  / TIGER ETF LIVE"
+          "snippet": "스페이스 X 상장 기념! 미국 우주테크 기업 전망  / TIGER ETF LIVE",
+          "error": null
         },
         "ace_youtube": {
           "channel_name": "ACE ETF 유튜브 (한국투자신탁운용)",
           "success": true,
-          "snippet": ""
+          "snippet": "",
+          "error": null
         },
         "rise_youtube": {
           "channel_name": "RISE ETF 유튜브 (KB자산운용)",
           "success": true,
-          "snippet": "삼성전자 레버리지부터 피지컬AI까지! 주간 순매수 TOP5 🏆"
+          "snippet": "삼성전자 레버리지부터 피지컬AI까지! 주간 순매수 TOP5 🏆",
+          "error": null
         },
         "hanaro_youtube": {
           "channel_name": "HANARO ETF 유튜브 (NH-Amundi)",
           "success": true,
-          "snippet": "우리 삼성전기? 절대 월클 맞습니다 AI 수혜주입니다 | ETF 백서 📖 EP4. 삼성전기"
+          "snippet": "우리 삼성전기? 절대 월클 맞습니다 AI 수혜주입니다 | ETF 백서 📖 EP4. 삼성전기",
+          "error": null
         },
         "sol_youtube": {
           "channel_name": "SOL ETF 유튜브 (신한자산운용)",
           "success": true,
-          "snippet": ""
+          "snippet": "",
+          "error": null
         },
         "tiger_event": {
           "channel_name": "TIGER ETF 이벤트 페이지",
-          "success": false,
-          "snippet": ""
+          "success": true,
+          "snippet": "",
+          "error": "이번 주 진행 중인 TIGER 이벤트 없음"
         },
         "ace_event": {
           "channel_name": "ACE ETF 이벤트 공지",
           "success": true,
-          "snippet": "[EVENT] ACE 미국우주테크액티브(0180V0) 매수 인증 이벤트 시즌 2 (~7/8)"
+          "snippet": "",
+          "error": "이번 주 이벤트 게시물 없음"
         },
         "rise_event": {
           "channel_name": "RISE ETF 이벤트 페이지",
           "success": true,
-          "snippet": "종료 RISE 시드키트 이벤트 이벤트 기간 2026-05-12 ~ 2026-06-07 2026-05-12 ~ 2026-06-07 종료 RISE 현대차고정피지컬AI ETF 상장 기념 매수 인증 이벤트 이벤트 기간 2026-05-12 ~ 2026-05-31 2026-05-12 ~ 2026-05-31 종료 KB자산운용 X KB증권 라이브 웹세미나 이벤트 기간 2026-04-30 ~ 2026-05-07 2026-04-30 ~ 2026-05-07 종료 RISE 데고커시리즈 월중분배 변경 기념 매수인증 이벤트 이벤트 기간 2026-04-08 "
+          "snippet": "종료 RISE 시드키트 이벤트 이벤트 기간 2026-05-12 ~ 2026-06-07 2026-05-12 ~ 2026-06-07 종료 RISE 현대차고정피지컬AI ETF 상장 기념 매수 인증 이벤트 이벤트 기간 2026-05-12 ~ 2026-05-31 2026-05-12 ~ 2026-05-31 종료 KB자산운용 X KB증권 라이브 웹세미나 이벤트 기간 2026-04-30 ~ 2026-05-07 2026-04-30 ~ 2026-05-07 종료 RISE 데고커시리즈 월중분배 변경 기념 매수인증 이벤트 이벤트 기간 2026-04-08 ",
+          "error": null
         },
         "hanaro_event": {
           "channel_name": "HANARO ETF 이벤트 공지",
-          "success": false,
-          "snippet": ""
+          "success": true,
+          "snippet": "NH-Amundi자산운용, 'HANARO ETF Monthly Report' 발간 - 뉴스핌",
+          "error": null
         },
         "sol_event": {
           "channel_name": "SOL ETF 이벤트 공지",
           "success": true,
-          "snippet": "[SOL ETF] 4월 팬덤 이벤트 | 절세계좌 투자는 SOL ETF와 함께!"
+          "snippet": "[SOL ETF] 4월 팬덤 이벤트 | 절세계좌 투자는 SOL ETF와 함께!",
+          "error": null
         },
         "sol_blog": {
           "channel_name": "SOL ETF 블로그 (네이버)",
           "success": true,
-          "snippet": "[당첨자 발표] 6월 SOL 라이브 세미나 : 반도체 투자에 관심 있다면? [당첨자 발표] SOL ETF와 함께하는 국장 투자! | 국내투자 ETF 순매수 이벤트 SpaceX 상장, 그리고 그 이후: SOL 우주항공밸류체인(0207G0), SOL 미국우주항공TOP10(0181L0) [SOL ETF] 6월 중순 분배금 안내 ① (지급 예정일 6월 16일) 꿈이 아닌 실적에 투자하는 우주 ETF | SOL 우주항공밸류체인 (0207G0) SOL 우주항공밸류체인 ETF 신규 상장 기념 초성 퀴즈 이벤트 │ SOL 우주항공밸류체인 ETF("
+          "snippet": "[당첨자 발표] 6월 SOL 라이브 세미나 : 반도체 투자에 관심 있다면? [당첨자 발표] SOL ETF와 함께하는 국장 투자! | 국내투자 ETF 순매수 이벤트 SpaceX 상장, 그리고 그 이후: SOL 우주항공밸류체인(0207G0), SOL 미국우주항공TOP10(0181L0) [SOL ETF] 6월 중순 분배금 안내 ① (지급 예정일 6월 16일) 꿈이 아닌 실적에 투자하는 우주 ETF | SOL 우주항공밸류체인 (0207G0) SOL 우주항공밸류체인 ETF 신규 상장 기념 초성 퀴즈 이벤트 │ SOL 우주항공밸류체인 ETF(",
+          "error": null
         },
         "etf_am_news": {
           "channel_name": "ETF 운용사 뉴스 (네이버/구글)",
           "success": true,
-          "snippet": "[증권 Pick] 이번주 상장 소식 모아보기 [더밸류 브리핑] 오늘의 삼성 금융 소식...삼성증권·삼성자산운용 [증권 뉴스브리핑] 검찰, 선행매매 의혹 삼성전자 압색/코스닥시장위원... 스페이스X 상장 D-1…우주ETF 매수 열풍 [송윤서의 '주'경야독] 하루 앞으로 다가온 스페이스X 상장…반도체 수... [경제소식] 새마을금고 영업점 1712곳 '무더위 쉼터' 운영 [여의도단신]삼성자산운용·키움증권·한국투자증권 [증권가로수] KB증권/한투증권/삼성운용/마스턴운용/미래에셋운용/메리... [금융권 이모저모]우리은행, 방한 외국인 디지"
+          "snippet": "[증권 Pick] 이번주 상장 소식 모아보기 [더밸류 브리핑] 오늘의 삼성 금융 소식...삼성증권·삼성자산운용 [증권 뉴스브리핑] 검찰, 선행매매 의혹 삼성전자 압색/코스닥시장위원... 스페이스X 상장 D-1…우주ETF 매수 열풍 [송윤서의 '주'경야독] 하루 앞으로 다가온 스페이스X 상장…반도체 수... [경제소식] 새마을금고 영업점 1712곳 '무더위 쉼터' 운영 [Invest]환율 앞엔 장사없다?...미래에셋ETF, '스페이스X 편입' 공지 삭제 [체크!ETF]스페이스X 잡아라…미래·한투 '우주테크' ETF 경쟁 후끈 [스페이",
+          "error": null
         }
       },
       "events": {
-        "marketing_detected": null,
-        "events": [],
-        "summary": "LLM 분석 미실행 (API 키 없음)"
+        "marketing_detected": true,
+        "summary": "KODEX는 순자산 200조 돌파 기념과 현대차로보틱스밸류체인 TOP3플러스 신규상장 이벤트로 고객 유입을 도모하고 있으며, 경쟁사들(TIGER/RISE/SOL)은 우주항공·AI·반도체 등 핫 테마 ETF 신규상장과 매수인증 이벤트로 적극적인 마케팅을 전개 중이다.",
+        "events": [
+          {
+            "channel": "삼성자산운용 홈페이지",
+            "provider": "KODEX",
+            "title": "KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF 신규상장 이벤트",
+            "url": null,
+            "marketing_type": "신규상장",
+            "event_period": "2026-06-09 ~ 2026-07-31",
+            "event_summary": "신규상장 ETF 출시 기념 이벤트를 통한 초기 고객 유입 및 매수 유도",
+            "target_etf": "KODEX 현대차로보틱스밸류체인 TOP3플러스"
+          },
+          {
+            "channel": "삼성자산운용 홈페이지",
+            "provider": "KODEX",
+            "title": "[6~8월 릴레이 이벤트] KODEX ETF 순자산 200조 돌파 기념",
+            "url": null,
+            "marketing_type": "프로모션",
+            "event_period": null,
+            "event_summary": "순자산 200조 달성 기념 릴레이 이벤트로 전사 차원의 고객 참여 유도",
+            "target_etf": "KODEX 전체 ETF"
+          },
+          {
+            "channel": "YouTube",
+            "provider": "KODEX (삼성자산운용)",
+            "title": "KODEX 홈페이지 이벤트 - KODEX ETF 순자산 200조 돌파 기념 이벤트",
+            "url": null,
+            "marketing_type": "프로모션",
+            "event_period": null,
+            "event_summary": "유튜브를 통한 홈페이지 이벤트 홍보로 멀티채널 마케팅 실시",
+            "target_etf": "KODEX 전체 ETF"
+          },
+          {
+            "channel": "YouTube",
+            "provider": "KODEX (삼성자산운용)",
+            "title": "KODEX 홈페이지 이벤트 - KODEX 현대차로보틱스밸류체인TOP3플러스 신규 상장 이벤트",
+            "url": null,
+            "marketing_type": "신규상장",
+            "event_period": null,
+            "event_summary": "유튜브 콘텐츠를 통한 신규 상장 ETF 홍보 및 매수 유도",
+            "target_etf": "KODEX 현대차로보틱스밸류체인 TOP3플러스"
+          },
+          {
+            "channel": "YouTube",
+            "provider": "TIGER ETF (미래에셋자산운용)",
+            "title": "스페이스 X 상장 기념! 미국 우주테크 기업 전망 / TIGER ETF LIVE",
+            "url": null,
+            "marketing_type": "신규상장",
+            "event_period": null,
+            "event_summary": "시황 이슈 활용한 우주테크 ETF 관심 유도 및 실시간 콘텐츠 제공",
+            "target_etf": "TIGER 우주항공 관련 ETF"
+          },
+          {
+            "channel": "RISE ETF 이벤트 페이지",
+            "provider": "RISE ETF (KB자산운용)",
+            "title": "RISE 현대차고정피지컬AI ETF 상장 기념 매수 인증 이벤트",
+            "url": null,
+            "marketing_type": "신규상장",
+            "event_period": "2026-05-12 ~ 2026-05-31",
+            "event_summary": "신규상장 ETF 매수 인증을 통한 직접적인 매수 유도 및 고객 참여 증대",
+            "target_etf": "RISE 현대차고정피지컬AI ETF"
+          },
+          {
+            "channel": "RISE ETF 이벤트 페이지",
+            "provider": "RISE ETF (KB자산운용)",
+            "title": "RISE 시드키트 이벤트",
+            "url": null,
+            "marketing_type": "프로모션",
+            "event_period": "2026-05-12 ~ 2026-06-07",
+            "event_summary": "신규 고객 유입을 위한 초기 이용자 대상 프로모션 패키지",
+            "target_etf": "RISE 전체 ETF"
+          },
+          {
+            "channel": "RISE ETF 이벤트 페이지",
+            "provider": "RISE ETF (KB자산운용)",
+            "title": "RISE 데고커시리즈 월중분배 변경 기념 매수인증 이벤트",
+            "url": null,
+            "marketing_type": "프로모션",
+            "event_period": "2026-04-08 ~ 2026-04-30",
+            "event_summary": "분배금 정책 변경을 기념한 매수인증 이벤트로 기존 고객 유지 및 신규 매수 유도",
+            "target_etf": "RISE 데고커시리즈 ETF"
+          },
+          {
+            "channel": "블로그 (네이버)",
+            "provider": "SOL ETF",
+            "title": "[당첨자 발표] 6월 SOL 라이브 세미나 : 반도체 투자에 관심 있다면?",
+            "url": null,
+            "marketing_type": "프로모션",
+            "event_period": null,
+            "event_summary": "반도체 ETF 관심층 대상 라이브 세미나 개최로 고객 교육 및 참여 유도",
+            "target_etf": "SOL 반도체 관련 ETF"
+          },
+          {
+            "channel": "블로그 (네이버)",
+            "provider": "SOL ETF",
+            "title": "[당첨자 발표] SOL ETF와 함께하는 국장 투자! | 국내투자 ETF 순매수 이벤트",
+            "url": null,
+            "marketing_type": "프로모션",
+            "event_period": null,
+            "event_summary": "국내투자 ETF 순매수 이벤트로 국내 자산군 매수 유도",
+            "target_etf": "SOL 국내투자 관련 ETF"
+          },
+          {
+            "channel": "블로그 (네이버)",
+            "provider": "SOL ETF",
+            "title": "SOL 우주항공밸류체인 ETF 신규 상장 기념 초성 퀴즈 이벤트",
+            "url": null,
+            "marketing_type": "신규상장",
+            "event_period": null,
+            "event_summary": "신규상장 우주항공 테마 ETF 홍보 및 고객 참여 유도를 위한 이벤트성 이벤트",
+            "target_etf": "SOL 우주항공밸류체인"
+          },
+          {
+            "channel": "SOL ETF 공지",
+            "provider": "SOL ETF",
+            "title": "[SOL ETF] 4월 팬덤 이벤트 | 절세계좌 투자는 SOL ETF와 함께!",
+            "url": null,
+            "marketing_type": "프로모션",
+            "event_period": null,
+            "event_summary": "절세계좌 활용 강점 홍보로 세제 혜택 관심층 대상 매수 유도",
+            "target_etf": "SOL 전체 ETF"
+          }
+        ]
       }
     }
   }

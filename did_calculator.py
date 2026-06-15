@@ -396,13 +396,14 @@ def extract_target_etfs_with_llm(collection_results: Dict,
     if not marketing_texts:
         return {"marketing_detected": False, "etf_codes": [], "summary": "수집된 마케팅 텍스트 없음"}
 
-    prompt = f"""다음은 {channel_context} 마케팅 채널에서 수집된 텍스트입니다.
+    prompt = f"""다음은 {channel_context} 채널에서 수집된 텍스트입니다.
 
 {chr(10).join(marketing_texts)}
 
 [분석 기준]
-- {channel_context} 채널에서 직접 진행한 마케팅 활동만 감지
-- 단순 시세·교육·분석 콘텐츠는 제외. 이벤트·프로모션·수수료혜택·매수유도만 포함
+- 수집된 채널에서 개인 투자자를 대상으로 ETF 매수를 유도하는 마케팅 활동 감지
+- 운용사(KODEX/TIGER/ACE 등) 구분 없이 이벤트·프로모션·수수료혜택·매수유도 모두 포함
+- 단순 시세·교육·분석 콘텐츠는 제외
 
 JSON만 출력:
 {{

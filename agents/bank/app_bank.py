@@ -464,11 +464,11 @@ else:
 
     def _z_label(z: float) -> str:
         """Z-score → 직관적 설명"""
-        if z >= 2.0:   return f"평소보다 {z:.1f}배 급변 🔺"
-        elif z >= 1.0: return f"평소보다 {z:.1f}배 변동 ⚠️"
-        elif z <= -2.0: return f"경쟁사 대비 {abs(z):.1f}배 부진 🔻"
-        elif z <= -1.0: return f"경쟁사 대비 소폭 부진"
-        else:           return f"정상 범위"
+        if z >= 2.0:    return f"Z={z:+.2f} — 평소 변동성의 {z:.1f}배 🔺"
+        elif z >= 1.0:  return f"Z={z:+.2f} — 이례적 상승 ⚠️"
+        elif z <= -2.0: return f"Z={z:+.2f} — 경쟁사 대비 {abs(z):.1f}배 부진 🔻"
+        elif z <= -1.0: return f"Z={z:+.2f} — 경쟁사 우위"
+        else:           return f"Z={z:+.2f} — 정상 범위"
 
     # ── 이상 감지 ETF 카드 ──
     if spikes:
@@ -524,18 +524,21 @@ else:
                     )
                 st.markdown(f'<div class="comp-grid">{cards}</div>', unsafe_allow_html=True)
 
-            # 계산 결과 (식이 아닌 숫자)
+            # 계산 결과 ①②③④
             if not r.no_competitors:
-                ctrl_str = " + ".join(f"{int(c.change_pct*100):+d}%" for c in r.competitors)
+                ctrl_str = " + ".join(f"{c.change_pct:+.4f}" for c in r.competitors)
+                ctrl_pct_str = " + ".join(f"{int(c.change_pct*100):+d}%" for c in r.competitors)
                 n = len(r.competitors)
-                raw_did = r.kodex_change_pct - r.control_avg_pct
+                raw_did = getattr(r, "raw_did_value", r.kodex_change_pct - r.control_avg_pct)
+                z = r.did_value  # 2단계 이후 Z-score
+                z_label = _z_label(z)
                 formula = (
                     f"[ 은행 컬럼 · {r.mapping_source} ]\n\n"
-                    f"  ① KODEX 은행변화율   = {int(r.kodex_change_pct*100):+d}%\n"
-                    f"  ② 비교군 {n}개 평균  = ({ctrl_str}) ÷ {n} = {int(r.control_avg_pct*100):+d}%\n\n"
-                    f"  ③ 이번주 초과분       = {int(r.kodex_change_pct*100):+d}% − {int(r.control_avg_pct*100):+d}% = {int(raw_did*100):+d}%\n\n"
-                    f"  ④ 평소 변동 대비      = {r.did_value:+.2f}배  ({_z_label(r.did_value)})\n"
-                    f"     (이번주 초과분이 과거 16주 평균 대비 {abs(r.did_value):.1f}배 {'크다' if r.did_value > 0 else '작다'})\n\n"
+                    f"  ① KODEX 은행변화율   = {r.kodex_change_pct:+.4f}  (≈ {int(r.kodex_change_pct*100):+d}%p)\n"
+                    f"  ② 비교군 {n}개 평균  = ({ctrl_str}) ÷ {n} = {r.control_avg_pct:+.4f}  (≈ {int(r.control_avg_pct*100):+d}%p)\n\n"
+                    f"  ③ 1단계 DiD          = {r.kodex_change_pct:+.4f} − {r.control_avg_pct:+.4f} = {raw_did:+.4f}  (≈ {int(raw_did*100):+d}%p)\n\n"
+                    f"  ④ 2단계 Z-score      = {z:+.4f}  ({z_label})\n"
+                    f"     (이번주 DiD를 16주 평균·표준편차로 표준화)\n\n"
                     f"  판정  {r.judgement_emoji} {r.judgement}"
                 )
                 st.markdown(f"<div class='formula-box'>{formula}</div>", unsafe_allow_html=True)
@@ -543,16 +546,19 @@ else:
             # 단계별 계산 로그 (LP 관련 제외)
             with st.expander("📋 단계별 계산 로그", expanded=False):
                 log_html = ""
-                icons = {"[KODEX":"🟦","[베이스라인":"📊","[비교군":"🆚","[DiD":"🧮","[Z-score":"📐","[판정":"🏁"}
+                icons = {
+                    "[KODEX":"🟦","[베이스라인":"📊","[비교군":"🆚",
+                    "[DiD":"🧮","[2단계":"📐","[판정":"🏁","[최종판정":"🏁",
+                }
                 for line in r.calculation_log:
-                    if "[LP" in line or "LP 감지" in line: continue  # 은행은 LP 불필요
+                    if "[LP" in line or "LP 감지" in line: continue
                     icon = "▸"
                     for k, v in icons.items():
                         if line.startswith(k): icon = v; break
                     color = "#4d9fff" if "KODEX" in line[:15] else \
                             "#f4a261" if "비교군" in line[:10] else \
                             "#4ec880" if "판정" in line else \
-                            "#a78bfa" if "Z-score" in line[:10] else "inherit"
+                            "#a78bfa" if "2단계" in line[:8] else "inherit"
                     log_html += (f"<div style='padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);'>"
                                  f"<span style='opacity:.5;margin-right:6px;'>{icon}</span>"
                                  f"<span style='color:{color};font-size:0.82rem;font-family:monospace;'>{line}</span></div>")

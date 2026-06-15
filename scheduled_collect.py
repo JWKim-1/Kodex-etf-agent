@@ -70,7 +70,10 @@ def extract_events(collection_results: dict, api_key: str, mode: str) -> dict:
     """채널 수집 결과에서 LLM으로 마케팅 이벤트 구조화."""
     texts = []
     for r in collection_results.values():
-        if not r.success or not r.data:
+        ok = getattr(r, "success", None)
+        if ok is None:
+            ok = getattr(r, "detected", False)
+        if not ok or not r.data:
             continue
         d = r.data
         label = f"[{r.channel_name}]"
@@ -99,7 +102,7 @@ def extract_events(collection_results: dict, api_key: str, mode: str) -> dict:
     mode_map = {
         "securities": "증권사(삼성/미래에셋/키움/토스/한투/신한/KB증권)",
         "bank":       "은행(KB/신한/하나/우리/NH농협은행)",
-        "mass":       "ETF 운용사 전체(KODEX/TIGER/ACE/RISE/HANARO/SOL) — 개인 투자자 유입 관점",
+        "mass":       "ETF 운용사 전체(KODEX/TIGER/ACE/RISE/HANARO/SOL) — 개인 투자자 대상 마케팅 (운용사 구분 없이 모든 ETF 이벤트 포함)",
         "competitor": "ETF 운용사 전체(KODEX/TIGER/ACE/RISE/HANARO/SOL) — KODEX 경쟁사 비교 관점",
     }
     mode_desc = mode_map.get(mode, mode)
@@ -107,7 +110,7 @@ def extract_events(collection_results: dict, api_key: str, mode: str) -> dict:
     focus_map = {
         "securities": "증권사가 KODEX ETF를 어떻게 마케팅하는지 — 추천/프로모션/수수료혜택 감지",
         "bank":       "은행이 ETF 매수를 유도하는 이벤트/혜택 감지 — KODEX 관련 우선",
-        "mass":       "ETF 운용사들의 개인 투자자 유입 마케팅 감지 — 어떤 ETF로 자금 유도하는지, KODEX 포함 전사 비교",
+        "mass":       "ETF 운용사(KODEX/TIGER/ACE/RISE/HANARO/SOL) 전체가 개인 투자자를 대상으로 진행한 마케팅 감지 — 운용사 구분 없이 개인 투자자에게 ETF 매수를 유도하는 모든 이벤트·프로모션·혜택 포함",
         "competitor": "KODEX 경쟁사(TIGER/ACE/RISE/HANARO/SOL) 마케팅 vs KODEX 활동 비교 — 경쟁사가 집중 마케팅하는 상품과 KODEX 대응 현황",
     }
     focus_desc = focus_map.get(mode, "")
@@ -144,7 +147,7 @@ JSON만 출력:
 
     try:
         from llm_client import call_llm
-        text = call_llm(prompt, anthropic_key=api_key, gemini_key=os.getenv("GEMINI_API_KEY",""), max_tokens=2048)
+        text = call_llm(prompt, anthropic_key=api_key, gemini_key=os.getenv("GEMINI_API_KEY",""), max_tokens=3000)
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
             return json.loads(m.group())
@@ -159,15 +162,23 @@ JSON만 출력:
 def collection_summary(results: dict) -> dict:
     ok, fail = [], []
     for r in results.values():
-        # 메인 collector: success 필드 / 은행 collector: detected 필드
-        is_ok = getattr(r, "success", None)
-        if is_ok is None:
-            is_ok = getattr(r, "detected", False)
         name = getattr(r, "channel_name", "")
+        err  = getattr(r, "error", None) or getattr(r, "error_label", None) or ""
+
+        # 메인 collector: success 필드로 판단
+        # 은행 collector: detected는 "마케팅 감지 여부"이지 수집 성공이 아님
+        #   → 데이터가 있으면 수집 성공, 에러가 있으면 실패
+        if hasattr(r, "success"):
+            is_ok = r.success
+        else:
+            # 은행: 에러가 없고 data가 있으면 수집 성공
+            data = getattr(r, "data", None) or {}
+            has_data = bool(data)
+            is_ok = has_data and not err
+
         if is_ok:
             ok.append(name)
         else:
-            err = getattr(r, "error_label", None) or getattr(r, "error", "")
             fail.append({"name": name, "error": err})
     return {"success": ok, "failed": fail, "ok_count": len(ok), "fail_count": len(fail)}
 

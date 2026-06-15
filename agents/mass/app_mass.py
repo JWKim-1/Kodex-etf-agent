@@ -199,7 +199,7 @@ elif anthropic_key:
     with st.spinner("LLM 분석 중..."):
         llm_result = extract_target_etfs_with_llm(
             collection_results, anthropic_key,
-            channel_context="삼성자산운용 KODEX ETF 직접 채널 (유튜브, 이벤트, 뉴스)"
+            channel_context="ETF 운용사 전체 (KODEX/TIGER/ACE/RISE/HANARO/SOL) — 개인 투자자 대상 ETF 매수 유도 이벤트·프로모션·혜택 (운용사 구분 없이 모든 ETF 마케팅 포함)"
         )
     if _days_old <= 14:
         save_raw_data(_mass_llm_arch_key, llm_result)

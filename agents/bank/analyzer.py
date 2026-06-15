@@ -241,9 +241,10 @@ class ETFDiDResult:
     # 변화율
     kodex_change_pct: float
     control_avg_pct: float
-    did_value: float
-    judgement: str
-    judgement_emoji: str
+    did_value: float          # 2단계 후: 배수(ratio) = raw_did / 16주평균DiD
+    raw_did_value: float = 0.0   # 1단계 원값: KODEX변화율 - 비교군평균변화율
+    judgement: str = ""
+    judgement_emoji: str = ""
     # 비교군 상세
     competitors: List[CompetitorResult] = field(default_factory=list)
     mapping_source: str = ""
@@ -503,30 +504,26 @@ class MarketingAnalyzer:
                     if len(did_history) >= 4:  # 최소 4주는 있어야 σ 의미있음
                         import numpy as _np
                         did_avg = float(_np.mean(did_history))
-                        did_std = float(_np.std(did_history, ddof=1))  # 표본표준편차
-                        ALPHA_STD = 0.01  # σ=0일 때 분모 보호 (1%p)
-                        # Z-score: 평소 변동성 대비 이번 주 DiD가 얼마나 튀었나
-                        z_score = (result.did_value - did_avg) / (did_std + ALPHA_STD)
-                        result.notes.append(
-                            f"[2단계 Z-score] DiD={result.did_value*100:+.1f}%p | "
-                            f"{WINDOW_2ND}주평균={did_avg*100:+.1f}%p | "
-                            f"σ={did_std*100:.1f}%p | Z={z_score:+.2f}"
-                        )
-                        result = ETFDiDResult(
-                            kodex_code=result.kodex_code,
-                            kodex_name=result.kodex_name,
-                            current=result.current,
-                            baseline=result.baseline,
-                            lp=result.lp,
-                            kodex_change_pct=result.kodex_change_pct,
-                            control_avg_pct=result.control_avg_pct,
-                            did_value=z_score,  # 2단계 Z-score
-                            judgement=result.judgement,
-                            judgement_emoji=result.judgement_emoji,
-                            competitors=result.competitors,
-                            mapping_source=result.mapping_source,
-                            notes=result.notes,
-                            calculation_log=result.calculation_log,
+                        did_std = float(_np.std(did_history, ddof=1))
+                        ALPHA_STD = 0.01  # σ=0일 때 분모 폭발 방지
+                        # 2단계 Z-score: 평소 변동성 대비 이번 주 DiD가 얼마나 튀었나
+                        raw_did = result.raw_did_value
+                        z_score = (raw_did - did_avg) / (did_std + ALPHA_STD)
+                        z_score = round(z_score, 4)
+                        log2_lines = [
+                            f"[2단계 Z-score] {WINDOW_2ND}주 DiD 이력: {[round(v,3) for v in did_history[-6:]]} ... ({len(did_history)}주)",
+                            f"[2단계 Z-score] 16주평균={did_avg:+.4f}  σ={did_std:.4f}  α=0.01",
+                            f"[2단계 Z-score] Z = (DiD - 평균) / (σ + α) = ({raw_did:+.4f} - {did_avg:+.4f}) / ({did_std:.4f} + 0.01) = {z_score:+.4f}",
+                        ]
+                        for ln in log2_lines:
+                            result.notes.append(ln)
+                            result.calculation_log.append(ln)
+                        judgement2, emoji2 = self._judge(z_score)
+                        result.did_value = z_score      # 2단계: Z-score로 교체
+                        result.judgement = judgement2
+                        result.judgement_emoji = emoji2
+                        result.calculation_log.append(
+                            f"[최종판정] {emoji2} {judgement2}  (Z={z_score:+.4f}, raw DiD={raw_did:+.4f})"
                         )
 
                 results[code] = result
@@ -586,9 +583,10 @@ class MarketingAnalyzer:
         metric_label = "은행" if lp.use_metric == "financial" else "개인"
         cur_val = current_kodex.financial_investment if lp.use_metric == "financial" else current_kodex.individual
         base_val = baseline.fi_avg if lp.use_metric == "financial" else baseline.ind_avg
+        mabs_val = baseline.fi_mabs if lp.use_metric == "financial" else baseline.ind_mabs
         log.append(
-            f"[KODEX 변화율] ({cur_val:,.0f} ÷ {base_val:,.0f} - 1) × 100 = {kodex_chg:+.1f}%"
-            f"  [{metric_label} 기준{'  ※추정값' if lp.is_estimate else ''}]"
+            f"[KODEX 변화율] ({cur_val:,.0f} - {base_val:,.0f}) ÷ {mabs_val:,.0f} = {kodex_chg:+.4f}"
+            f"  (≈ {kodex_chg*100:+.1f}%p, {metric_label} 기준{'  ※추정값' if lp.is_estimate else ''})"
         )
 
         # ── Step E: 비교군 변화율 ──
@@ -610,8 +608,9 @@ class MarketingAnalyzer:
 
             c_cur = cdata.financial_investment if force_metric == "financial" else cdata.individual
             c_base = cb.fi_avg if force_metric == "financial" else cb.ind_avg
+            c_mabs = cb.fi_mabs if force_metric == "financial" else cb.ind_mabs
             log.append(
-                f"  · {cname}: ({c_cur:,.0f} ÷ {c_base:,.0f} - 1) × 100 = {cchg:+.1f}%"
+                f"  · {cname}: ({c_cur:,.0f} - {c_base:,.0f}) ÷ {c_mabs:,.0f} = {cchg:+.4f} (≈ {cchg*100:+.1f}%p)"
             )
             competitor_results.append(CompetitorResult(
                 code=ccode, name=cname, provider=cprov,
@@ -681,7 +680,8 @@ class MarketingAnalyzer:
             lp=lp,
             kodex_change_pct=round(kodex_chg, 2),
             control_avg_pct=round(control_avg, 2),
-            did_value=did,
+            did_value=did,         # 1단계에선 raw DiD, 2단계에서 배수로 교체됨
+            raw_did_value=did,     # 원값 보존
             judgement=judgement,
             judgement_emoji=emoji,
             competitors=competitor_results,
@@ -840,20 +840,15 @@ class MarketingAnalyzer:
             return self._normalized_change(
                 current.individual, baseline.ind_avg, baseline.ind_mabs)
 
-    def _judge(self, did: float):
-        # 단위: 정규화 절대 변화값 (= 평소 변동 크기 대비 초과분)
-        # ── 2단계 Z-score 임계값 ──────────────────────────────────────────────────
-        # 은행 채널은 평소 마케팅이 거의 없어 σ 자체가 작음
-        # → Z=1.0이 일반 통계의 Z=2.0과 동일한 실질적 의미를 가짐
-        # Z ≥ 2.0: 상위 2.5% — 보이지 않는 이벤트 거의 확실
-        # Z ≥ 1.0: 상위 16% — 은행 채널 특성상 역추적 필요
-        # |Z| < 1.0: 정상 변동 범위
-        # Z < -1.0: 경쟁사 우위 구간
-        if did >= 2.0:
+    def _judge(self, z: float):
+        # 단위: Z-score = (DiD(t) - 16주평균) / (σ + 0.01)
+        # 은행 채널은 평소 마케팅이 없어 σ 자체가 작음
+        # → Z=1.0이 일반 통계 Z=2.0과 동일한 실질적 의미
+        if z >= 2.0:
             return "강한 이상 감지 — 은행 마케팅 거의 확실", "🟢"
-        elif did >= 1.0:
+        elif z >= 1.0:
             return "이상 감지 — 역추적 권고", "🟡"
-        elif did >= -1.0:
+        elif z >= -1.0:
             return "정상 변동 범위", "⚪"
         else:
             return "경쟁사 우위 — 경쟁 마케팅 의심", "🔴"

@@ -311,14 +311,18 @@ if st.button(_btn_label, type="primary", use_container_width=True, key="run_repo
     _save_report_cache(selected_week, report_md)
 
 if "report_md" in st.session_state:
-    import markdown as _md_lib
     _report_week_label = st.session_state.get("report_week", selected_week)
     _report_md = st.session_state["report_md"]
 
     st.markdown(f"### {_report_week_label} 주간 종합 리포트")
     st.markdown(_report_md)
 
-    _report_html_body = _md_lib.markdown(_report_md, extensions=["tables", "fenced_code"])
+    try:
+        import markdown as _md_lib
+        _report_html_body = _md_lib.markdown(_report_md, extensions=["tables", "fenced_code"])
+    except ImportError:
+        import html as _html_mod
+        _report_html_body = "<pre>" + _html_mod.escape(_report_md) + "</pre>"
     _full_html = f"""<!DOCTYPE html>
 <html lang="ko"><head><meta charset="utf-8">
 <title>KODEX 주간 리포트 {_report_week_label}</title>

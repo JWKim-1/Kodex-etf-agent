@@ -251,50 +251,9 @@ if "bank_collect_results" not in st.session_state and _bank_has_arch(_bank_arch_
     _bat = _bank_arch_at(_bank_arch_key)
     st.caption(f"📦 보존된 수집 결과 자동 로드 (최초 수집: {_bat})")
 
-if st.button("📡 은행 채널 수집 시작", type="primary", use_container_width=True, key="bank_collect"):
-    prog_bar = st.progress(0)
-    status = st.empty()
-
-    def on_prog(idx, total, name):
-        prog_bar.progress(idx / total)
-        status.caption(f"수집 중 ({idx}/{total}): {name}")
-
-    with st.spinner("은행 9개 채널 수집 중..."):
-        # 선택 주차 기간으로 수집 범위 설정
-        import re as _re
-        _m = _re.match(r"(\d+)\.(\d+)-(\d+)\.(\d+)", selected)
-        if _m:
-            _y = date.today().year
-            _ws = datetime(_y, int(_m.group(1)), int(_m.group(2)))
-            _we = datetime(_y, int(_m.group(3)), int(_m.group(4)), 23, 59)
-        else:
-            _ws, _we = None, None
-        collector = BankChannelCollector(week_start=_ws, week_end=_we,
-                                         youtube_api_key=os.getenv("YOUTUBE_API_KEY", ""))
-        results = collector.collect_all(progress_callback=on_prog)
-    st.session_state["bank_collect_results"] = results
-
-    # LLM으로 마케팅 활동 판단
-    anthropic_key = os.getenv("ANTHROPIC_API_KEY", "") or st.session_state.get("bank_ant_key","")
-    gemini_key    = os.getenv("GEMINI_API_KEY", "")    or st.session_state.get("bank_gem_key","")
-    if anthropic_key or gemini_key:
-        os.environ["GEMINI_API_KEY"] = gemini_key
-        with st.spinner("LLM이 채널 내용 분석 중..."):
-            from agents.bank.analyzer import extract_target_etfs_with_llm
-            llm_result = extract_target_etfs_with_llm(results, anthropic_key)
-    else:
-        llm_result = {"marketing_detected": False, "etf_codes": [], "evidence": []}
-    st.session_state["bank_llm_result"] = llm_result
-
-    # 아카이브 저장
-    if _days_ago_bank <= 14:
-        from channel_archive import save_channel_results as _bank_save, save_raw_data as _bank_save_raw
-        _bank_save(_bank_arch_key, results)
-        _bank_save_raw(_bank_llm_arch_key, llm_result)
-
-    prog_bar.empty()
-    status.empty()
-    st.success("✅ 수집 완료")
+if "bank_collect_results" not in st.session_state:
+    st.info("📦 이번 주 수집 데이터 없음 — 랜딩 페이지에서 **'🔄 전체 수집 시작'** 을 먼저 실행하세요.")
+    st.stop()
 
 if "bank_collect_results" in st.session_state:
     results = st.session_state["bank_collect_results"]

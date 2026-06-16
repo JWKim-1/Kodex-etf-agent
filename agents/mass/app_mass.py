@@ -130,11 +130,8 @@ if not st.session_state.get("mass_analysis_run", False):
         st.session_state["mass_analysis_run"] = True
 
 if not st.session_state.get("mass_analysis_run", False):
-    if st.button("🚀 분석 시작", type="primary", use_container_width=True, key="mass_run"):
-        st.session_state["mass_analysis_run"] = True
-    else:
-        st.info("📦 저장된 데이터 없음 — 버튼을 눌러 채널 수집을 시작합니다.")
-        st.stop()
+    st.info("📦 이번 주 수집 데이터 없음 — 랜딩 페이지에서 **'🔄 전체 수집 시작'** 을 먼저 실행하세요.")
+    st.stop()
 
 # ── STEP 1: 채널 수집 ─────────────────────────────────────────────────────────
 st.markdown('<div class="step-header">Step 1 · 삼성자산운용 채널 수집</div>', unsafe_allow_html=True)

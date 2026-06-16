@@ -281,6 +281,46 @@ if st.session_state.selected_mode is None:
             st.session_state.selected_mode = "lifecycle"
             st.rerun()
 
+    # ── 전체 통합 수집 ───────────────────────────────────────────────────────────
+    st.markdown("<div style='margin:24px 0 8px;'></div>", unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+    .collect-banner {
+        border: 1px solid rgba(0,198,100,0.35);
+        border-radius: 14px;
+        background: linear-gradient(90deg, rgba(0,198,100,0.06) 0%, rgba(0,82,255,0.06) 100%);
+        padding: 18px 24px;
+        margin-bottom: 8px;
+        display: flex; align-items: center; gap: 16px;
+    }
+    .collect-banner-icon { font-size: 2rem; }
+    .collect-banner-text { flex: 1; }
+    .collect-banner-title { font-weight: 700; font-size: 1rem; margin-bottom: 2px; }
+    .collect-banner-desc  { font-size: 0.82rem; opacity: .65; }
+    </style>
+    <div class="collect-banner">
+        <div class="collect-banner-icon">🔄</div>
+        <div class="collect-banner-text">
+            <div class="collect-banner-title">이번 주 전체 채널 수집</div>
+            <div class="collect-banner-desc">증권사 · 은행 · 개인(ETF AM) · 경쟁사 — 4개 세션 수집 + LLM 분석 + 자동 저장까지 한 번에</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if st.button("🔄  전체 수집 시작  —  이번 주 4개 세션 일괄 수집 & 저장", key="btn_collect_all", use_container_width=True):
+        import scheduled_collect as _sc
+        from datetime import date as _date, timedelta as _td
+        _today = _date.today()
+        _mon   = _today - _td(days=_today.weekday())
+        _fri   = _mon + _td(days=4)
+        _lbl   = f"{_mon.month}.{_mon.day}-{_fri.month}.{_fri.day}"
+        with st.spinner(f"🔄 {_lbl} 전체 수집 중... (2~5분 소요)"):
+            try:
+                _sc.run()
+                st.success(f"✅ {_lbl} 전체 수집 완료 — 각 세션에서 버튼 없이 결과가 바로 표시됩니다.")
+            except Exception as _e:
+                st.error(f"수집 중 오류: {_e}")
+
     st.markdown("<div style='margin:16px 0 4px;'></div>", unsafe_allow_html=True)
     if st.button(
         "📁  채널 수집 히스토리  —  주차별 마케팅 채널 수집 결과 및 이벤트 내역",
@@ -791,9 +831,6 @@ else:
         unsafe_allow_html=True)
 st.markdown("")
 
-if st.button("🚀 분석 시작", type="primary", use_container_width=True):
-    st.session_state["analysis_run"] = True
-
 # 아카이브 있으면 버튼 없이 자동 진행
 if not st.session_state.get("analysis_run", False):
     from channel_archive import has_archive as _has_arch
@@ -801,6 +838,7 @@ if not st.session_state.get("analysis_run", False):
         st.session_state["analysis_run"] = True
 
 if not st.session_state.get("analysis_run", False):
+    st.info("📦 이번 주 수집 데이터 없음 — 랜딩 페이지에서 **'🔄 전체 수집 시작'** 을 먼저 실행하세요.")
     st.stop()
 
 # ════════════════════════════════════════════════════════════════════

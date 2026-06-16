@@ -132,14 +132,8 @@ if not st.session_state.get("comp_analysis_run", False):
         st.session_state["comp_analysis_run"] = True
 
 if not st.session_state.get("comp_analysis_run", False):
-    if st.button("🔍 경쟁사 채널 수집 및 분석", type="primary", use_container_width=True, key="comp_run"):
-        st.session_state["comp_analysis_run"] = True
-    else:
-        st.info("📦 저장된 데이터 없음 — 버튼을 눌러 채널 수집을 시작합니다.")
-        st.markdown("""
-        **수집 채널:** KODEX · TIGER · ACE · RISE · HANARO · SOL 유튜브 + 이벤트 + 뉴스
-        """)
-        st.stop()
+    st.info("📦 이번 주 수집 데이터 없음 — 랜딩 페이지에서 **'🔄 전체 수집 시작'** 을 먼저 실행하세요.")
+    st.stop()
 
 # ── STEP 1: 채널 수집 ─────────────────────────────────────────────────────────
 st.markdown('<div class="step-header">Step 1 · 경쟁사 채널 수집</div>', unsafe_allow_html=True)

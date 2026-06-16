@@ -866,7 +866,7 @@ if True:  # 과거/현재 모두 수집 시도
     # RSS/유튜브/블로그는 "현재 시점 기준 최근 글"만 반환하므로, 1주만 지나도
     # 그 시점에 감지했던 글/링크가 사라져 재조회가 안 됨 → 최초 수집 시 보존,
     # 이후엔 보존된 결과를 그대로 사용 (그 주차 시점의 데이터를 영구 확보)
-    from channel_archive import has_archive, save_channel_results, load_channel_results, get_archived_at
+    from channel_archive import has_archive, save_channel_results, load_channel_results, get_archived_at, save_raw_data, load_raw_data
 
     _from_archive = False
     _days_old = (today_date - sheet_start).days if sheet_start else 0
@@ -933,12 +933,18 @@ if IS_BACKTEST and not collection_results:
     llm_result = {"marketing_detected": False, "etf_codes": [],
                   "summary": f"{current_sheet} 채널 수집 결과 없음"}
 else:
-    with st.spinner("LLM 분석 중..."):
-
-        if anthropic_key:
-            llm_result = extract_target_etfs_with_llm(collection_results, anthropic_key)
-        else:
-            llm_result = keyword_fallback(collection_results, all_kodex_etfs)
+    _sec_llm_key = f"sec_llm_{current_sheet}"
+    if has_archive(_sec_llm_key):
+        llm_result = load_raw_data(_sec_llm_key)
+        st.caption(f"📦 LLM 분석 결과 캐시 사용 ({_sec_llm_key})")
+    else:
+        with st.spinner("LLM 분석 중..."):
+            if anthropic_key:
+                llm_result = extract_target_etfs_with_llm(collection_results, anthropic_key)
+            else:
+                llm_result = keyword_fallback(collection_results, all_kodex_etfs)
+        if llm_result and llm_result.get("marketing_detected") is not None:
+            save_raw_data(_sec_llm_key, llm_result)
 
     if llm_result.get("marketing_detected"):
         etf_names_det = [all_kodex_etfs.get(c, COMPARISON_MAP.get(c, {}).get("name", c))

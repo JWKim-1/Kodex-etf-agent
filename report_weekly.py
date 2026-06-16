@@ -21,6 +21,23 @@ if _ROOT not in sys.path:
 from scheduled_collect import load_history, HISTORY_FILE
 from krx_data_fetcher import load_cache, _parse_week_label, detect_listing_changes
 
+_REPORT_CACHE_FILE = os.path.join(_ROOT, "report_cache.json")
+
+def _load_report_cache() -> dict:
+    if not os.path.exists(_REPORT_CACHE_FILE):
+        return {}
+    try:
+        with open(_REPORT_CACHE_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def _save_report_cache(week: str, report_md: str):
+    cache = _load_report_cache()
+    cache[week] = report_md
+    with open(_REPORT_CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(cache, f, ensure_ascii=False, indent=2)
+
 # ── 유틸 ─────────────────────────────────────────────────────────────────────
 
 def _sorted_weeks(d: dict) -> list:
@@ -218,6 +235,13 @@ _btn_label = "🤖  AI 리포트 생성" if _has_key else "📄  데이터 리�
 if not _has_key:
     st.info("💡 API 키 없이도 수집 데이터 기반 리포트를 볼 수 있습니다. Anthropic/Gemini 키 입력 시 AI 인사이트가 추가됩니다.")
 
+# 캐시에 이번 주차 리포트 있으면 자동 로드 (버튼 없이)
+_report_cache = _load_report_cache()
+if selected_week in _report_cache and "report_md" not in st.session_state:
+    st.session_state["report_md"] = _report_cache[selected_week]
+    st.session_state["report_week"] = selected_week
+    st.caption(f"📦 저장된 리포트 자동 로드 ({selected_week})")
+
 if st.button(_btn_label, type="primary", use_container_width=True, key="run_report"):
     with st.spinner("데이터 통합 중..." if not _has_key else "6개 채널 데이터 통합 분석 중..."):
         krx_text     = _krx_summary(cache, selected_week)
@@ -244,6 +268,7 @@ if st.button(_btn_label, type="primary", use_container_width=True, key="run_repo
 
     st.session_state["report_md"] = report_md
     st.session_state["report_week"] = selected_week
+    _save_report_cache(selected_week, report_md)
 
 if "report_md" in st.session_state:
     st.markdown(f"### {st.session_state['report_week']} 주간 종합 리포트")

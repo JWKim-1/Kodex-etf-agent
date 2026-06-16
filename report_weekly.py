@@ -63,9 +63,27 @@ def _krx_summary(cache: dict, week: str) -> str:
     return "\n".join(rows) if rows else "수급 데이터 없음"
 
 
+def _closest_history_week(history: dict, week: str) -> str:
+    """KRX 주차와 날짜가 가장 가까운 히스토리 주차 반환."""
+    if week in history:
+        return week
+    target = _parse_week_label(week)
+    if not target or not history:
+        return week
+    best, best_diff = week, 999
+    for hw in history:
+        hw_date = _parse_week_label(hw)
+        if hw_date:
+            diff = abs((hw_date - target).days)
+            if diff < best_diff:
+                best, best_diff = hw, diff
+    return best if best_diff <= 7 else week
+
+
 def _history_summary(history: dict, week: str) -> str:
     """해당 주차 4개 세션 마케팅 이벤트 요약 텍스트."""
-    entry = history.get(week, {})
+    matched = _closest_history_week(history, week)
+    entry = history.get(matched, {})
     parts = []
     session_labels = {
         "securities": "증권사 채널",
@@ -91,13 +109,23 @@ def _history_summary(history: dict, week: str) -> str:
     return "\n".join(parts) if parts else "수집 데이터 없음"
 
 
-def _listing_summary(cache: dict) -> str:
+def _listing_summary(cache: dict, selected_week: str = None) -> str:
     result = detect_listing_changes(cache)
-    new_c = [x for x in result["new_listings"] if x["status"] == "confirmed"]
+    cutoff = date.today() - timedelta(days=28)
+
+    def _week_date(x):
+        return _parse_week_label(x.get("week", "")) or date.min
+
+    new_all = [x for x in result["new_listings"] if x["status"] == "confirmed"]
+    new_recent = [x for x in new_all if _week_date(x) >= cutoff]
+    new_older  = [x for x in new_all if _week_date(x) < cutoff]
+
     delist = [x for x in result["delistings"] if x["reason"] in ("delisting_confirmed", "delisting_pending", "maturity_redemption")]
     lines = []
-    if new_c:
-        lines.append(f"신규상장 확정 {len(new_c)}건: " + ", ".join(f"{x['종목명']}({x['week']})" for x in new_c[-5:]))
+    if new_recent:
+        lines.append(f"신규상장 확정 {len(new_recent)}건 (최근 4주): " + ", ".join(f"{x['종목명']}({x['week']})" for x in new_recent))
+    if new_older:
+        lines.append(f"  ↳ 그 외 이전 상장 {len(new_older)}건 (생략)")
     if delist:
         lines.append(f"상폐/만기 {len(delist)}건: " + ", ".join(f"{x['종목명']}[{x['reason']}]" for x in delist[-5:]))
     return "\n".join(lines) if lines else "신규상장/상폐 이슈 없음"
@@ -218,7 +246,7 @@ with st.expander("📂 데이터 소스 미리보기", expanded=False):
         st.text(_krx_summary(cache, selected_week))
     with col_b:
         st.markdown("**신규상장/상폐**")
-        st.text(_listing_summary(cache))
+        st.text(_listing_summary(cache, selected_week))
 
     st.markdown("**채널 이벤트**")
     hist_text = _history_summary(history, selected_week)
@@ -258,7 +286,7 @@ if st.button(_btn_label, type="primary", use_container_width=True, key="run_repo
     with st.spinner("데이터 통합 중..." if not _has_key else "6개 채널 데이터 통합 분석 중..."):
         krx_text     = _krx_summary(cache, selected_week)
         history_text = _history_summary(history, selected_week)
-        listing_text = _listing_summary(cache)
+        listing_text = _listing_summary(cache, selected_week)
 
         if not _has_key:
             report_md = generate_report_no_llm(
@@ -284,8 +312,13 @@ if st.button(_btn_label, type="primary", use_container_width=True, key="run_repo
 
 if "report_md" in st.session_state:
     import markdown as _md_lib
-    _report_html_body = _md_lib.markdown(st.session_state["report_md"], extensions=["tables", "fenced_code"])
-    _report_week_label = st.session_state["report_week"]
+    _report_week_label = st.session_state.get("report_week", selected_week)
+    _report_md = st.session_state["report_md"]
+
+    st.markdown(f"### {_report_week_label} 주간 종합 리포트")
+    st.markdown(_report_md)
+
+    _report_html_body = _md_lib.markdown(_report_md, extensions=["tables", "fenced_code"])
     _full_html = f"""<!DOCTYPE html>
 <html lang="ko"><head><meta charset="utf-8">
 <title>KODEX 주간 리포트 {_report_week_label}</title>
@@ -306,14 +339,6 @@ if "report_md" in st.session_state:
 <h1>KODEX 주간 리포트 — {_report_week_label}</h1>
 {_report_html_body}
 </body></html>"""
-
-    st.markdown(f"### {_report_week_label} 주간 종합 리포트")
-    b64 = __import__("base64").b64encode(_full_html.encode("utf-8")).decode()
-    st.markdown(
-        f'<iframe src="data:text/html;base64,{b64}" width="100%" height="700px" '
-        f'style="border:1px solid #ddd;border-radius:8px;"></iframe>',
-        unsafe_allow_html=True
-    )
 
     st.download_button(
         "📥 HTML 리포트 다운로드",

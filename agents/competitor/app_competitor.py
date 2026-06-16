@@ -360,15 +360,21 @@ def keyword_fallback_competitor(collection_results: dict) -> dict:
 _use_api = anthropic_key or os.getenv("GEMINI_API_KEY","")
 _llm_cache_key = f"comp_llm_{selected_week_lbl}"
 
-# LLM 분석 결과 캐시 자동 로드
-if has_archive(_llm_cache_key):
-    comp_result = load_raw_data(_llm_cache_key)
+# LLM 분석 결과 캐시 자동 로드 (실패 결과는 무시하고 재실행)
+_cached = load_raw_data(_llm_cache_key) if has_archive(_llm_cache_key) else None
+_cache_valid = bool(_cached and _cached.get("marketing_detected") is not False or
+                    (_cached and _cached.get("marketing_detected") is False
+                     and "실패" not in _cached.get("summary", "")))
+
+if _cached and _cache_valid:
+    comp_result = _cached
     st.caption(f"📦 LLM 분석 결과 캐시 사용 ({_llm_cache_key})")
 elif _use_api:
     with st.spinner("LLM으로 경쟁사 마케팅 이벤트 분석 중..."):
         comp_result = extract_competitor_events(collection_results, anthropic_key or "")
     comp_result = _inject_images(comp_result, collection_results)
-    save_raw_data(_llm_cache_key, comp_result)
+    if comp_result.get("marketing_detected") is not None and "실패" not in comp_result.get("summary",""):
+        save_raw_data(_llm_cache_key, comp_result)
 else:
     st.info("💡 API 키 미입력 — 키워드 기반으로 경쟁사 이벤트를 감지합니다. (LLM 보다 정밀도 낮음)")
     comp_result = keyword_fallback_competitor(collection_results)

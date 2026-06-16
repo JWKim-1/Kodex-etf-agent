@@ -698,20 +698,6 @@ if not base_loaded:
     st.info("📊 KRX 데이터 없음 — 랜딩 페이지에서 **'📊 KRX 수집'** 을 먼저 실행하세요. (VPN 필수)")
     st.stop()
 
-# 기존 파일 병합 (호환성 유지)
-if uploaded_new:
-    new_bytes = uploaded_new.read()
-    with st.spinner("신규 파일 병합 중..."):
-        new_sheets = load_excel(new_bytes)
-    added = []
-    for sname, sdf in new_sheets.items():
-        if sname not in all_sheets:
-            all_sheets[sname] = sdf
-            added.append(sname)
-    if added:
-        st.success(f"✅ 신규 시트 추가됨: {', '.join(added)}")
-    else:
-        st.info("신규 파일의 시트가 이미 누적 파일에 있습니다. 중복 제외됨.")
 
 # 참고사항 등 데이터 시트가 아닌 것 제외
 SKIP_SHEETS = {"참고사항", "설명", "readme", "README", "시트설명"}

@@ -230,19 +230,31 @@ with st.expander("📂 데이터 소스 미리보기", expanded=False):
 st.markdown("---")
 
 _has_key = bool(api_key or gemini_key)
-_btn_label = "🤖  AI 리포트 생성" if _has_key else "📄  데이터 리포트 보기 (API 없음)"
-
-if not _has_key:
-    st.info("💡 API 키 없이도 수집 데이터 기반 리포트를 볼 수 있습니다. Anthropic/Gemini 키 입력 시 AI 인사이트가 추가됩니다.")
 
 # 캐시에 이번 주차 리포트 있으면 자동 로드 (버튼 없이)
 _report_cache = _load_report_cache()
-if selected_week in _report_cache and "report_md" not in st.session_state:
+_has_cached = selected_week in _report_cache
+
+if _has_cached and "report_md" not in st.session_state:
     st.session_state["report_md"] = _report_cache[selected_week]
     st.session_state["report_week"] = selected_week
     st.caption(f"📦 저장된 리포트 자동 로드 ({selected_week})")
 
+if _has_key:
+    _btn_label = "🤖  AI 리포트 생성"
+elif _has_cached:
+    _btn_label = "📦  저장된 리포트 불러오기"
+else:
+    _btn_label = "📄  데이터 리포트 보기 (API 없음)"
+    st.info("💡 API 키 없이도 수집 데이터 기반 리포트를 볼 수 있습니다. Anthropic/Gemini 키 입력 시 AI 인사이트가 추가됩니다.")
+
 if st.button(_btn_label, type="primary", use_container_width=True, key="run_report"):
+    # API 키 없고 캐시 있으면 → 캐시 로드만, LLM 폴백 금지
+    if not _has_key and _has_cached:
+        st.session_state["report_md"] = _report_cache[selected_week]
+        st.session_state["report_week"] = selected_week
+        st.rerun()
+
     with st.spinner("데이터 통합 중..." if not _has_key else "6개 채널 데이터 통합 분석 중..."):
         krx_text     = _krx_summary(cache, selected_week)
         history_text = _history_summary(history, selected_week)
@@ -271,13 +283,42 @@ if st.button(_btn_label, type="primary", use_container_width=True, key="run_repo
     _save_report_cache(selected_week, report_md)
 
 if "report_md" in st.session_state:
-    st.markdown(f"### {st.session_state['report_week']} 주간 종합 리포트")
-    st.markdown(st.session_state["report_md"])
+    import markdown as _md_lib
+    _report_html_body = _md_lib.markdown(st.session_state["report_md"], extensions=["tables", "fenced_code"])
+    _report_week_label = st.session_state["report_week"]
+    _full_html = f"""<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>KODEX 주간 리포트 {_report_week_label}</title>
+<style>
+  body {{ font-family: 'Pretendard', 'Noto Sans KR', sans-serif; max-width: 860px; margin: 40px auto; padding: 0 24px; color: #1a1a2e; line-height: 1.7; }}
+  h1 {{ color: #0052ff; border-bottom: 2px solid #0052ff; padding-bottom: 8px; }}
+  h2 {{ color: #1f6feb; margin-top: 32px; }}
+  h3 {{ color: #3b82f6; }}
+  table {{ border-collapse: collapse; width: 100%; margin: 16px 0; }}
+  th {{ background: #0052ff; color: white; padding: 8px 12px; text-align: left; }}
+  td {{ border: 1px solid #dde; padding: 8px 12px; }}
+  tr:nth-child(even) {{ background: #f5f8ff; }}
+  code {{ background: #f0f4ff; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }}
+  pre {{ background: #f0f4ff; padding: 16px; border-radius: 8px; overflow-x: auto; }}
+  blockquote {{ border-left: 4px solid #0052ff; margin: 0; padding-left: 16px; color: #555; }}
+</style></head>
+<body>
+<h1>KODEX 주간 리포트 — {_report_week_label}</h1>
+{_report_html_body}
+</body></html>"""
+
+    st.markdown(f"### {_report_week_label} 주간 종합 리포트")
+    b64 = __import__("base64").b64encode(_full_html.encode("utf-8")).decode()
+    st.markdown(
+        f'<iframe src="data:text/html;base64,{b64}" width="100%" height="700px" '
+        f'style="border:1px solid #ddd;border-radius:8px;"></iframe>',
+        unsafe_allow_html=True
+    )
 
     st.download_button(
-        "📥 리포트 다운로드 (.md)",
-        data=st.session_state["report_md"],
-        file_name=f"kodex_report_{st.session_state['report_week'].replace('.', '-').replace(' ', '')}.md",
-        mime="text/markdown",
+        "📥 HTML 리포트 다운로드",
+        data=_full_html.encode("utf-8"),
+        file_name=f"kodex_report_{_report_week_label.replace('.', '-').replace(' ', '')}.html",
+        mime="text/html",
         use_container_width=True,
     )

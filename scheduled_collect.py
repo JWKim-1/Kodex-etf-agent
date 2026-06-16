@@ -304,6 +304,51 @@ def run():
 
     save_history(history)
 
+    # ── 은행 DiD Step3 사전 계산 → pkl 캐시 저장 ────────────────────────────────
+    try:
+        import pickle as _pickle
+        import importlib.util as _ilu2
+        import pathlib as _pl2
+
+        _pkl_dir = os.path.join(_ROOT, ".did_cache")
+        os.makedirs(_pkl_dir, exist_ok=True)
+        _pkl_name = f"bank_{week_label.replace('.','_').replace('-','_')}.pkl"
+        _pkl_path = os.path.join(_pkl_dir, _pkl_name)
+
+        if not os.path.exists(_pkl_path):
+            logger.info("은행 DiD Step3 사전 계산 시작...")
+            # agents/bank를 sys.path에 추가해야 pickle이 ETFDiDResult를 재임포트 가능
+            _bank_dir = str(_pl2.Path(_ROOT) / "agents" / "bank")
+            if _bank_dir not in sys.path:
+                sys.path.insert(0, _bank_dir)
+            from krx_data_fetcher import load_cache_recent
+            import analyzer as _bank_analyzer_mod
+            MarketingAnalyzer = _bank_analyzer_mod.MarketingAnalyzer
+
+            all_sheets_did = load_cache_recent(25)
+            if all_sheets_did and week_label in all_sheets_did:
+                SKIP = {"참고사항", "설명", "README"}
+                sheet_names_did = [s for s in all_sheets_did if s not in SKIP]
+                # 전체 KODEX ETF 코드 추출 (첫 번째 시트 기준)
+                import pandas as pd
+                _first_df = all_sheets_did[sheet_names_did[0]] if sheet_names_did else None
+                if _first_df is not None:
+                    _code_col = next((c for c in _first_df.columns if "종목" in str(c) or "코드" in str(c)), None)
+                    bank_target_codes_did = _first_df[_code_col].dropna().tolist() if _code_col else []
+                    analyzer_did = MarketingAnalyzer()
+                    summary_did = analyzer_did.analyze(all_sheets_did, bank_target_codes_did, week_label)
+                    with open(_pkl_path, "wb") as _pf:
+                        _pickle.dump(summary_did, _pf)
+                    logger.info(f"은행 DiD pkl 저장 완료: {_pkl_name} ({len(summary_did)}개 ETF)")
+                else:
+                    logger.warning("시트 없음 — DiD 사전 계산 건너뜀")
+            else:
+                logger.warning(f"KRX 캐시에 {week_label} 없음 — DiD 사전 계산 건너뜀 (KRX 수집 먼저)")
+        else:
+            logger.info(f"은행 DiD pkl 이미 존재, 건너뜀: {_pkl_name}")
+    except Exception as e:
+        logger.warning(f"은행 DiD 사전 계산 실패 (무시): {e}")
+
     # ── channel_archive.json 에도 저장 → 앱 자동 로드 지원 ───────────────────
     try:
         from channel_archive import save_channel_results, save_raw_data

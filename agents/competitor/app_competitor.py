@@ -205,35 +205,37 @@ def extract_competitor_events(collection_results: dict, api_key: str) -> dict:
         if not r.success or not r.data: continue
         d = r.data
         label = f"[{r.channel_name}]"
+        ch_lines = []
         if "raw_text" in d:
-            marketing_texts.append(f"{label}\n{d['raw_text'][:600]}")
+            ch_lines.append(d['raw_text'][:300])
         elif "videos" in d:
-            lines = [f"- {v['title']} {v.get('url','')}" for v in d["videos"][:5]]
-            if lines: marketing_texts.append(f"{label}\n" + "\n".join(lines))
+            ch_lines += [f"- {v['title']}" for v in d["videos"][:3]]
         elif "posts" in d:
-            lines = [f"- {p['title']} {p.get('link','')}" for p in d["posts"][:5]]
-            if lines: marketing_texts.append(f"{label}\n" + "\n".join(lines))
+            ch_lines += [f"- {p['title']}" for p in d["posts"][:3]]
         elif "articles" in d:
-            lines = [f"- {a['title']} {a.get('link','')}" for a in d["articles"][:5]]
-            if lines: marketing_texts.append(f"{label}\n" + "\n".join(lines))
-        # event_details: 이미지 URL + 텍스트 모두 수집
+            ch_lines += [f"- {a['title']}" for a in d["articles"][:3]]
         for ev in d.get("event_details", []):
             title = ev.get("title", "")
             url   = ev.get("url", "")
             img   = ev.get("image_url", "")
             if title:
-                lines_ev = [f"- {title}"]
-                if url: lines_ev.append(f"  URL: {url}")
-                marketing_texts.append(f"{label}\n" + "\n".join(lines_ev))
+                ch_lines.append(f"- {title}" + (f" {url}" if url else ""))
             if img and img.startswith("http"):
                 collected_image_urls.append(img)
+        if ch_lines:
+            marketing_texts.append(f"{label}\n" + "\n".join(ch_lines))
 
     if not marketing_texts:
         return {"marketing_detected": False, "events": [], "summary": "수집된 텍스트 없음"}
 
+    # 전체 입력 3000자 이내로 제한 (LLM JSON 오류 방지)
+    combined = "\n\n".join(marketing_texts)
+    if len(combined) > 3000:
+        combined = combined[:3000] + "\n...(이하 생략)"
+
     prompt = f"""다음은 ETF 운용사 채널(KODEX/TIGER/ACE/RISE/HANARO/SOL)에서 수집된 텍스트입니다.
 
-{chr(10).join(marketing_texts)}
+{combined}
 
 [ETF 마케팅 활동 판단 기준]
 포함 (is_etf_marketing=true):
@@ -273,20 +275,33 @@ JSON만 출력:
     try:
         from llm_client import call_llm, call_llm_with_images
         gem_key = os.getenv("GEMINI_API_KEY", "")
+        text = None
         if collected_image_urls:
-            img_note = f"\n\n[첨부 이미지 {len(collected_image_urls)}개: 이벤트 배너 이미지입니다. 이미지에서 이벤트 기간·대상 ETF·혜택 조건을 추가로 추출해주세요.]"
-            text = call_llm_with_images(
-                prompt + img_note,
-                collected_image_urls,
-                anthropic_key=api_key,
-                gemini_key=gem_key,
-                max_tokens=1500,
-            )
-        else:
-            text = call_llm(prompt, anthropic_key=api_key, gemini_key=gem_key, max_tokens=1024)
+            try:
+                img_note = f"\n\n[첨부 이미지 {len(collected_image_urls)}개: 이벤트 배너 이미지입니다.]"
+                text = call_llm_with_images(
+                    prompt + img_note,
+                    collected_image_urls,
+                    anthropic_key=api_key,
+                    gemini_key=gem_key,
+                    max_tokens=1500,
+                )
+            except Exception as img_e:
+                logger.warning(f"이미지 LLM 실패, 텍스트 전용으로 전환: {img_e}")
+                text = None
+        if not text:
+            text = call_llm(prompt, anthropic_key=api_key, gemini_key=gem_key, max_tokens=3000)
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
-            return json.loads(m.group())
+            raw = m.group()
+            try:
+                return json.loads(raw)
+            except json.JSONDecodeError:
+                try:
+                    from json_repair import repair_json
+                    return json.loads(repair_json(raw))
+                except Exception:
+                    pass
     except Exception as e:
         logger.warning(f"경쟁사 LLM 분석 실패: {e}")
 
@@ -362,9 +377,12 @@ _llm_cache_key = f"comp_llm_{selected_week_lbl}"
 
 # LLM 분석 결과 캐시 자동 로드 (실패 결과는 무시하고 재실행)
 _cached = load_raw_data(_llm_cache_key) if has_archive(_llm_cache_key) else None
-_cache_valid = bool(_cached and _cached.get("marketing_detected") is not False or
-                    (_cached and _cached.get("marketing_detected") is False
-                     and "실패" not in _cached.get("summary", "")))
+_cache_valid = bool(
+    _cached and not (
+        _cached.get("marketing_detected") is False
+        and "실패" in _cached.get("summary", "")
+    )
+)
 
 if _cached and _cache_valid:
     comp_result = _cached
@@ -373,8 +391,12 @@ elif _use_api:
     with st.spinner("LLM으로 경쟁사 마케팅 이벤트 분석 중..."):
         comp_result = extract_competitor_events(collection_results, anthropic_key or "")
     comp_result = _inject_images(comp_result, collection_results)
-    if comp_result.get("marketing_detected") is not None and "실패" not in comp_result.get("summary",""):
+    _llm_failed = "실패" in comp_result.get("summary", "")
+    if not _llm_failed and comp_result.get("marketing_detected") is not None:
         save_raw_data(_llm_cache_key, comp_result)
+    elif _llm_failed:
+        st.warning("LLM 호출 실패 — 키워드 기반으로 전환합니다.")
+        comp_result = keyword_fallback_competitor(collection_results)
 else:
     st.info("💡 API 키 미입력 — 키워드 기반으로 경쟁사 이벤트를 감지합니다. (LLM 보다 정밀도 낮음)")
     comp_result = keyword_fallback_competitor(collection_results)
@@ -507,3 +529,4 @@ if st.button("🔄 데이터 새로고침 (재수집)", key="comp_refresh"):
     st.rerun()
 
 st.caption(f"경쟁사 채널 모니터링 · {week_str} · 삼성자산운용 ETF AI Agent")
+

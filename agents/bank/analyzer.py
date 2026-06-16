@@ -506,6 +506,9 @@ class MarketingAnalyzer:
                         did_avg = float(_np.mean(did_history))
                         did_std = float(_np.std(did_history, ddof=1))
                         ALPHA_STD = 0.01  # σ=0일 때 분모 폭발 방지
+                        # σ=0 (16주 내내 거래 없는 ETF) → Z 계산 무의미, 건너뜀
+                        if did_std == 0.0 and result.raw_did_value == 0.0:
+                            continue
                         # 2단계 Z-score: 평소 변동성 대비 이번 주 DiD가 얼마나 튀었나
                         raw_did = result.raw_did_value
                         z_score = (raw_did - did_avg) / (did_std + ALPHA_STD)
@@ -842,13 +845,12 @@ class MarketingAnalyzer:
 
     def _judge(self, z: float):
         # 단위: Z-score = (DiD(t) - 16주평균) / (σ + 0.01)
-        # 은행 채널은 평소 마케팅이 없어 σ 자체가 작음
-        # → Z=1.0이 일반 통계 Z=2.0과 동일한 실질적 의미
+        # 실측 σ = 0.1~2.67 (정상 크기) → 통계 관례 Z≥1.5 적용
         if z >= 2.0:
             return "강한 이상 감지 — 은행 마케팅 거의 확실", "🟢"
-        elif z >= 1.0:
+        elif z >= 1.5:
             return "이상 감지 — 역추적 권고", "🟡"
-        elif z >= -1.0:
+        elif z >= -1.5:
             return "정상 변동 범위", "⚪"
         else:
             return "경쟁사 우위 — 경쟁 마케팅 의심", "🔴"

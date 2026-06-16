@@ -28,25 +28,22 @@ from krx_data_fetcher import (
     load_cache_recent, save_cache,
     fetch_weekly_etf_data, get_week_dates, BASELINE_WEEKS
 )
-import importlib.util
+import importlib.util as _ilu
 
-def _load_module(path, name):
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
+def _load_bank_mod(filename, mod_name):
+    path = os.path.join(ROOT, "agents", "bank", filename)
+    spec = _ilu.spec_from_file_location(mod_name, path)
+    mod = _ilu.module_from_spec(spec)
+    sys.modules[mod_name] = mod
     spec.loader.exec_module(mod)
     return mod
 
-_bank_collector = _load_module(os.path.join(ROOT, "agents", "bank", "collector.py"), "bank_collector")
-_bank_analyzer  = _load_module(os.path.join(ROOT, "agents", "bank", "analyzer.py"),  "bank_analyzer")
+_bank_collector_mod = _load_bank_mod("collector.py", "bank_collector")
+_bank_analyzer_mod  = _load_bank_mod("analyzer.py",  "analyzer")
 
-# pickle이 동적 로드 모듈을 직렬화할 수 있도록 sys.modules에 등록
-import sys as _sys_mod
-_sys_mod.modules.setdefault("bank_collector", _bank_collector)
-_sys_mod.modules.setdefault("bank_analyzer",  _bank_analyzer)
-
-BankChannelCollector = _bank_collector.BankChannelCollector
-CHANNEL_LABELS       = _bank_collector.CHANNEL_LABELS
-BankAnalyzer         = _bank_analyzer.MarketingAnalyzer
+BankChannelCollector = _bank_collector_mod.BankChannelCollector
+CHANNEL_LABELS       = _bank_collector_mod.CHANNEL_LABELS
+BankAnalyzer         = _bank_analyzer_mod.MarketingAnalyzer
 
 # ── 페이지 설정 ───────────────────────────────────────────────────────────────
 st.title("🏦 은행 채널 KODEX ETF 마케팅 효과 측정 Agent")
@@ -361,11 +358,23 @@ if st.session_state.get("bank_did_key") == _cache_key:
     summary = st.session_state.get("bank_did_result", {})
 elif _os.path.exists(_pkl_path):
     # 이전 실행 결과 pickle 복원 — 재계산 없음
-    with open(_pkl_path, "rb") as _f:
-        summary = _pickle.load(_f)
-    st.session_state["bank_did_result"] = summary
-    st.session_state["bank_did_key"] = _cache_key
-    st.caption("💾 이전 분석 결과 복원 (캐시)")
+    try:
+        with open(_pkl_path, "rb") as _f:
+            summary = _pickle.load(_f)
+        st.session_state["bank_did_result"] = summary
+        st.session_state["bank_did_key"] = _cache_key
+        st.caption("💾 이전 분석 결과 복원 (캐시)")
+    except Exception:
+        # 손상된 pkl 삭제 후 재계산
+        _os.remove(_pkl_path)
+        summary = None
+    if summary is None:
+        with st.spinner(f"KODEX ETF {len(bank_target_codes)}개 은행 순매수 DiD 분석 중… (캐시 손상, 재계산)"):
+            summary = analyzer.analyze(all_sheets, bank_target_codes, selected)
+        st.session_state["bank_did_result"] = summary
+        st.session_state["bank_did_key"] = _cache_key
+        with open(_pkl_path, "wb") as _f:
+            _pickle.dump(summary, _f)
 else:
     with st.spinner(f"KODEX ETF {len(bank_target_codes)}개 은행 순매수 DiD 분석 중… (첫 실행만 소요)"):
         summary = analyzer.analyze(all_sheets, bank_target_codes, selected)
@@ -456,45 +465,53 @@ else:
                     )
                 st.markdown(f'<div class="comp-grid">{cards}</div>', unsafe_allow_html=True)
 
-            # 계산 결과 ①②③④
+            # 계산 전 과정 표시
             if not r.no_competitors:
-                ctrl_str = " + ".join(f"{c.change_pct:+.4f}" for c in r.competitors)
-                ctrl_pct_str = " + ".join(f"{int(c.change_pct*100):+d}%" for c in r.competitors)
                 n = len(r.competitors)
                 raw_did = getattr(r, "raw_did_value", r.kodex_change_pct - r.control_avg_pct)
-                z = r.did_value  # 2단계 이후 Z-score
+                z = r.did_value
                 z_label = _z_label(z)
-                formula = (
-                    f"[ 은행 컬럼 · {r.mapping_source} ]\n\n"
-                    f"  ① KODEX 은행변화율   = {r.kodex_change_pct:+.4f}  (≈ {int(r.kodex_change_pct*100):+d}%p)\n"
-                    f"  ② 비교군 {n}개 평균  = ({ctrl_str}) ÷ {n} = {r.control_avg_pct:+.4f}  (≈ {int(r.control_avg_pct*100):+d}%p)\n\n"
-                    f"  ③ 1단계 DiD          = {r.kodex_change_pct:+.4f} − {r.control_avg_pct:+.4f} = {raw_did:+.4f}  (≈ {int(raw_did*100):+d}%p)\n\n"
-                    f"  ④ 2단계 Z-score      = {z:+.4f}  ({z_label})\n"
-                    f"     (이번주 DiD를 16주 평균·표준편차로 표준화)\n\n"
-                    f"  판정  {r.judgement_emoji} {r.judgement}"
-                )
-                st.markdown(f"<div class='formula-box'>{formula}</div>", unsafe_allow_html=True)
 
-            # 단계별 계산 로그 (LP 관련 제외)
-            with st.expander("📋 단계별 계산 로그", expanded=False):
-                log_html = ""
-                icons = {
-                    "[KODEX":"🟦","[베이스라인":"📊","[비교군":"🆚",
-                    "[DiD":"🧮","[2단계":"📐","[판정":"🏁","[최종판정":"🏁",
-                }
+                # calculation_log에서 핵심 라인 추출
+                _log_kodex, _log_base, _log_comp, _log_did, _log_z1, _log_z2, _log_z3 = "", "", "", "", "", "", ""
                 for line in r.calculation_log:
                     if "[LP" in line or "LP 감지" in line: continue
-                    icon = "▸"
-                    for k, v in icons.items():
-                        if line.startswith(k): icon = v; break
-                    color = "#4d9fff" if "KODEX" in line[:15] else \
-                            "#f4a261" if "비교군" in line[:10] else \
-                            "#4ec880" if "판정" in line else \
-                            "#a78bfa" if "2단계" in line[:8] else "inherit"
-                    log_html += (f"<div style='padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);'>"
-                                 f"<span style='opacity:.5;margin-right:6px;'>{icon}</span>"
-                                 f"<span style='color:{color};font-size:0.82rem;font-family:monospace;'>{line}</span></div>")
-                st.markdown(f"<div style='padding:8px;'>{log_html}</div>", unsafe_allow_html=True)
+                    if "[KODEX 순매수]" in line:    _log_kodex = line
+                    elif "[베이스라인]" in line:     _log_base  = line
+                    elif "[비교군 지표]" in line:   _log_comp  = line
+                    elif "[DiD 계산]" in line:      _log_did   = line
+                    elif "DiD 이력:" in line:       _log_z1    = line
+                    elif "16주평균=" in line:        _log_z2    = line
+                    elif "Z = (" in line:           _log_z3    = line
+
+                comp_lines = "\n".join(
+                    f"     {c.provider} {c.name[:20]}: {c.change_pct:+.4f}"
+                    for c in r.competitors
+                )
+                ctrl_str = " + ".join(f"{c.change_pct:+.4f}" for c in r.competitors)
+
+                formula = (
+                    f"[ 은행 컬럼 · {r.mapping_source} ]\n\n"
+                    f"━━ STEP 1 · KODEX 변화율 ━━\n"
+                    + (f"  {_log_kodex}\n" if _log_kodex else "")
+                    + (f"  {_log_base}\n" if _log_base else "")
+                    + f"  ▶ KODEX 변화율 = {r.kodex_change_pct:+.4f}  (≈ {int(r.kodex_change_pct*100):+d}%p)\n\n"
+                    f"━━ STEP 2 · 비교군 변화율 ━━\n"
+                    f"{comp_lines}\n"
+                    + (f"  {_log_comp}\n" if _log_comp else "")
+                    + f"  ▶ 비교군 {n}개 평균 = ({ctrl_str}) ÷ {n} = {r.control_avg_pct:+.4f}  (≈ {int(r.control_avg_pct*100):+d}%p)\n\n"
+                    f"━━ STEP 3 · 1단계 DiD ━━\n"
+                    + (f"  {_log_did}\n" if _log_did else "")
+                    + f"  ▶ DiD = {r.kodex_change_pct:+.4f} − {r.control_avg_pct:+.4f} = {raw_did:+.4f}  (≈ {int(raw_did*100):+d}%p)\n\n"
+                    f"━━ STEP 4 · 2단계 Z-score (16주 이력 표준화) ━━\n"
+                    + (f"  {_log_z1}\n" if _log_z1 else "")
+                    + (f"  {_log_z2}\n" if _log_z2 else "")
+                    + (f"  {_log_z3}\n" if _log_z3 else "")
+                    + f"  ▶ Z-score = {z:+.4f}  ({z_label})\n\n"
+                    f"━━ 판정 ━━\n"
+                    f"  {r.judgement_emoji} {r.judgement}"
+                )
+                st.markdown(f"<div class='formula-box'>{formula}</div>", unsafe_allow_html=True)
 
             if r.notes:
                 st.warning("  |  ".join(r.notes))

@@ -188,8 +188,15 @@ all_kodex_etfs = {
 _mass_llm_arch_key = f"mass_llm_{current_sheet}"
 
 # 캐시에서 LLM 결과 먼저 확인
+_mass_llm_failed = False
 _cached_llm = load_raw_data(_mass_llm_arch_key)
-if _cached_llm:
+_mass_cache_valid = bool(
+    _cached_llm and not (
+        _cached_llm.get("marketing_detected") is False
+        and "실패" in _cached_llm.get("summary", "")
+    )
+)
+if _cached_llm and _mass_cache_valid:
     llm_result = _cached_llm
     st.caption("📦 LLM 분석 결과: 캐시 사용")
 elif anthropic_key:
@@ -198,9 +205,13 @@ elif anthropic_key:
             collection_results, anthropic_key,
             channel_context="ETF 운용사 전체 (KODEX/TIGER/ACE/RISE/HANARO/SOL) — 개인 투자자 대상 ETF 매수 유도 이벤트·프로모션·혜택 (운용사 구분 없이 모든 ETF 마케팅 포함)"
         )
-    if _days_old <= 14:
+    _mass_llm_failed = "실패" in llm_result.get("summary", "")
+    if _mass_llm_failed:
+        st.warning("LLM 호출 실패 — 키워드 기반으로 전환합니다.")
+    elif _days_old <= 14:
         save_raw_data(_mass_llm_arch_key, llm_result)
-else:
+
+if not anthropic_key or _mass_llm_failed:
     _kw_evidence = []
     _kw_etf_codes = []
     _ETF_KW = ["ETF", "KODEX", "이벤트", "프로모션", "혜택", "매수", "출시", "상장", "수익률"]

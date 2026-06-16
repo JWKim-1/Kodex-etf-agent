@@ -500,11 +500,19 @@ JSON만 출력:
     try:
         from llm_client import call_llm
         gem_key = __import__("os").getenv("GEMINI_API_KEY", "")
-        text = call_llm(prompt, anthropic_key=anthropic_api_key, gemini_key=gem_key, max_tokens=512)
+        text = call_llm(prompt, anthropic_key=anthropic_api_key, gemini_key=gem_key, max_tokens=2000)
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
-            return json.loads(m.group())
+            raw = m.group()
+            try:
+                return json.loads(raw)
+            except json.JSONDecodeError:
+                try:
+                    from json_repair import repair_json
+                    return json.loads(repair_json(raw))
+                except Exception:
+                    pass
     except Exception as e:
         logger.warning(f"LLM ETF 추출 실패: {e}")
 
-    return {"marketing_detected": False, "etf_codes": [], "summary": f"LLM 분석 실패: {e}"}
+    return {"marketing_detected": False, "etf_codes": [], "summary": "LLM 분석 실패"}

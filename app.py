@@ -953,8 +953,15 @@ if IS_BACKTEST and not collection_results:
                   "summary": f"{current_sheet} 채널 수집 결과 없음"}
 else:
     _sec_llm_key = f"sec_llm_{current_sheet}"
-    if has_archive(_sec_llm_key):
-        llm_result = load_raw_data(_sec_llm_key)
+    _sec_cached = load_raw_data(_sec_llm_key) if has_archive(_sec_llm_key) else None
+    _sec_cache_valid = bool(
+        _sec_cached and not (
+            _sec_cached.get("marketing_detected") is False
+            and "실패" in _sec_cached.get("summary", "")
+        )
+    )
+    if _sec_cached and _sec_cache_valid:
+        llm_result = _sec_cached
         st.caption(f"📦 LLM 분석 결과 캐시 사용 ({_sec_llm_key})")
     else:
         with st.spinner("LLM 분석 중..."):
@@ -962,7 +969,11 @@ else:
                 llm_result = extract_target_etfs_with_llm(collection_results, anthropic_key)
             else:
                 llm_result = keyword_fallback(collection_results, all_kodex_etfs)
-        if llm_result and llm_result.get("marketing_detected") is not None:
+        _sec_llm_failed = "실패" in llm_result.get("summary", "")
+        if _sec_llm_failed:
+            st.warning("LLM 호출 실패 — 키워드 기반으로 전환합니다.")
+            llm_result = keyword_fallback(collection_results, all_kodex_etfs)
+        if llm_result and llm_result.get("marketing_detected") is not None and not _sec_llm_failed:
             save_raw_data(_sec_llm_key, llm_result)
 
     if llm_result.get("marketing_detected"):
@@ -1489,48 +1500,4 @@ for code, res in did_results.items():
         if res.notes:
             st.warning("  |  ".join(res.notes))
 
-# ════════════════════════════════════════════════════════════════════
-# STEP 6: 리포트 생성 + HTML 내보내기
-# ════════════════════════════════════════════════════════════════════
-st.markdown('<div class="step-header">Step 6 · 주간 리포트 생성</div>', unsafe_allow_html=True)
-
-week_label = current_sheet
-trends_r = collection_results.get("google_trends") if collection_results else None
-trends_data = trends_r.data.get("trends") if (trends_r and trends_r.success and trends_r.data) else None
-
-report_data = build_report(
-    collection_results=collection_results,
-    llm_result=llm_result,
-    did_results=did_results,
-    week_label=week_label,
-    google_trends_data=trends_data,
-)
-
-with st.expander("💡 마케팅 개선 제안", expanded=True):
-    st.markdown(
-        "<div style='text-align:center; padding:24px; opacity:.5;'>"
-        "🔒 추후 출시 예정<br>"
-        "<small>DiD 누적 데이터 기반 LLM 마케팅 제안 자동 생성</small>"
-        "</div>",
-        unsafe_allow_html=True
-    )
-
-html_content = export_html(report_data)
-dl1, dl2 = st.columns(2)
-with dl1:
-    st.download_button("⬇️ HTML 리포트 다운로드", data=html_content.encode("utf-8"),
-                       file_name=f"kodex_report_{week_label}.html", mime="text/html",
-                       type="primary", use_container_width=True)
-with dl2:
-    st.download_button("⬇️ JSON 데이터 다운로드",
-                       data=json.dumps(report_data, ensure_ascii=False, indent=2).encode("utf-8"),
-                       file_name=f"kodex_report_{week_label}.json", mime="application/json",
-                       use_container_width=True)
-
-with st.expander("🌐 HTML 리포트 미리보기", expanded=False):
-    b64 = base64.b64encode(html_content.encode("utf-8")).decode()
-    st.markdown(
-        f'<iframe src="data:text/html;base64,{b64}" width="100%" height="640px" '
-        f'style="border:1px solid #ddd;border-radius:6px;"></iframe>',
-        unsafe_allow_html=True)
 

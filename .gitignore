@@ -6,4 +6,3 @@ __pycache__/
 *.log
 .did_cache/
 *.pkl
-report_cache.json

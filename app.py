@@ -297,6 +297,14 @@ if st.session_state.selected_mode is None:
     .collect-banner-text { flex: 1; }
     .collect-banner-title { font-weight: 700; font-size: 1rem; margin-bottom: 2px; }
     .collect-banner-desc  { font-size: 0.82rem; opacity: .65; }
+    .krx-banner {
+        border: 1px solid rgba(255,170,0,0.35);
+        border-radius: 14px;
+        background: linear-gradient(90deg, rgba(255,170,0,0.06) 0%, rgba(255,80,0,0.04) 100%);
+        padding: 18px 24px;
+        margin-bottom: 8px;
+        display: flex; align-items: center; gap: 16px;
+    }
     </style>
     <div class="collect-banner">
         <div class="collect-banner-icon">🔄</div>
@@ -307,7 +315,7 @@ if st.session_state.selected_mode is None:
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("🔄  전체 수집 시작  —  이번 주 4개 세션 일괄 수집 & 저장", key="btn_collect_all", use_container_width=True):
+    if st.button("🔄  전체 채널 수집  —  증권사·은행·개인·경쟁사 4개 세션 일괄 수집 & 저장", key="btn_collect_all", use_container_width=True):
         import scheduled_collect as _sc
         from datetime import date as _date, timedelta as _td
         _today = _date.today()
@@ -320,6 +328,49 @@ if st.session_state.selected_mode is None:
                 st.success(f"✅ {_lbl} 전체 수집 완료 — 각 세션에서 버튼 없이 결과가 바로 표시됩니다.")
             except Exception as _e:
                 st.error(f"수집 중 오류: {_e}")
+
+    # ── KRX 순매수 데이터 수집 (VPN 필수) ────────────────────────────────────────
+    st.markdown("""
+    <div class="krx-banner">
+        <div class="collect-banner-icon">📊</div>
+        <div class="collect-banner-text">
+            <div class="collect-banner-title">KRX 순매수 데이터 수집</div>
+            <div class="collect-banner-desc">⚠️ VPN 필수 — KRX 망 접속 필요. DiD 분석의 기반 데이터 (주 1회, 금요일 장 마감 후)</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    _krx_id = os.getenv("KRX_ID", "")
+    if _krx_id:
+        from datetime import date as _kdate, timedelta as _ktd
+        _ktoday  = _kdate.today()
+        _kmon    = _ktoday - _ktd(days=_ktoday.weekday())
+        _kfri    = _kmon + _ktd(days=4)
+        _kweeks  = {}
+        for _ki in range(8):
+            _kws = _kmon - _ktd(weeks=_ki)
+            _kwe = _kws + _ktd(days=4)
+            _klbl = f"{_kws.month}.{_kws.day}-{_kwe.month}.{_kwe.day}"
+            _kweeks[_klbl] = (_kws, _kwe)
+        _kcol_w, _kcol_btn = st.columns([3, 1])
+        _ksel = _kcol_w.selectbox("수집 주차", list(_kweeks.keys()), index=0, key="landing_krx_week")
+        _kstart, _kend = _kweeks[_ksel]
+        if _kcol_btn.button("📊 KRX 수집", type="primary", use_container_width=True, key="landing_krx_btn"):
+            try:
+                from krx_data_fetcher import fetch_weekly_etf_data, load_cache, save_cache
+                with st.spinner(f"KRX 수집 중... {_ksel} (수분 소요, VPN 연결 확인)"):
+                    _knew = fetch_weekly_etf_data(_kstart, _kend)
+                if not _knew.empty:
+                    _kexist = load_cache()
+                    _kexist[_ksel] = _knew
+                    save_cache(_kexist)
+                    st.success(f"✅ KRX {_ksel} 수집 완료 — {len(_knew)}개 ETF 저장됨")
+                else:
+                    st.error("수집된 데이터 없음 — VPN 연결 및 날짜 확인")
+            except Exception as _ke:
+                st.error(f"KRX 수집 실패: {_ke}")
+    else:
+        st.warning("KRX 계정 미설정 — `.env`에 `KRX_ID` / `KRX_PW` 를 추가하면 사용 가능합니다.")
 
     st.markdown("<div style='margin:16px 0 4px;'></div>", unsafe_allow_html=True)
     if st.button(
@@ -643,64 +694,8 @@ elif os.path.exists(DEFAULT_EXCEL):
         all_sheets = load_excel_path(DEFAULT_EXCEL)
     base_loaded = True
 
-# ── KRX 직접 수집 (파일 업로드 대체) ────────────────────────────────────────
-st.header("📂 데이터 수집")
-
-krx_id = os.getenv("KRX_ID", "")
-
-from krx_data_fetcher import fetch_weekly_etf_data, get_week_dates
-
-if krx_id:
-    # KRX 계정 있으면 직접 수집 UI — 주차 드롭다운 (캐시에 없는 주차 자동 생성)
-    today = datetime.now().date()
-    monday = today - timedelta(days=today.weekday())
-    friday = monday + timedelta(days=4)
-
-    # 최근 8주 옵션 생성 (이번 주 포함)
-    week_opts = {}
-    for i in range(8):
-        ws = monday - timedelta(weeks=i)
-        we = ws + timedelta(days=4)
-        label = f"{ws.month}.{ws.day}-{we.month}.{we.day}"
-        week_opts[label] = (ws, we)
-    week_labels = list(week_opts.keys())
-
-    col_w, col_btn = st.columns([3, 1])
-    sel_week = col_w.selectbox("수집할 주차", week_labels, index=0, key="krx_week_sel")
-    krx_start, krx_end = week_opts[sel_week]
-
-    if col_btn.button("🔄 KRX 수집", type="primary", use_container_width=True):
-        try:
-            with st.spinner(f"KRX 수집 중... (종목 수에 따라 수분 소요)"):
-                krx_df = fetch_weekly_etf_data(krx_start, krx_end)
-            if not krx_df.empty:
-                week_label = f"{krx_start.month}.{krx_start.day}-{krx_end.month}.{krx_end.day}"
-                all_sheets[week_label] = krx_df
-                base_loaded = True
-                save_cache(all_sheets)  # 자동 저장
-                st.success(f"✅ {week_label} 수집 완료 ({len(krx_df)}개 종목) — 로컬 캐시 저장됨")
-                st.rerun()
-            else:
-                st.error("수집된 데이터 없음")
-        except Exception as e:
-            st.error(f"수집 실패: {e}")
-
-
-elif not base_loaded:
-    # KRX 계정 없고 캐시도 없을 때만 파일 업로드 fallback 노출
-    st.warning("KRX 계정 없음 — `.env`에 `KRX_ID`/`KRX_PW` 설정하면 자동 수집 가능")
-    uploaded_new = st.file_uploader("엑셀 파일 업로드 (임시)", type=["xlsx"])
-    if uploaded_new:
-        file_bytes_base = uploaded_new.read()
-        all_sheets = load_excel(file_bytes_base)
-        base_loaded = True
-# else: 계정은 없지만 캐시 데이터로 base_loaded=True → 안내문 불필요 (공유 클라우드 배포 시)
-
-uploaded_new = None  # 파일 업로드 비활성화
-
 if not base_loaded:
-    if not krx_id:
-        st.info("KRX 계정 설정 또는 파일 업로드 후 분석 가능합니다.")
+    st.info("📊 KRX 데이터 없음 — 랜딩 페이지에서 **'📊 KRX 수집'** 을 먼저 실행하세요. (VPN 필수)")
     st.stop()
 
 # 기존 파일 병합 (호환성 유지)

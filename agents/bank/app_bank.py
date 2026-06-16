@@ -134,35 +134,8 @@ elif os.path.exists(os.path.join(ROOT, "ETF 순매수 데이터_260529.xlsx")):
     base_loaded = True
 
 if not base_loaded:
-    st.warning("데이터 없음 — KRX 수집 후 다시 시도하세요")
+    st.info("📊 KRX 데이터 없음 — 랜딩 페이지에서 **'📊 KRX 수집'** 을 먼저 실행하세요. (VPN 필수)")
     st.stop()
-
-# ── KRX 신규 주차 수집 (매주 금요일 장 마감 후 1회) ──
-with st.expander("🔄 신규 주차 데이터 수집 (매주 1회)", expanded=False):
-    st.caption("매주 금요일 장 마감 후 이번 주 데이터 추가. 수집 후 다음부터는 분석 시작만 누르면 됩니다.")
-    from datetime import date as _date
-    _today = _date.today()
-    _monday = _today - timedelta(days=_today.weekday())
-    _friday = _monday + timedelta(days=4)
-    col_d1, col_d2, col_btn = st.columns([2, 2, 2])
-    krx_start = col_d1.date_input("시작일", value=_monday, key="bank_krx_start")
-    krx_end   = col_d2.date_input("종료일", value=_friday, key="bank_krx_end")
-    if col_btn.button("🔄 KRX 수집", type="primary", use_container_width=True, key="bank_krx_btn"):
-        try:
-            from krx_data_fetcher import fetch_weekly_etf_data, load_cache, save_cache
-            with st.spinner("KRX 수집 중... (수분 소요)"):
-                new_df = fetch_weekly_etf_data(krx_start, krx_end)
-            if not new_df.empty:
-                label = f"{krx_start.month}.{krx_start.day}-{krx_end.month}.{krx_end.day}"
-                existing = load_cache()
-                existing[label] = new_df
-                save_cache(existing)
-                st.success(f"✅ {label} 수집 완료 — {len(new_df)}개 ETF")
-                st.rerun()
-            else:
-                st.warning("수집된 데이터 없음 — 날짜 확인 또는 KRX 세션 재시도")
-        except Exception as e:
-            st.error(f"수집 실패: {e}")
 
 # 주차 선택 — 금요일 이전이면 현재 주차 제외 (불완전 데이터)
 SKIP = {"참고사항", "설명", "README"}

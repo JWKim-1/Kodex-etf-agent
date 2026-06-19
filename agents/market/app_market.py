@@ -368,3 +368,193 @@ if st.button("🔄 데이터 새로고침", key="trend_refresh"):
     st.rerun()
 
 st.caption(f"데이터 출처: 네이버 금융 · {week_str} 기준 · 삼성자산운용 ETF 마케팅 AI Agent")
+
+# ── 전략 매트릭스: 수익률 vs 순매수 ─────────────────────────────────────────
+st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+st.markdown("### 🎯 ETF 전략 매트릭스 — 수익률 × 순매수")
+st.caption("수익률(성과)과 순매수(투자자 유입) 두 축으로 마케팅 전략 방향을 분류합니다.")
+
+# 순매수 데이터 (KRX 캐시)
+_krx_df = krx_sheets.get(selected_week, pd.DataFrame())
+
+if _krx_df.empty:
+    st.info("순매수 데이터 없음 — KRX 캐시가 비어있습니다.")
+else:
+    # 순매수 계산: 금융투자 + 은행 + 개인 합산
+    _num_cols = [c for c in ["금융투자", "은행", "개인"] if c in _krx_df.columns]
+    if not _num_cols:
+        st.info("순매수 컬럼을 찾을 수 없습니다.")
+    else:
+        _krx_df = _krx_df.copy()
+        _krx_df["순매수"] = _krx_df[_num_cols].fillna(0).sum(axis=1)
+        _code_col = "종목코드" if "종목코드" in _krx_df.columns else "단축코드"
+        if "종목코드" not in _krx_df.columns and "단축코드" in _krx_df.columns:
+            _krx_df = _krx_df.rename(columns={"단축코드": "종목코드"})
+        _krx_df["종목코드"] = _krx_df["종목코드"].astype(str).str.strip()
+
+        # 수익률 데이터와 merge
+        _ret_df = df_trend[["종목코드", "종목명", "수익률_pct"]].copy()
+        _ret_df["종목코드"] = _ret_df["종목코드"].astype(str).str.strip()
+        _mx = pd.merge(_krx_df[["종목코드", "순매수"]], _ret_df, on="종목코드", how="inner")
+        _mx = _mx.dropna(subset=["수익률_pct", "순매수"])
+
+        if _mx.empty:
+            st.info("수익률 + 순매수 교집합 데이터가 없습니다.")
+        else:
+            import plotly.graph_objects as go
+
+            # 중앙값 기준 사분면
+            _med_ret = _mx["수익률_pct"].median()
+            _med_net = _mx["순매수"].median()
+
+            def _quadrant(row):
+                r, n = row["수익률_pct"], row["순매수"]
+                if r >= _med_ret and n >= _med_net:  return "⭐ 스타 (유지·강화)"
+                if r >= _med_ret and n <  _med_net:  return "📣 공격적 마케팅 필요"
+                if r <  _med_ret and n >= _med_net:  return "📚 교육형 마케팅"
+                return "🔄 리포지셔닝 검토"
+
+            _mx["전략"] = _mx.apply(_quadrant, axis=1)
+            _mx["is_kodex"] = _mx["종목명"].str.contains("KODEX", case=False, na=False)
+
+            _Q_COLOR = {
+                "⭐ 스타 (유지·강화)":    "#05b169",
+                "📣 공격적 마케팅 필요":  "#4d9fff",
+                "📚 교육형 마케팅":        "#f0c040",
+                "🔄 리포지셔닝 검토":      "#f43f5e",
+            }
+
+            fig_mx = go.Figure()
+
+            # 사분면 배경
+            _x_min, _x_max = _mx["순매수"].min(), _mx["순매수"].max()
+            _y_min, _y_max = _mx["수익률_pct"].min(), _mx["수익률_pct"].max()
+            _xpad = (_x_max - _x_min) * 0.1 or 1e6
+            _ypad = (_y_max - _y_min) * 0.1 or 0.5
+
+            _quad_cfg = [
+                (_med_net, _med_ret, _x_max + _xpad, _y_max + _ypad, "rgba(5,177,105,0.07)",  "⭐ 스타"),
+                (_x_min - _xpad, _med_ret, _med_net, _y_max + _ypad, "rgba(77,159,255,0.07)", "📣 공격적 마케팅"),
+                (_med_net, _y_min - _ypad, _x_max + _xpad, _med_ret, "rgba(240,192,64,0.07)", "📚 교육형"),
+                (_x_min - _xpad, _y_min - _ypad, _med_net, _med_ret, "rgba(244,63,94,0.07)",  "🔄 리포지셔닝"),
+            ]
+            for x0, y0, x1, y1, color, _ in _quad_cfg:
+                fig_mx.add_shape(type="rect", x0=x0, y0=y0, x1=x1, y1=y1,
+                                 fillcolor=color, line_width=0, layer="below")
+
+            # 중앙선
+            fig_mx.add_shape(type="line", x0=_med_net, x1=_med_net,
+                             y0=_y_min - _ypad, y1=_y_max + _ypad,
+                             line=dict(color="rgba(255,255,255,0.2)", width=1, dash="dot"))
+            fig_mx.add_shape(type="line", y0=_med_ret, y1=_med_ret,
+                             x0=_x_min - _xpad, x1=_x_max + _xpad,
+                             line=dict(color="rgba(255,255,255,0.2)", width=1, dash="dot"))
+
+            # 사분면 라벨
+            _lbl_pos = [
+                (_x_max,           _y_max,           "⭐ 스타",         "#05b169", "right", "top"),
+                (_x_min,           _y_max,           "📣 공격적 마케팅", "#4d9fff", "left",  "top"),
+                (_x_max,           _y_min,           "📚 교육형",        "#f0c040", "right", "bottom"),
+                (_x_min,           _y_min,           "🔄 리포지셔닝",    "#f43f5e", "left",  "bottom"),
+            ]
+            for lx, ly, ltxt, lc, xanc, yanc in _lbl_pos:
+                fig_mx.add_annotation(x=lx, y=ly, text=f"<b>{ltxt}</b>",
+                                      showarrow=False, font=dict(size=11, color=lc),
+                                      xanchor=xanc, yanchor=yanc, opacity=0.7)
+
+            # 비KODEX 점 (배경)
+            _bg = _mx[~_mx["is_kodex"]]
+            fig_mx.add_trace(go.Scatter(
+                x=_bg["순매수"], y=_bg["수익률_pct"],
+                mode="markers",
+                marker=dict(size=5, color="rgba(150,150,150,0.25)", line=dict(width=0)),
+                hovertemplate="<b>%{customdata[0]}</b><br>수익률: %{y:.2f}%<br>순매수: %{x:,.0f}만원<extra></extra>",
+                customdata=_bg[["종목명"]].values,
+                name="기타 ETF",
+                showlegend=True,
+            ))
+
+            # KODEX 점 (전략별 색상)
+            _kx = _mx[_mx["is_kodex"]]
+            for strat, color in _Q_COLOR.items():
+                _sub = _kx[_kx["전략"] == strat]
+                if _sub.empty:
+                    continue
+                fig_mx.add_trace(go.Scatter(
+                    x=_sub["순매수"], y=_sub["수익률_pct"],
+                    mode="markers+text",
+                    marker=dict(size=11, color=color,
+                                line=dict(color="rgba(255,255,255,0.5)", width=1.2),
+                                symbol="circle"),
+                    text=_sub["종목명"].str.replace("KODEX ", "", regex=False).str[:10],
+                    textposition="top center",
+                    textfont=dict(size=9, color=color),
+                    hovertemplate=(
+                        "<b>%{customdata[0]}</b><br>"
+                        "수익률: %{y:.2f}%<br>"
+                        "순매수: %{x:,.0f}만원<br>"
+                        f"전략: {strat}<extra></extra>"
+                    ),
+                    customdata=_sub[["종목명"]].values,
+                    name=strat,
+                ))
+
+            fig_mx.update_layout(
+                height=500,
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(20,20,30,0.6)",
+                font=dict(color="#e8eaed", family="Pretendard,sans-serif"),
+                xaxis=dict(
+                    title="순매수 (금융투자+은행+개인, 천원)",
+                    gridcolor="rgba(255,255,255,0.05)",
+                    zerolinecolor="rgba(255,255,255,0.15)",
+                    tickformat=",",
+                ),
+                yaxis=dict(
+                    title="주간 수익률 (%)",
+                    gridcolor="rgba(255,255,255,0.05)",
+                    zerolinecolor="rgba(255,255,255,0.15)",
+                    ticksuffix="%",
+                ),
+                legend=dict(
+                    orientation="h", x=0.5, y=-0.18, xanchor="center",
+                    font=dict(size=11),
+                    bgcolor="rgba(0,0,0,0)",
+                ),
+                margin=dict(t=20, b=60, l=60, r=20),
+                hoverlabel=dict(
+                    bgcolor="rgba(20,20,30,0.92)",
+                    bordercolor="rgba(255,255,255,0.15)",
+                    font=dict(color="#e8eaed"),
+                ),
+            )
+            st.plotly_chart(fig_mx, use_container_width=True)
+
+            # 전략별 요약 카드
+            st.markdown("""
+<style>
+.mx-card { border-radius:12px; padding:12px 16px; margin:6px 0;
+           border:1px solid; font-size:.82rem; }
+.mx-card-title { font-weight:700; font-size:.88rem; margin-bottom:4px; }
+.mx-card-desc  { color:#aaa; line-height:1.5; }
+</style>""", unsafe_allow_html=True)
+
+            _strat_desc = {
+                "⭐ 스타 (유지·강화)":    ("수익률↑ + 순매수↑", "#05b169", "성과도 좋고 투자자 유입도 활발. 현 마케팅 기조 유지 + 브랜드 강화"),
+                "📣 공격적 마케팅 필요":  ("수익률↑ + 순매수↓", "#4d9fff", "성과는 좋은데 투자자가 모름. 인지도 공략 — 광고·채널 확대"),
+                "📚 교육형 마케팅":        ("수익률↓ + 순매수↑", "#f0c040", "사람은 오는데 성과가 아쉬움. 장기투자 가치·전략 교육 콘텐츠"),
+                "🔄 리포지셔닝 검토":      ("수익률↓ + 순매수↓", "#f43f5e", "성과·유입 모두 부진. 전략 재검토 또는 마케팅 축소 고려"),
+            }
+            _cnt_map = _kx["전략"].value_counts()
+            c1, c2, c3, c4 = st.columns(4)
+            for col, (strat, (axis_desc, color, desc)) in zip([c1,c2,c3,c4], _strat_desc.items()):
+                cnt = _cnt_map.get(strat, 0)
+                with col:
+                    st.markdown(
+                        f"""<div class="mx-card" style="border-color:{color}44;background:{color}0d;">
+                        <div class="mx-card-title" style="color:{color};">{strat}</div>
+                        <div style="font-size:.72rem;color:{color}88;margin-bottom:4px;">{axis_desc} · KODEX {cnt}개</div>
+                        <div class="mx-card-desc">{desc}</div>
+                        </div>""",
+                        unsafe_allow_html=True,
+                    )

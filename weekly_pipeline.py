@@ -96,7 +96,7 @@ def step2_did():
         )
         mod = _ilu.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        sec_analyzer = mod.SecuritiesAnalyzer()
+        sec_analyzer = mod.MarketingAnalyzer()
         sec_results = sec_analyzer.analyze(all_sheets, kodex_codes, WEEK_LABEL)
         _save_did(WEEK_LABEL, [
             {"code": c, "name": r.kodex_name, "did": r.raw_did_value if r.raw_did_value else r.did_value,

@@ -505,28 +505,28 @@ class MarketingAnalyzer:
                         import numpy as _np
                         did_avg = float(_np.mean(did_history))
                         did_std = float(_np.std(did_history, ddof=1))
-                        ALPHA_STD = 0.01  # σ=0일 때 분모 폭발 방지
-                        # σ=0 (16주 내내 거래 없는 ETF) → Z 계산 무의미, 건너뜀
                         if did_std == 0.0 and result.raw_did_value == 0.0:
                             continue
-                        # 2단계 Z-score: 평소 변동성 대비 이번 주 DiD가 얼마나 튀었나
                         raw_did = result.raw_did_value
-                        z_score = (raw_did - did_avg) / (did_std + ALPHA_STD)
+                        z_score = (raw_did - did_avg) / (did_std + 0.01)
                         z_score = round(z_score, 4)
+                        score = round(100 / (1 + _np.exp(-z_score * 1.5)), 1)
                         log2_lines = [
                             f"[2단계 Z-score] {WINDOW_2ND}주 DiD 이력: {[round(v,3) for v in did_history[-6:]]} ... ({len(did_history)}주)",
-                            f"[2단계 Z-score] 16주평균={did_avg:+.4f}  σ={did_std:.4f}  α=0.01",
-                            f"[2단계 Z-score] Z = (DiD - 평균) / (σ + α) = ({raw_did:+.4f} - {did_avg:+.4f}) / ({did_std:.4f} + 0.01) = {z_score:+.4f}",
+                            f"[2단계 Z-score] 평균={did_avg:+.4f}  σ={did_std:.4f}",
+                            f"[2단계 Z-score] Z={z_score:+.4f}  점수={score:.1f}",
                         ]
                         for ln in log2_lines:
                             result.notes.append(ln)
                             result.calculation_log.append(ln)
-                        judgement2, emoji2 = self._judge(z_score)
-                        result.did_value = z_score      # 2단계: Z-score로 교체
+                        judgement2, emoji2 = self._judge_score(score)
+                        result.did_value = z_score
+                        result.zscore = z_score
+                        result.marketing_score = score
                         result.judgement = judgement2
                         result.judgement_emoji = emoji2
                         result.calculation_log.append(
-                            f"[최종판정] {emoji2} {judgement2}  (Z={z_score:+.4f}, raw DiD={raw_did:+.4f})"
+                            f"[최종판정] {emoji2} {judgement2}  (Z={z_score:+.4f}, 점수={score:.1f}, raw DiD={raw_did:+.4f})"
                         )
 
                 results[code] = result
@@ -621,6 +621,7 @@ class MarketingAnalyzer:
                 current_fi=cdata.financial_investment, current_ind=cdata.individual,
                 baseline_fi_avg=cb.fi_avg, baseline_ind_avg=cb.ind_avg,
                 metric_used=force_metric,
+                corr=comp.get("corr"),
             ))
 
         # 호환성: TIGER/ACE 별도 추출
@@ -844,16 +845,19 @@ class MarketingAnalyzer:
                 current.individual, baseline.ind_avg, baseline.ind_mabs)
 
     def _judge(self, z: float):
-        # 단위: Z-score = (DiD(t) - 16주평균) / (σ + 0.01)
-        # 실측 σ = 0.1~2.67 (정상 크기) → 통계 관례 Z≥1.5 적용
-        if z >= 2.0:
-            return "강한 이상 감지 — 은행 마케팅 거의 확실", "🟢"
-        elif z >= 1.5:
-            return "이상 감지 — 역추적 권고", "🟡"
-        elif z >= -1.5:
-            return "정상 변동 범위", "⚪"
-        else:
-            return "경쟁사 우위 — 경쟁 마케팅 의심", "🔴"
+        # Z-score 기반 임시 판정 (sigmoid 전 fallback)
+        if z >= 2.0:   return "강한 이상 감지 — 은행 마케팅 거의 확실", "🟢"
+        elif z >= 1.5: return "이상 감지 — 역추적 권고", "🟡"
+        elif z >= -1.5: return "정상 변동 범위", "⚪"
+        else:           return "경쟁사 우위 — 경쟁 마케팅 의심", "🔴"
+
+    def _judge_score(self, score: float):
+        """sigmoid 0~100점 기반 판정 (3채널 공통)."""
+        if score >= 75:   return "마케팅 효과 있음", "🟢"
+        elif score >= 60: return "효과 있을 수 있음", "🟡"
+        elif score >= 40: return "중립", "⚪"
+        elif score >= 25: return "경쟁사 우위", "🔴"
+        else:             return "경쟁사 강세", "🔴"
 
 
 # ── LLM ETF 추출 ──────────────────────────────────────────────────────────────

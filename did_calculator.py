@@ -163,6 +163,7 @@ class CompetitorResult:
     metric_used: str
     fi_mabs: float = 0.0    # 계산식 표시용
     ind_mabs: float = 0.0   # 계산식 표시용
+    corr: Optional[float] = None  # 수익률 상관계수 (매핑 품질)
 
 
 @dataclass
@@ -184,6 +185,9 @@ class ETFDiDResult:
     no_competitors: bool = False
     notes: List[str] = field(default_factory=list)
     calculation_log: List[str] = field(default_factory=list)
+    raw_did_value: float = 0.0       # 1단계 원값 (2단계에서 Z-score로 교체 전 보존)
+    zscore: float = 0.0              # 2단계 Z-score
+    marketing_score: float = 50.0   # sigmoid 0~100점
 
 
 # ── Excel 로더 ────────────────────────────────────────────────────────────────
@@ -292,7 +296,8 @@ class MarketingAnalyzerBase:
     서브클래스에서 TARGET_COLUMN, BASELINE_WEEKS, USE_LP_DETECTION 오버라이드.
     """
     TARGET_COLUMN: str = "financial"   # "financial" | "individual"
-    BASELINE_WEEKS: int = 4
+    BASELINE_WEEKS: int = 8
+    ZSCORE_WINDOW: int = 15
     USE_LP_DETECTION: bool = True      # 개인 컬럼은 LP 없으므로 False
     CHANNEL_TYPE: str = "securities"   # did_history 저장용
 
@@ -359,6 +364,26 @@ class MarketingAnalyzerBase:
                      lp: LPResult) -> float:
         metric = "individual" if self.TARGET_COLUMN == "individual" else lp.use_metric
         return self._change_rate_by_metric(current, baseline, metric)
+
+    def _compute_zscore_score(self, did_value: float, did_history: list):
+        """2단계 Z-score + sigmoid 0~100점. (z, score) 반환. 이력 부족 시 (None, 50.0)."""
+        if len(did_history) < 4:
+            return None, 50.0
+        mu = float(np.mean(did_history))
+        sigma = float(np.std(did_history, ddof=1))
+        if sigma < 1e-9:
+            return 0.0, 50.0
+        z = round((did_value - mu) / sigma, 4)
+        score = round(100 / (1 + np.exp(-z * 1.5)), 1)
+        return z, score
+
+    def _judge_score(self, score: float):
+        """sigmoid 점수 기반 판정."""
+        if score >= 75:   return "마케팅 효과 있음", "🟢"
+        elif score >= 60: return "효과 있을 수 있음", "🟡"
+        elif score >= 40: return "중립", "⚪"
+        elif score >= 25: return "경쟁사 우위", "🔴"
+        else:             return "경쟁사 강세", "🔴"
 
 
 # ── LLM ETF 추출 (공용) ──────────────────────────────────────────────────────

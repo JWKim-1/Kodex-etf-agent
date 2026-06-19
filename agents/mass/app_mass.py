@@ -446,9 +446,12 @@ if not did_results:
     st.warning("DiD 계산 결과 없음")
     st.stop()
 
-def did_pct(v):
-    if v is None: return "N/A"
-    return f"{v*100:+.1f}%"
+def _score_label_m(res) -> str:
+    score = getattr(res, 'marketing_score', 50.0)
+    z = getattr(res, 'zscore', 0.0)
+    if z != 0.0 or score != 50.0:
+        return f"{score:.0f}점"
+    return "산출중"
 
 color_map = {"🟢":"#28a745","🟡":"#ffc107","⚪":"#6c757d","🔴":"#dc3545","⚫":"#343a40"}
 
@@ -460,48 +463,46 @@ for col, (code, res) in zip(summary_cols, did_results.items()):
             f"<div style='border:2px solid {c};border-radius:8px;padding:14px;text-align:center;'>"
             f"<div style='font-size:2rem;'>{res.judgement_emoji}</div>"
             f"<div style='font-weight:700;font-size:0.85rem;'>{res.kodex_name}</div>"
-            f"<div style='font-size:1.4rem;font-weight:800;color:{c};'>{did_pct(res.did_value)}</div>"
+            f"<div style='font-size:1.4rem;font-weight:800;color:{c};'>{_score_label_m(res)}</div>"
             f"<div style='font-size:0.78rem;color:#555;'>{res.judgement}</div>"
             f"</div>", unsafe_allow_html=True)
 
 st.markdown("")
 
 etf_names_did = [r.kodex_name for r in did_results.values()]
-did_vals       = [r.did_value for r in did_results.values()]
-bar_colors     = [color_map.get(r.judgement_emoji, "#6c757d") for r in did_results.values()]
-short_names    = [n.replace("KODEX ", "") for n in etf_names_did]
-did_pct_vals   = [v * 100 for v in did_vals]
+score_vals    = [getattr(r, 'marketing_score', 50.0) for r in did_results.values()]
+zscore_vals   = [getattr(r, 'zscore', 0.0) for r in did_results.values()]
+bar_colors    = [color_map.get(r.judgement_emoji, "#6c757d") for r in did_results.values()]
+short_names   = [n.replace("KODEX ", "") for n in etf_names_did]
 
 fig_did = go.Figure()
-for name, short, val_raw, val_pct, color in zip(etf_names_did, short_names, did_vals, did_pct_vals, bar_colors):
-    label = f"{val_pct:+.0f}%"
-    tpos = "inside" if val_pct < -20 else "outside"
+for name, short, score, z, color in zip(etf_names_did, short_names, score_vals, zscore_vals, bar_colors):
+    label = f"{score:.0f}점"
     fig_did.add_trace(go.Bar(
-        y=[short], x=[val_pct],
+        y=[short], x=[score],
         orientation="h",
         marker_color=color,
         marker_line_width=0,
         text=label,
-        textposition=tpos,
+        textposition="outside",
         textfont=dict(size=12, color="white"),
-        hovertemplate=f"<b>{name}</b><br>평소 대비 {val_pct:+.0f}%<br>(DiD={val_raw:+.3f})<extra></extra>",
+        hovertemplate=f"<b>{name}</b><br>마케팅 점수: {score:.1f}점<br>Z-score: {z:+.3f}<extra></extra>",
         showlegend=False,
     ))
 
-_max_abs = max(abs(v) for v in did_pct_vals) if did_pct_vals else 100
-_x_range = max(_max_abs * 1.3, 120)
-fig_did.add_vline(x=0,    line_dash="solid", line_color="rgba(200,200,200,0.5)", line_width=1.5)
-fig_did.add_vline(x=100,  line_dash="dot",   line_color="#28a745", line_width=1.5,
-                  annotation=dict(text="+100%", font_color="#28a745", font_size=10, y=1.08))
-fig_did.add_vline(x=30,   line_dash="dot",   line_color="#ffc107", line_width=1.5,
-                  annotation=dict(text="+30%", font_color="#ffc107", font_size=10, y=1.08))
-fig_did.add_vline(x=-30,  line_dash="dot",   line_color="#dc3545", line_width=1.5,
-                  annotation=dict(text="-30%", font_color="#dc3545", font_size=10, y=1.08))
+fig_did.add_vline(x=75, line_dash="dot", line_color="#28a745", line_width=1.5,
+                  annotation=dict(text="75 효과있음", font_color="#28a745", font_size=10, y=1.08))
+fig_did.add_vline(x=60, line_dash="dot", line_color="#ffc107", line_width=1.5,
+                  annotation=dict(text="60 가능성", font_color="#ffc107", font_size=10, y=1.08))
+fig_did.add_vline(x=40, line_dash="dot", line_color="#6c757d", line_width=1.5,
+                  annotation=dict(text="40 중립", font_color="#aaa", font_size=10, y=1.08))
+fig_did.add_vline(x=25, line_dash="dot", line_color="#dc3545", line_width=1.5,
+                  annotation=dict(text="25 경쟁사↑", font_color="#dc3545", font_size=10, y=1.08))
 fig_did.update_layout(
-    title="📊 개인 순매수 DiD 결과 (평소 대비 변화율)",
+    title="📊 개인 채널 마케팅 점수 (0~100)",
     template="plotly_dark",
     height=max(200, 80 * len(did_results) + 100),
-    xaxis=dict(title="변화율 (%)", range=[-_x_range, _x_range], zeroline=False),
+    xaxis=dict(title="마케팅 점수 (0~100)", range=[0, 115], zeroline=False),
     yaxis=dict(autorange="reversed"),
     margin=dict(t=60, b=40, l=10, r=60),
     bargap=0.3,

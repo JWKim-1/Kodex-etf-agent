@@ -454,11 +454,15 @@ class DataCollector:
                 videos = []
                 for item in search.get("items", []):
                     vid_id = item["id"].get("videoId", "")
-                    title = item.get("snippet", {}).get("title", "")
-                    pub = item.get("snippet", {}).get("publishedAt", "")
+                    snip = item.get("snippet", {})
+                    title = snip.get("title", "")
+                    pub = snip.get("publishedAt", "")
+                    thumb = (snip.get("thumbnails", {}).get("medium", {}).get("url")
+                             or f"https://img.youtube.com/vi/{vid_id}/mqdefault.jpg")
                     is_etf = bool(re.search(r"ETF|KODEX|TIGER|코덱스|배당|채권|지수|리츠|반도체|AI", title, re.I))
                     videos.append({"title": title, "published_at": pub, "is_etf_related": is_etf,
-                                   "url": f"https://youtu.be/{vid_id}"})
+                                   "url": f"https://youtu.be/{vid_id}",
+                                   "thumbnail": thumb})
                 return ChannelResult(ch, name, True, data={"source": "api", "videos": videos})
             except Exception as e:
                 logger.warning(f"YouTube API 실패 → RSS: {e}")
@@ -493,11 +497,15 @@ class DataCollector:
                         pass  # 자막 없으면 제목으로만 판단
 
                 is_etf = is_etf_title
+                vid_id_rss = (vid_url.split("v=")[-1].split("&")[0]
+                              if "v=" in vid_url else vid_url.split("/")[-1])
+                thumb_rss = f"https://img.youtube.com/vi/{vid_id_rss}/mqdefault.jpg" if vid_id_rss else ""
                 videos.append({
                     "title": title,
                     "published_at": pub_str,
                     "is_etf_related": is_etf,
                     "url": vid_url,
+                    "thumbnail": thumb_rss,
                     "transcript": transcript_text[:500] if transcript_text else "",
                 })
             week_info = f"{self.week_start.strftime('%m/%d')}~{self.week_end.strftime('%m/%d')}" if self.week_start else "최근 7일"

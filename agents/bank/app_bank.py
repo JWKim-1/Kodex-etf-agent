@@ -399,21 +399,18 @@ else:
     c_map = {"🟢":"#28a745","🟡":"#ffc107","⚪":"#6c757d","🔴":"#dc3545","⚫":"#343a40"}
     provider_colors = {"TIGER":"#f4a261","ACE":"#e76f51","PLUS":"#2a9d8f","SOL":"#e9c46a","RISE":"#6b9fff","HANARO":"#a78bfa"}
 
-    sorted_results = sorted(did_results, key=lambda x: abs(x.did_value), reverse=True)
-    spikes    = [r for r in sorted_results if abs(r.did_value) >= 1.0]
-    normals   = [r for r in sorted_results if abs(r.did_value) < 1.0]
+    def _score_label(r) -> str:
+        score = getattr(r, 'marketing_score', 50.0)
+        z = getattr(r, 'zscore', r.did_value)
+        return f"{score:.0f}점 (Z={z:+.2f})"
 
-    def _z_label(z: float) -> str:
-        """Z-score → 직관적 설명"""
-        if z >= 2.0:    return f"Z={z:+.2f} — 평소 변동성의 {z:.1f}배 🔺"
-        elif z >= 1.0:  return f"Z={z:+.2f} — 이례적 상승 ⚠️"
-        elif z <= -2.0: return f"Z={z:+.2f} — 경쟁사 대비 {abs(z):.1f}배 부진 🔻"
-        elif z <= -1.0: return f"Z={z:+.2f} — 경쟁사 우위"
-        else:           return f"Z={z:+.2f} — 정상 범위"
+    sorted_results = sorted(did_results, key=lambda x: getattr(x, 'marketing_score', 50.0), reverse=True)
+    spikes    = [r for r in sorted_results if getattr(r, 'marketing_score', 50.0) >= 75 or getattr(r, 'marketing_score', 50.0) <= 25]
+    normals   = [r for r in sorted_results if r not in spikes]
 
     # ── 이상 감지 ETF 카드 ──
     if spikes:
-        st.markdown(f"**⚡ 이상 감지: {len(spikes)}개** (평소 변동의 1배 이상)")
+        st.markdown(f"**⚡ 이상 감지: {len(spikes)}개** (점수 75점 이상 또는 25점 이하)")
         cols = st.columns(min(len(spikes), 4))
         for col, r in zip(cols, spikes):
             c = c_map.get(r.judgement_emoji, "#6c757d")
@@ -422,7 +419,7 @@ else:
                     f"<div style='border:2px solid {c};border-radius:8px;padding:14px;text-align:center;'>"
                     f"<div style='font-size:2rem;'>{r.judgement_emoji}</div>"
                     f"<div style='font-weight:700;font-size:0.85rem;'>{r.kodex_name}</div>"
-                    f"<div class='did-result' style='color:{c};font-size:1rem;'>{_z_label(r.did_value)}</div>"
+                    f"<div class='did-result' style='color:{c};font-size:1rem;'>{_score_label(r)}</div>"
                     f"</div>", unsafe_allow_html=True)
     else:
         st.info("이번 주 이상 변동 없음 — 모든 KODEX ETF 정상 범위")
@@ -433,18 +430,20 @@ else:
     for r in spikes:
         border_c = c_map.get(r.judgement_emoji, "#6c757d")
         with st.expander(
-            f"{r.judgement_emoji} {r.kodex_name}  |  {_z_label(r.did_value)}  —  {r.judgement}",
+            f"{r.judgement_emoji} {r.kodex_name}  |  {_score_label(r)}  —  {r.judgement}",
             expanded=False
         ):
             c1, c2, c3 = st.columns(3)
             c1.metric("KODEX 은행 변화율", f"{int(r.kodex_change_pct*100):+d}%")
             c2.metric("비교군 평균", f"{int(r.control_avg_pct*100):+d}%" if not r.no_competitors else "N/A")
-            c3.metric("평소 대비 이상 정도", _z_label(r.did_value),
-                      delta_color="normal" if r.did_value >= 1.0 else ("off" if r.did_value >= -1.0 else "inverse"))
+            _score_b = getattr(r, 'marketing_score', 50.0)
+            c3.metric("마케팅 점수 (0~100)", f"{_score_b:.0f}점",
+                      delta=r.judgement,
+                      delta_color="normal" if _score_b >= 60 else ("off" if _score_b >= 40 else "inverse"))
 
             bw = r.baseline.weeks_used
-            if bw < 4:
-                st.warning(f"⚠️ 베이스라인 {bw}주만 확보 — 신규 상장 ETF. {4-bw}주 더 쌓이면 정상화됩니다.")
+            if bw < 8:
+                st.warning(f"⚠️ 베이스라인 {bw}주만 확보 — 신규 상장 ETF. {8-bw}주 더 쌓이면 정상화됩니다.")
 
             st.divider()
 
@@ -461,7 +460,9 @@ else:
                         f'<div style="font-size:.68rem;color:{c};font-weight:700;">{comp.provider}</div>'
                         f'<div style="font-size:.95rem;font-weight:700;color:#e8eaed;">{short2}</div>'
                         f'<div style="font-size:1.1rem;font-weight:700;color:{c};font-family:monospace;">'
-                        f'{int(comp.change_pct*100):+d}%</div></div>'
+                        f'{int(comp.change_pct*100):+d}%</div>'
+                        + (f'<div style="font-size:.65rem;color:#888;margin-top:4px;">r={comp.corr:.3f}</div>' if comp.corr is not None else '')
+                        + '</div>'
                     )
                 st.markdown(f'<div class="comp-grid">{cards}</div>', unsafe_allow_html=True)
 
@@ -469,8 +470,9 @@ else:
             if not r.no_competitors:
                 n = len(r.competitors)
                 raw_did = getattr(r, "raw_did_value", r.kodex_change_pct - r.control_avg_pct)
-                z = r.did_value
-                z_label = _z_label(z)
+                z = getattr(r, 'zscore', r.did_value)
+                score_b = getattr(r, 'marketing_score', 50.0)
+                z_label = f"{score_b:.0f}점 (Z={z:+.2f})"
 
                 # calculation_log에서 핵심 라인 추출
                 _log_kodex, _log_base, _log_comp, _log_did, _log_z1, _log_z2, _log_z3 = "", "", "", "", "", "", ""
@@ -528,7 +530,7 @@ else:
                     "KODEX 변화율": f"{int(r.kodex_change_pct*100):+d}%",
                     "비교군": comp_names if comp_names else "없음",
                     "비교군 변화율": f"{int(r.control_avg_pct*100):+d}%",
-                    "이상 정도": _z_label(r.did_value),
+                    "점수": f"{getattr(r, 'marketing_score', 50.0):.0f}점 (Z={getattr(r, 'zscore', 0.0):+.2f})",
                     "매핑": r.mapping_source,
                 })
             st.dataframe(pd.DataFrame(rows), use_container_width=True)
@@ -538,8 +540,8 @@ else:
 # ══════════════════════════════════════════════════════════════════
 st.markdown('<div class="step-header">Step 5 · 주간 요약</div>', unsafe_allow_html=True)
 
-spikes = [r for r in did_results if abs(r.did_value) >= 1.0]  # 카드/테이블과 동일 기준
-spike_names = [r.kodex_name for r in sorted(spikes, key=lambda x: abs(x.did_value), reverse=True)[:3]]
+spikes = [r for r in did_results if getattr(r, 'marketing_score', 50.0) >= 75 or getattr(r, 'marketing_score', 50.0) <= 25]
+spike_names = [r.kodex_name for r in sorted(spikes, key=lambda x: abs(getattr(x, 'marketing_score', 50.0) - 50), reverse=True)[:3]]
 
 st.markdown(f"**분석 주차:** {selected}")
 st.markdown(f"**분석 ETF 수:** {len(did_results)}개")

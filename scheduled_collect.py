@@ -231,15 +231,27 @@ def run():
         raw = {}
         for k, r in results.items():
             d = getattr(r, "data", {}) or {}
+            videos = d.get("videos", [])
             raw[k] = {
                 "channel_name": getattr(r, "channel_name", k),
                 "success": getattr(r, "success", getattr(r, "detected", False)),
                 "snippet": (
                     d.get("raw_text", "")[:300] or
-                    " / ".join(v.get("title","") for v in d.get("videos",[])[:3]) or
+                    " / ".join(v.get("title","") for v in videos[:3]) or
                     " / ".join(a.get("title","") for a in d.get("articles",[])[:3]) or
                     " / ".join(e.get("title","") for e in d.get("event_details",[])[:3]) or ""
-                )
+                ),
+                # 유튜브 영상 목록 (썸네일 + 제목 표시용)
+                "videos": [
+                    {
+                        "title": v.get("title", ""),
+                        "url": v.get("url", ""),
+                        "thumbnail": v.get("thumbnail", ""),
+                        "published_at": v.get("published_at", ""),
+                        "is_etf_related": v.get("is_etf_related", False),
+                    }
+                    for v in videos[:10]
+                ] if videos else [],
             }
         return raw
 

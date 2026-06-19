@@ -68,6 +68,9 @@ def build_report(
             "judgement": res.judgement,
             "judgement_emoji": res.judgement_emoji,
             "did_value": res.did_value,
+            "raw_did_value": getattr(res, 'raw_did_value', res.did_value),
+            "zscore": getattr(res, 'zscore', 0.0),
+            "marketing_score": getattr(res, 'marketing_score', 50.0),
             "kodex_change_pct": res.kodex_change_pct,
             "tiger_change_pct": res.tiger_change_pct,
             "ace_change_pct": res.ace_change_pct,
@@ -134,12 +137,16 @@ def _build_checkpoints(did_results: Dict[str, ETFDiDResult], llm_result: Dict) -
     for code, res in did_results.items():
         if res.lp.suspicious:
             pts.append(f"⚠️ {res.kodex_name}: LP 개입 여부 추가 확인 필요 (z={res.lp.z_score})")
-        if res.did_value >= 0.3:
-            pts.append(f"✅ {res.kodex_name}: 마케팅 효과 감지 (DiD={res.did_value:+.2f}) — 다음 주 지속 여부 추적")
-        if res.did_value < -0.3:
-            pts.append(f"🔴 {res.kodex_name}: 유의미한 효과 확인 어려움 — 추가 확인 필요")
-        if res.baseline.weeks_used < 4:
-            pts.append(f"📊 {res.kodex_name}: 베이스라인 데이터 {res.baseline.weeks_used}주만 확보 — 4주 이상 축적 필요")
+        score = getattr(res, 'marketing_score', 50.0)
+        z = getattr(res, 'zscore', 0.0)
+        if score >= 75:
+            pts.append(f"✅ {res.kodex_name}: 마케팅 효과 감지 (점수={score:.0f}, Z={z:+.2f}) — 다음 주 지속 여부 추적")
+        elif score >= 60:
+            pts.append(f"🟡 {res.kodex_name}: 효과 있을 수 있음 (점수={score:.0f}) — 지속 모니터링")
+        if score < 25:
+            pts.append(f"🔴 {res.kodex_name}: 경쟁사 강세 (점수={score:.0f}) — 추가 확인 필요")
+        if res.baseline.weeks_used < 8:
+            pts.append(f"📊 {res.kodex_name}: 베이스라인 데이터 {res.baseline.weeks_used}주만 확보 — 8주 이상 축적 필요")
     if not llm_result.get("marketing_detected"):
         pts.append("📋 이번 주 마케팅 활동 미감지 — 베이스라인만 업데이트됨")
     if not pts:
@@ -266,13 +273,13 @@ def export_html(report: Dict) -> str:
     # DiD 테이블
     did_rows = ""
     for e in report["etf_reports"]:
-        did = e["did_value"]
-        # 새 판정 기준: 정규화 절대 변화 (≥1.0 강함 / ≥0.3 효과있음 / ≥-0.3 불분명 / <-0.3 어려움)
-        if did >= 1.0:
+        score = e.get("marketing_score", 50.0)
+        z = e.get("zscore", 0.0)
+        if score >= 75:
             cls = "did-strong"
-        elif did >= 0.3:
+        elif score >= 60:
             cls = "did-medium"
-        elif did >= -0.3:
+        elif score >= 40:
             cls = "did-neutral"
         else:
             cls = "did-neg"
@@ -286,7 +293,6 @@ def export_html(report: Dict) -> str:
             "low": '<span class="badge badge-red">신뢰도 低</span>',
         }.get(e["lp"]["reliability"], "")
 
-        # 비교군 변화율 (소수점 4자리, 단위 없음)
         tiger = f'{e["tiger_change_pct"]:+.4f}' if e["tiger_change_pct"] is not None else "N/A"
         ace   = f'{e["ace_change_pct"]:+.4f}'   if e["ace_change_pct"]   is not None else "N/A"
 
@@ -297,7 +303,8 @@ def export_html(report: Dict) -> str:
             f'<td>{tiger}</td>'
             f'<td>{ace}</td>'
             f'<td>{e["control_avg_pct"]:+.4f}</td>'
-            f'<td class="{cls}"><strong>{did:+.4f}</strong></td>'
+            f'<td class="{cls}"><strong>{score:.1f}점</strong></td>'
+            f'<td style="font-size:.85rem;">Z={z:+.2f}</td>'
             f'<td>{e["judgement"]}</td>'
             f'<td>{rel_badge}</td>'
             f'</tr>'
@@ -306,11 +313,11 @@ def export_html(report: Dict) -> str:
     did_table = (
         f'<table>'
         f'<tr><th>ETF</th><th>KODEX 변화율</th><th>TIGER</th><th>ACE</th>'
-        f'<th>비교군 평균</th><th>DiD</th><th>판정</th><th>신뢰도</th></tr>'
+        f'<th>비교군 평균</th><th>마케팅 점수</th><th>Z-score</th><th>판정</th><th>신뢰도</th></tr>'
         f'{did_rows}'
         f'</table>'
         f'<p style="font-size:.8rem;margin-top:6px;opacity:.7;">'
-        f'※ 변화율 단위: 정규화 절대 변화 (≥1.0 강함 / ≥0.3 효과있음 / ≥-0.3 불분명 / &lt;-0.3 효과 확인 어려움)'
+        f'※ 마케팅 점수: sigmoid(Z×1.5)×100 — ≥75점: 효과있음 / ≥60점: 가능성 / ≥40점: 중립 / &lt;40점: 경쟁사 우위'
         f'</p>'
     )
 

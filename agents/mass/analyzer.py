@@ -30,11 +30,12 @@ logger = logging.getLogger(__name__)
 
 class MassAnalyzer(MarketingAnalyzerBase):
     """
-    대고객 디지털 채널: 개인 컬럼, 4주 베이스라인, LP 감지 없음.
+    대고객 디지털 채널: 개인 컬럼, 8주 베이스라인, LP 감지 없음.
     삼성자산운용이 직접 소비자에게 하는 마케팅 효과 측정.
     """
     TARGET_COLUMN = "individual"   # 개인 순매수
-    BASELINE_WEEKS = 4
+    BASELINE_WEEKS = 8
+    ZSCORE_WINDOW = 15
     USE_LP_DETECTION = False       # 개인 컬럼은 LP 노이즈 구조적으로 없음
     CHANNEL_TYPE = "mass"
 
@@ -62,6 +63,27 @@ class MassAnalyzer(MarketingAnalyzerBase):
                 current_sheet_name, etf_universe
             )
             if result:
+                # ── 2단계: Z-score + sigmoid 점수 ──
+                if not result.no_competitors:
+                    did_history = []
+                    for hw in list(history_sheets.keys())[-self.ZSCORE_WINDOW:]:
+                        hidx = sheet_names.index(hw)
+                        hhistory = {k: all_sheets[k] for k in sheet_names[:hidx]}
+                        hres = self._analyze_one(code, kodex_name, hhistory, all_sheets[hw], hw, etf_universe)
+                        if hres and not hres.no_competitors:
+                            did_history.append(hres.did_value)
+                    z, score = self._compute_zscore_score(result.did_value, did_history)
+                    if z is not None:
+                        result.raw_did_value = result.did_value
+                        result.zscore = z
+                        result.marketing_score = score
+                        result.did_value = z
+                        j, e = self._judge_score(score)
+                        result.judgement = j
+                        result.judgement_emoji = e
+                        result.calculation_log.append(
+                            f"[2단계 Z-score] 이력 {len(did_history)}주  Z={z:+.4f}  점수={score:.1f}"
+                        )
                 results[code] = result
 
         # DiD 결과 누적 저장
@@ -133,6 +155,7 @@ class MassAnalyzer(MarketingAnalyzerBase):
                 current_fi=cdata.financial_investment, current_ind=cdata.individual,
                 baseline_fi_avg=cb.fi_avg, baseline_ind_avg=cb.ind_avg,
                 metric_used="individual",
+                corr=comp.get("corr"),
             ))
             if comp.get("provider") == "TIGER": tiger_chg = cchg
             elif comp.get("provider") in ("ACE", "PLUS"): ace_chg = cchg

@@ -50,9 +50,10 @@ ALL_KNOWN_CODES = set(COMPARISON_MAP.keys()) | {
 
 
 class MarketingAnalyzer(MarketingAnalyzerBase):
-    """증권사 채널: 금융투자 컬럼, 4주 베이스라인, LP 감지 포함."""
+    """증권사 채널: 금융투자 컬럼, 8주 베이스라인, LP 감지 포함."""
     TARGET_COLUMN = "financial"
-    BASELINE_WEEKS = 4
+    BASELINE_WEEKS = 8
+    ZSCORE_WINDOW = 15
     USE_LP_DETECTION = True
     CHANNEL_TYPE = "securities"
 
@@ -85,6 +86,27 @@ class MarketingAnalyzer(MarketingAnalyzerBase):
                 current_sheet_name, etf_universe
             )
             if result:
+                # ── 2단계: Z-score + sigmoid 점수 ──
+                if not result.no_competitors:
+                    did_history = []
+                    for hw in list(history_sheets.keys())[-self.ZSCORE_WINDOW:]:
+                        hidx = sheet_names.index(hw)
+                        hhistory = {k: all_sheets[k] for k in sheet_names[:hidx]}
+                        hres = self._analyze_one(code, kodex_name, hhistory, all_sheets[hw], hw, etf_universe)
+                        if hres and not hres.no_competitors:
+                            did_history.append(hres.did_value)
+                    z, score = self._compute_zscore_score(result.did_value, did_history)
+                    if z is not None:
+                        result.raw_did_value = result.did_value
+                        result.zscore = z
+                        result.marketing_score = score
+                        result.did_value = z
+                        j, e = self._judge_score(score)
+                        result.judgement = j
+                        result.judgement_emoji = e
+                        result.calculation_log.append(
+                            f"[2단계 Z-score] 이력 {len(did_history)}주  Z={z:+.4f}  점수={score:.1f}"
+                        )
                 results[code] = result
 
         # ── DiD 결과 누적 저장 ──
@@ -191,6 +213,7 @@ class MarketingAnalyzer(MarketingAnalyzerBase):
                 baseline_fi_avg=cb.fi_avg, baseline_ind_avg=cb.ind_avg,
                 metric_used=force_metric,
                 fi_mabs=cb.fi_mabs, ind_mabs=cb.ind_mabs,
+                corr=comp.get("corr"),
             ))
 
         # 호환성: TIGER/ACE 별도 추출
@@ -263,10 +286,8 @@ class MarketingAnalyzer(MarketingAnalyzerBase):
             if row:
                 records.append({"week": sheet_name, "fi": row.financial_investment, "ind": row.individual})
 
-        # 직전 4주 이평선 (증권사 채널 기준)
-        # [설계 의도] 증권사 채널 = 단발성 이벤트 효과 빠르게 반응 → 4주 적정
-        # 은행 채널은 agents/bank/analyzer.py 에서 8주 사용
-        recent = records[-4:] if len(records) >= 4 else records
+        # 직전 8주 이평선 (은행·증권·매스 통일)
+        recent = records[-self.BASELINE_WEEKS:] if len(records) >= self.BASELINE_WEEKS else records
 
         if not recent:
             return Baseline(code, name, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0, [])
@@ -402,17 +423,11 @@ class MarketingAnalyzer(MarketingAnalyzerBase):
                 current.individual, baseline.ind_avg, baseline.ind_mabs)
 
     def _judge(self, did: float):
-        # 단위: 정규화 절대 변화값 (= 평소 변동 크기 대비 초과분)
-        # [설계 의도] 1.0 = 평소 변동 크기만큼 초과, 0.3 = 30% 초과
-        # [한계] 임계값(1.0/0.3/-0.3)은 이론적 설정 — 실증 데이터 기반 보정 필요
-        if did >= 1.0:
-            return "마케팅 효과 강함", "🟢"
-        elif did >= 0.3:
-            return "마케팅 효과 있음", "🟡"
-        elif did >= -0.3:
-            return "효과 불분명", "⚪"
-        else:
-            return "유의미한 효과 확인 어려움", "🔴"
+        # 1단계 raw DiD 임시 판정 (2단계 Z-score 전 fallback용)
+        if did >= 1.0:   return "마케팅 효과 강함", "🟢"
+        elif did >= 0.3: return "마케팅 효과 있음", "🟡"
+        elif did >= -0.3: return "효과 불분명", "⚪"
+        else:             return "유의미한 효과 확인 어려움", "🔴"
 
 
 # ── LLM ETF 추출 ──────────────────────────────────────────────────────────────

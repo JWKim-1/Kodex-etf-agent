@@ -504,9 +504,18 @@ with st.sidebar:
 
 # ── 헬퍼 ─────────────────────────────────────────────────────────────────────
 def did_pct(v: float) -> str:
-    """DiD 소수 → '평소 대비 +42%' 형식."""
-    p = int(round(v * 100))
-    return f"평소 대비 {p:+d}%"
+    """Z-score 표시."""
+    return f"Z={v:+.2f}"
+
+def score_label(res) -> str:
+    """마케팅 점수 표시. 2단계 미적용 시 raw DiD 표시."""
+    score = getattr(res, 'marketing_score', 50.0)
+    zscore = getattr(res, 'zscore', 0.0)
+    if zscore != 0.0 or score != 50.0:
+        return f"{score:.0f}점"
+    raw = getattr(res, 'raw_did_value', None)
+    v = raw if raw else getattr(res, 'did_value', 0.0)
+    return f"산출중 ({v*100:+.0f}%)"
 
 def _parse_sheet_dates(sheet_name: str):
     """시트명에서 시작/종료 날짜 추출. 예: '5.25-5.28' → (date(5/25), date(5/28))"""
@@ -1255,51 +1264,46 @@ if did_results:
                 f"<div style='border:2px solid {c};border-radius:8px;padding:14px;text-align:center;'>"
                 f"<div style='font-size:2rem;'>{res.judgement_emoji}</div>"
                 f"<div style='font-weight:700;font-size:0.85rem;'>{res.kodex_name}</div>"
-                f"<div class='did-result' style='color:{c};'>{did_pct(res.did_value)}</div>"
+                f"<div class='did-result' style='color:{c};'>{score_label(res)}</div>"
                 f"<div style='font-size:0.78rem;color:#555;'>{res.judgement}</div>"
                 f"</div>", unsafe_allow_html=True)
 
     st.markdown("")
 
-    # DiD 비교 바 차트
-    etf_names = [r.kodex_name for r in did_results.values()]
-    did_vals   = [r.did_value for r in did_results.values()]
+    # 마케팅 점수 바 차트
+    etf_names  = [r.kodex_name for r in did_results.values()]
+    score_vals = [getattr(r, 'marketing_score', 50.0) for r in did_results.values()]
+    zscore_vals= [getattr(r, 'zscore', 0.0) for r in did_results.values()]
     bar_colors = [color_map.get(r.judgement_emoji, "#6c757d") for r in did_results.values()]
 
-    # ── DiD 결과: 가로 막대 — % 표시 ──
+    # ── 마케팅 점수 (0~100) 가로 막대 ──
     short_names = [n.replace("KODEX ", "") for n in etf_names]
-    did_pct_vals = [v * 100 for v in did_vals]  # % 단위로 변환
 
     fig_did = go.Figure()
-    for name, short, val_raw, val_pct, color in zip(etf_names, short_names, did_vals, did_pct_vals, bar_colors):
-        label = f"{val_pct:+.0f}%"
-        tpos = "inside" if val_pct < -20 else "outside"
+    for name, short, score, z, color in zip(etf_names, short_names, score_vals, zscore_vals, bar_colors):
+        label = f"{score:.0f}점"
         fig_did.add_trace(go.Bar(
-            y=[short], x=[val_pct],
+            y=[short], x=[score],
             orientation="h",
             marker_color=color,
             marker_line_width=0,
             text=label,
-            textposition=tpos,
+            textposition="outside",
             textfont=dict(size=12, color="white"),
-            hovertemplate=f"<b>{name}</b><br>평소 대비 {val_pct:+.0f}%<br>(DiD={val_raw:+.3f})<extra></extra>",
+            hovertemplate=f"<b>{name}</b><br>마케팅 점수: {score:.1f}점<br>Z-score: {z:+.3f}<extra></extra>",
             showlegend=False,
         ))
-    # x축 범위: 데이터 기반이되 0이 중앙에 오도록
-    _max_abs = max(abs(v) for v in did_pct_vals) if did_pct_vals else 100
-    _x_range = max(_max_abs * 1.3, 120)
-    fig_did.add_vline(x=0,    line_dash="solid", line_color="rgba(200,200,200,0.5)", line_width=1.5)
-    fig_did.add_vline(x=100,  line_dash="dot",   line_color="#28a745", line_width=1.5,
-                      annotation=dict(text="+100%", font_color="#28a745", font_size=10, y=1.08))
-    fig_did.add_vline(x=30,   line_dash="dot",   line_color="#ffc107", line_width=1.5,
-                      annotation=dict(text="+30%", font_color="#ffc107", font_size=10, y=1.08))
-    fig_did.add_vline(x=-30,  line_dash="dot",   line_color="#dc3545", line_width=1.5,
-                      annotation=dict(text="-30%", font_color="#dc3545", font_size=10, y=1.08))
-    fig_did.add_vline(x=-100, line_dash="dot",   line_color="#dc3545", line_width=1,
-                      annotation=dict(text="-100%", font_color="#dc3545", font_size=10, y=1.08))
+    fig_did.add_vline(x=75, line_dash="dot", line_color="#28a745", line_width=1.5,
+                      annotation=dict(text="75 효과있음", font_color="#28a745", font_size=10, y=1.08))
+    fig_did.add_vline(x=60, line_dash="dot", line_color="#ffc107", line_width=1.5,
+                      annotation=dict(text="60 가능성", font_color="#ffc107", font_size=10, y=1.08))
+    fig_did.add_vline(x=40, line_dash="dot", line_color="#6c757d", line_width=1.5,
+                      annotation=dict(text="40 중립", font_color="#aaa", font_size=10, y=1.08))
+    fig_did.add_vline(x=25, line_dash="dot", line_color="#dc3545", line_width=1.5,
+                      annotation=dict(text="25 경쟁사↑", font_color="#dc3545", font_size=10, y=1.08))
     fig_did.update_layout(
-        title=dict(text="📊 ETF별 DiD 마케팅 효과", font_size=15, x=0),
-        xaxis=dict(title="비교군 대비 초과 순매수 (%)", range=[-_x_range, _x_range],
+        title=dict(text="📊 ETF별 마케팅 점수 (0~100)", font_size=15, x=0),
+        xaxis=dict(title="마케팅 점수 (0~100)", range=[0, 115],
                    gridcolor="rgba(255,255,255,0.08)", zeroline=False),
         yaxis=dict(title="", autorange="reversed", tickfont=dict(size=12)),
         template="plotly_dark",
@@ -1394,23 +1398,24 @@ for code, res in did_results.items():
     metric_label = "금융투자" if res.lp.use_metric == "financial" else "개인"
 
     with st.expander(
-        f"{res.judgement_emoji} {res.kodex_name}  |  {did_pct(res.did_value)}  —  {res.judgement}",
+        f"{res.judgement_emoji} {res.kodex_name}  |  {score_label(res)}  —  {res.judgement}",
         expanded=False
     ):
         # ── 상단: 핵심 수치 3컬럼 ──
         c1, c2, c3 = st.columns(3)
         c1.metric("KODEX 변화율", f"{int(res.kodex_change_pct*100):+d}%", help="평소 대비")
         c2.metric("비교군 평균", f"{int(res.control_avg_pct*100):+d}%" if not res.no_competitors else "N/A")
-        c3.metric("DiD (마케팅 효과)", did_pct(res.did_value),
+        _score = getattr(res, 'marketing_score', 50.0)
+        c3.metric("마케팅 점수 (0~100)", f"{_score:.0f}점",
                   delta=res.judgement,
-                  delta_color="normal" if res.did_value >= 0.3 else ("off" if res.did_value >= -0.3 else "inverse"))
+                  delta_color="normal" if _score >= 60 else ("off" if _score >= 40 else "inverse"))
 
         # ── 베이스라인 부족 경고 ──
         bw = res.baseline.weeks_used
-        if bw < 4:
+        if bw < 8:
             st.warning(
-                f"⚠️ 베이스라인 {bw}주만 확보 (4주 미만) — 신규 상장 ETF로 데이터 부족. "
-                f"DiD 신뢰도 낮음. {4 - bw}주 더 쌓이면 정상화됩니다."
+                f"⚠️ 베이스라인 {bw}주만 확보 (8주 미만) — 신규 상장 ETF로 데이터 부족. "
+                f"DiD 신뢰도 낮음. {8 - bw}주 더 쌓이면 정상화됩니다."
             )
 
         # ── LP 상태 + 지표 한 줄 ──
@@ -1442,7 +1447,8 @@ for code, res in did_results.items():
                     f'<div style="font-size:.95rem;font-weight:700;color:#e8eaed;">{short2}</div>'
                     f'<div style="font-size:1.1rem;font-weight:700;color:{c};font-family:monospace;">{pct_disp}</div>'
                     f'<div style="font-size:.68rem;color:#5b616e;">{cur/1e6:.1f}M</div>'
-                    f'</div>'
+                    + (f'<div style="font-size:.65rem;color:#888;margin-top:4px;">r={comp.corr:.3f}</div>' if comp.corr is not None else '')
+                    + f'</div>'
                 )
             st.markdown(f'<div class="comp-grid">{cards}</div>', unsafe_allow_html=True)
             if len(res.competitors) == 1:
@@ -1474,9 +1480,11 @@ for code, res in did_results.items():
                 f"  ② 비교군 (각 ETF):\n"
                 f"{comp_lines}"
                 f"     평균  = ({ctrl_str}) ÷ {n} = {int(res.control_avg_pct*100):+d}%\n\n"
-                f"  ③ DiD   = ① − ② = {did_pct(res.did_value)}\n\n"
+                f"  ③ DiD   = ① − ② = {int(res.kodex_change_pct*100):+d}% − {int(res.control_avg_pct*100):+d}% = {res.raw_did_value:+.4f}\n\n"
+                f"  ④ Z-score = (DiD − 이력평균) ÷ 이력표준편차 = {res.zscore:+.3f}\n"
+                f"  ⑤ 점수   = 100 ÷ (1 + exp(−Z×1.5)) = {res.marketing_score:.1f}점\n\n"
                 f"  판정   {res.judgement_emoji} {res.judgement}\n"
-                f"  기준   >+100%: 강함 / >+30%: 효과있음 / <-30%: 불분명 / <-100%: 확인어려움{single_note}"
+                f"  기준   ≥75점: 마케팅 효과 있음 / ≥60점: 효과 있을 수 있음 / ≥40점: 중립 / <40점: 경쟁사 우위{single_note}"
             )
             st.markdown(f"<div class='formula-box'>{formula}</div>", unsafe_allow_html=True)
 

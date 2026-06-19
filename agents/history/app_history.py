@@ -3,9 +3,10 @@
 marketing_history.json 주차별 수집 결과 열람
 - 전체 통합 이벤트 보드 (기간·종목·보상·주관사)
 - 세션별 상세 탭
+- 백테스트 결과 탭 (마케팅 활동 vs DiD 유효성)
 """
 
-import os, sys, json
+import os, sys, json, html as _html
 from datetime import date
 from collections import defaultdict
 
@@ -144,7 +145,7 @@ def _ev_card_html(ev: dict) -> str:
       <div class="ev-title">{title_html}</div>
       {period_html}
       {etf_html}
-      <div class="ev-summary">{str(summary)[:150]}</div>
+      <div class="ev-summary">{_html.escape(str(summary)[:150])}</div>
       <div class="ev-channel">📡 {channel}</div>
     </div>"""
 
@@ -264,19 +265,53 @@ for tab, (sess_key, sess_label) in zip(tabs, SESSION_LABELS.items()):
                 fail_cards = [(k, v) for k, v in raw.items() if not v.get("success")]
 
                 if ok_cards:
-                    ch_html = '<div class="ev-board">'
-                    for ch_key, ch_data in ok_cards:
-                        name    = ch_data.get("channel_name", ch_key)
-                        snippet = (ch_data.get("snippet") or "")[:160]
-                        ch_html += (
-                            f'<div class="ev-card" style="border-color:{color}33;background:{color}06;">'
-                            f'<span class="ev-card-type ev-type-content">✅ 수집 성공</span>'
-                            f'<div class="ev-title">📡 {name}</div>'
-                            f'<div class="ev-summary">{snippet}</div>'
-                            f'</div>'
-                        )
-                    ch_html += "</div>"
-                    st.markdown(ch_html, unsafe_allow_html=True)
+                    # 유튜브 썸네일 카드 (videos 있는 채널)
+                    yt_channels = [(k, v) for k, v in ok_cards if v.get("videos")]
+                    if yt_channels:
+                        st.markdown("**📹 유튜브 영상**")
+                        for ch_key, ch_data in yt_channels:
+                            ch_name = ch_data.get("channel_name", ch_key)
+                            videos = ch_data["videos"]
+                            etf_vids = [v for v in videos if v.get("is_etf_related")]
+                            all_vids = etf_vids or videos  # ETF 관련 없으면 전체 표시
+                            if not all_vids:
+                                continue
+                            st.caption(f"📡 {ch_name} — ETF 관련 {len(etf_vids)}/{len(videos)}개")
+                            vid_cols = st.columns(min(len(all_vids), 4))
+                            for col, v in zip(vid_cols, all_vids[:4]):
+                                with col:
+                                    thumb = v.get("thumbnail", "")
+                                    title = v.get("title", "")
+                                    url = v.get("url", "#")
+                                    pub = v.get("published_at", "")[:10]
+                                    if thumb:
+                                        st.markdown(
+                                            f'<a href="{url}" target="_blank" style="text-decoration:none;">'
+                                            f'<img src="{thumb}" style="width:100%;border-radius:6px;margin-bottom:4px;">'
+                                            f'</a>', unsafe_allow_html=True)
+                                    st.markdown(
+                                        f'<a href="{url}" target="_blank" style="font-size:.78rem;color:#e8eaed;'
+                                        f'text-decoration:none;line-height:1.3;display:block;">{_html.escape(title)}</a>'
+                                        f'<div style="font-size:.68rem;color:#666;margin-top:2px;">{pub}</div>',
+                                        unsafe_allow_html=True)
+                        st.markdown("")
+
+                    # 나머지 채널 텍스트 카드
+                    non_yt = [(k, v) for k, v in ok_cards if not v.get("videos")]
+                    if non_yt:
+                        ch_html = '<div class="ev-board">'
+                        for ch_key, ch_data in non_yt:
+                            name    = ch_data.get("channel_name", ch_key)
+                            snippet = (ch_data.get("snippet") or "")[:160]
+                            ch_html += (
+                                f'<div class="ev-card" style="border-color:{color}33;background:{color}06;">'
+                                f'<span class="ev-card-type ev-type-content">✅ 수집 성공</span>'
+                                f'<div class="ev-title">📡 {name}</div>'
+                                f'<div class="ev-summary">{_html.escape(snippet)}</div>'
+                                f'</div>'
+                            )
+                        ch_html += "</div>"
+                        st.markdown(ch_html, unsafe_allow_html=True)
 
                 if fail_cards:
                     st.markdown("**❌ 실패 채널**")
@@ -293,3 +328,143 @@ for tab, (sess_key, sess_label) in zip(tabs, SESSION_LABELS.items()):
                         )
                     fail_html += "</div>"
                     st.markdown(fail_html, unsafe_allow_html=True)
+
+# ── 백테스트 결과 탭 ──────────────────────────────────────────────────────────
+st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+st.markdown("### 📊 백테스트 결과")
+
+_BT_FILE = os.path.join(_ROOT, "marketing_backtest_result.json")
+
+if not os.path.exists(_BT_FILE):
+    st.warning(
+        "결과 없음 — `marketing_backtest.py`를 실행해주세요.\n\n"
+        "```\npython marketing_backtest.py\n```"
+    )
+else:
+    with open(_BT_FILE, encoding="utf-8") as _f:
+        _bt = json.load(_f)
+
+    st.caption(
+        f"생성: {_bt.get('generated_at','')} | "
+        f"마케팅 이력 주차: {', '.join(_bt.get('marketing_history_weeks', []))} | "
+        f"주차 매핑: {_bt.get('week_map', {})}"
+    )
+
+    _note = _bt.get("analysis_note", "")
+    if _note:
+        st.info(f"ℹ️ {_note}")
+
+    _CH_LABELS = {
+        "securities": "📈 증권사",
+        "bank":       "🏦 은행",
+        "mass":       "🎯 개인(KODEX직접)",
+    }
+    _CH_COLORS = {
+        "securities": "#4d9fff",
+        "bank":       "#05b169",
+        "mass":       "#f0c040",
+    }
+
+    _bt_tabs = st.tabs([_CH_LABELS.get(k, k) for k in ["securities", "bank", "mass"]] + ["🔬 은행 보조분석"])
+
+    for _tab, _ch in zip(_bt_tabs[:3], ["securities", "bank", "mass"]):
+        with _tab:
+            _res = (_bt.get("channels") or {}).get(_ch, {})
+            _color = _CH_COLORS.get(_ch, "#aaa")
+
+            if not _res or _res.get("status") == "insufficient_data":
+                st.warning(f"⚠️ 데이터 부족: {_res.get('reason', '분석 불가')}")
+                _lim = _res.get("data_limitation", "")
+                if _lim:
+                    st.caption(f"데이터 제약: {_lim}")
+            else:
+                _n_with = _res.get("n_weeks_with_marketing", 0)
+                _n_wo   = _res.get("n_weeks_without", 0)
+                _mw     = _res.get("mean_did_with")
+                _mwo    = _res.get("mean_did_without")
+                _t      = _res.get("t_stat")
+                _p      = _res.get("p_value")
+                _sig    = _res.get("significant", False)
+                _pr     = _res.get("pearson_r")
+                _prp    = _res.get("pearson_p")
+
+                c1, c2, c3, c4 = st.columns(4)
+                c1.metric("마케팅 있는 주", f"{_n_with}주")
+                c2.metric("마케팅 없는 주", f"{_n_wo}주")
+                if _mw is not None:
+                    c3.metric("평균 DiD (마케팅O)", f"{_mw:.4f}")
+                if _mwo is not None:
+                    c4.metric("평균 DiD (마케팅X)", f"{_mwo:.4f}")
+
+                if _t is not None and _p is not None:
+                    st.markdown(
+                        f"**t-검정:** t = `{_t:.3f}` | p = `{_p:.4f}` | "
+                        + (f"<span style='color:#4ade80;font-weight:700;'>★ 유의 (p < 0.05)</span>"
+                           if _sig else "<span style='color:#aaa;'>비유의</span>"),
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.caption("t-검정: 샘플 부족으로 생략")
+
+                if _pr is not None:
+                    st.markdown(
+                        f"**Pearson r (이벤트 수 ↔ 주간 DiD):** `{_pr:.4f}` (p = `{_prp:.4f}`)"
+                    )
+                else:
+                    st.caption("Pearson 상관: 주차 수 부족으로 생략")
+
+                _lim = _res.get("data_limitation", "")
+                if _lim:
+                    with st.expander("데이터 제약 상세"):
+                        st.caption(_lim)
+
+                # ETF별 표
+                _by_etf = _res.get("by_etf", {})
+                if _by_etf:
+                    import pandas as _pd
+                    _etf_rows = []
+                    for _code, _ev in _by_etf.items():
+                        _diff = None
+                        if _ev.get("mean_with") is not None and _ev.get("mean_without") is not None:
+                            _diff = round(_ev["mean_with"] - _ev["mean_without"], 4)
+                        _etf_rows.append({
+                            "종목코드": _code,
+                            "종목명": _ev.get("name", ""),
+                            "마케팅O 평균": round(_ev["mean_with"], 4) if _ev.get("mean_with") is not None else None,
+                            "마케팅X 평균": round(_ev["mean_without"], 4) if _ev.get("mean_without") is not None else None,
+                            "효과(Δ)": _diff,
+                            "O 샘플수": _ev.get("n_with", 0),
+                            "X 샘플수": _ev.get("n_without", 0),
+                        })
+                    _etf_df = _pd.DataFrame(_etf_rows)
+                    if "효과(Δ)" in _etf_df.columns:
+                        _etf_df = _etf_df.sort_values("효과(Δ)", ascending=False, na_position="last")
+                    st.markdown("**ETF별 마케팅 효과 분해**")
+                    st.dataframe(_etf_df, use_container_width=True, hide_index=True)
+
+    # 은행 보조분석 탭
+    with _bt_tabs[3]:
+        _aux = _bt.get("bank_aux_analysis", {})
+        st.caption(_aux.get("note", ""))
+        _mw2  = _aux.get("mean_did_with")
+        _mwo2 = _aux.get("mean_did_without")
+        _t2   = _aux.get("t_stat")
+        _p2   = _aux.get("p_value")
+        _sig2 = _aux.get("significant", False)
+
+        if _mw2 is not None or _mwo2 is not None:
+            c1, c2 = st.columns(2)
+            if _mw2 is not None:
+                c1.metric("마케팅O 평균 Z-score", f"{_mw2:.4f}")
+            if _mwo2 is not None:
+                c2.metric("마케팅X 평균 Z-score", f"{_mwo2:.4f}")
+
+        if _t2 is not None and _p2 is not None:
+            st.markdown(
+                f"**t-검정:** t = `{_t2:.3f}` | p = `{_p2:.4f}` | "
+                + (f"<span style='color:#4ade80;font-weight:700;'>★ 유의</span>"
+                   if _sig2 else "<span style='color:#aaa;'>비유의</span>"),
+                unsafe_allow_html=True,
+            )
+        else:
+            st.info("bank_zscore_history에 marketing_detected=False 주차가 없어 비교 불가 (모든 수집 주차가 마케팅 기간).")

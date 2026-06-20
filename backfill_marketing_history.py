@@ -86,14 +86,110 @@ def _raw_data(results: dict) -> dict:
     return raw
 
 
-def _llm_analyze(collector_instance, results, mode, api_key):
-    if not api_key or not results:
-        return {"marketing_detected": None, "events": [], "summary": "LLM 분석 미실행"}
+_KW_EVENT   = ["이벤트", "경품", "추첨", "당첨", "기념", "선착순", "한정"]
+_KW_PROMO   = ["수수료", "무료", "할인", "혜택", "특별", "프로모션", "캐시백", "포인트"]
+_KW_CONTENT = ["etf", "kodex", "투자", "펀드", "운용", "포트폴리오", "자산배분", "리밸런싱"]
+_KW_EDU     = ["교육", "웨비나", "세미나", "강의", "설명회", "가이드", "튜토리얼"]
+_KW_ALL     = _KW_EVENT + _KW_PROMO + _KW_CONTENT + _KW_EDU
+
+
+def _keyword_analyze(results: dict, mode: str) -> dict:
+    """
+    1단계: 키워드로 후보 채널 필터링
+    2단계: 후보가 있을 때만 LLM에 요약 텍스트 전달 → 이벤트 추출
+    키워드 미감지 채널은 LLM 완전 스킵
+    """
+    from llm_client import call_llm
+    import json as _json
+    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+
+    candidates = []  # (ch_key, channel_name, snippet, url)
+
+    for ch_key, r in results.items():
+        d = getattr(r, "data", {}) or {}
+        videos   = d.get("videos", [])
+        articles = d.get("articles", [])
+        raw_text = d.get("raw_text", "")
+
+        texts = [raw_text]
+        texts += [v.get("title", "") + " " + v.get("description", "") for v in videos]
+        texts += [a.get("title", "") + " " + a.get("description", "") for a in articles]
+        combined = " ".join(t for t in texts if t).lower()
+
+        if not combined.strip():
+            continue
+
+        # 키워드 1차 필터
+        if not any(kw in combined for kw in _KW_ALL):
+            continue
+
+        titles = [v.get("title") for v in videos if v.get("title")]
+        titles += [a.get("title") for a in articles if a.get("title")]
+        snippet = " / ".join(titles[:5]) or raw_text[:200]
+        url = (videos[0].get("url") if videos else "") or ""
+        candidates.append((ch_key, getattr(r, "channel_name", ch_key), snippet, url))
+
+    if not candidates:
+        return {"marketing_detected": False, "events": [], "summary": "키워드 미감지 — LLM 스킵"}
+
+    # 키워드 걸린 채널만 LLM에 전달
+    if not api_key:
+        # API 키 없으면 키워드 결과 그대로 반환
+        events = [{
+            "marketing_type": "추천콘텐츠",
+            "title": snippet[:60],
+            "channel": ch_name,
+            "event_period": "",
+            "target_etf": "KODEX",
+            "event_summary": "키워드 감지",
+            "url": url,
+        } for _, ch_name, snippet, url in candidates]
+        return {"marketing_detected": True, "events": events, "summary": f"키워드 감지 {len(events)}건 (LLM 미실행)"}
+
+    ch_lines = "\n".join(
+        f"[{ch_name}] {snippet[:300]}" for _, ch_name, snippet, _ in candidates
+    )
+    prompt = f"""다음은 ETF 마케팅 채널에서 키워드로 1차 필터링된 콘텐츠 목록입니다.
+각 항목이 실제 KODEX ETF 마케팅 활동(이벤트/프로모션/수수료혜택/추천콘텐츠)인지 판단하고,
+해당하는 것만 JSON 배열로 반환하세요. 마케팅이 아닌 일반 시황·뉴스는 제외합니다.
+
+채널 목록:
+{ch_lines}
+
+반드시 다음 형식의 JSON 배열만 반환 (설명 없이):
+[{{"marketing_type":"이벤트|프로모션|수수료혜택|추천콘텐츠","title":"...","channel":"...","event_period":"","target_etf":"","event_summary":"..."}}]
+마케팅 활동이 없으면 빈 배열 [] 반환."""
+
     try:
-        return extract_events(results, api_key, mode)
+        raw = call_llm(prompt, anthropic_key=api_key, max_tokens=1500)
+        raw = raw.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        events = _json.loads(raw)
+        if not isinstance(events, list):
+            events = []
+        # url 보완
+        url_map = {ch_name: url for _, ch_name, _, url in candidates}
+        for ev in events:
+            if not ev.get("url"):
+                ev["url"] = url_map.get(ev.get("channel", ""), "")
     except Exception as e:
-        logger.warning(f"LLM 분석 실패 ({mode}): {e}")
-        return {"marketing_detected": None, "events": [], "summary": f"LLM 오류: {e}"}
+        logger.warning(f"LLM 파싱 실패 ({mode}): {e} — 키워드 결과로 폴백")
+        events = [{
+            "marketing_type": "추천콘텐츠",
+            "title": snippet[:60],
+            "channel": ch_name,
+            "event_period": "",
+            "target_etf": "KODEX",
+            "event_summary": "키워드 감지 (LLM 파싱 실패)",
+            "url": url,
+        } for _, ch_name, snippet, url in candidates]
+
+    detected = bool(events)
+    summary = f"LLM 확인: {len(events)}건 마케팅 감지" if detected else f"키워드 후보 {len(candidates)}건 → LLM 필터링 후 미감지"
+    return {"marketing_detected": detected, "events": events, "summary": summary}
 
 
 def backfill(channels: list, dry_run: bool = False, force: bool = False):
@@ -160,7 +256,7 @@ def backfill(channels: list, dry_run: bool = False, force: bool = False):
                 entry["securities"] = {
                     "collection": summary,
                     "raw": _raw_data(results),
-                    "events": _llm_analyze(collector, results, "securities", api_key),
+                    "events": _keyword_analyze(results, "securities"),
                 }
                 logger.info(f"  [{label}] 증권사 OK: {summary['ok_count']}채널")
             except Exception as e:
@@ -181,7 +277,7 @@ def backfill(channels: list, dry_run: bool = False, force: bool = False):
                 entry["bank"] = {
                     "collection": bank_summary,
                     "raw": _raw_data(bank_results),
-                    "events": _llm_analyze(bank_coll, bank_results, "bank", api_key),
+                    "events": _keyword_analyze(bank_results, "bank"),
                 }
                 logger.info(f"  [{label}] 은행 OK: {bank_summary['ok_count']}채널")
             except Exception as e:
@@ -202,14 +298,14 @@ def backfill(channels: list, dry_run: bool = False, force: bool = False):
                     entry["mass"] = {
                         "collection": etf_summary,
                         "raw": etf_raw,
-                        "events": _llm_analyze(collector, etf_results, "mass", api_key),
+                        "events": _keyword_analyze(etf_results, "mass"),
                     }
 
                 if "competitor" in channels and (force or entry.get("competitor") is None):
                     entry["competitor"] = {
                         "collection": etf_summary,
                         "raw": etf_raw,
-                        "events": _llm_analyze(collector, etf_results, "competitor", api_key),
+                        "events": _keyword_analyze(etf_results, "competitor"),
                     }
                 logger.info(f"  [{label}] ETF AM OK: {etf_summary['ok_count']}채널")
             except Exception as e:

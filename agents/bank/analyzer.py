@@ -502,7 +502,7 @@ class MarketingAnalyzer:
                             self._parquet_cache[cache_key] = hres.did_value
                             did_history.append(hres.did_value)
 
-                    if len(did_history) >= 2:  # 최소 2주 이상이면 산출 (초기 데이터 부족 시 완화)
+                    if len(did_history) >= 2:  # 2주 이상이면 산출
                         import numpy as _np
                         did_avg = float(_np.mean(did_history))
                         did_std = float(_np.std(did_history, ddof=1))

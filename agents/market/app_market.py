@@ -236,15 +236,12 @@ avg_ret       = df_valid_ret["수익률_pct"].mean() if len(df_valid_ret) else 0
 up_cnt        = (df_valid_ret["수익률_pct"] > 0).sum()
 dn_cnt        = (df_valid_ret["수익률_pct"] < 0).sum()
 
-m1, m2, m3, m4 = st.columns(4)
+m1, m2, m3 = st.columns(3)
 with m1:
     st.metric("전체 ETF 수", f"{len(df_trend):,}개")
 with m2:
     st.metric("주간 거래대금 합계", f"{total_vol_조:.1f}조원")
 with m3:
-    sign = "+" if avg_ret >= 0 else ""
-    st.metric("평균 수익률", f"{sign}{avg_ret:.2f}%")
-with m4:
     st.metric("상승 / 하락", f"{up_cnt} / {dn_cnt}")
 
 st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
@@ -395,8 +392,14 @@ else:
         # 수익률 데이터와 merge
         _ret_df = df_trend[["종목코드", "종목명", "수익률_pct"]].copy()
         _ret_df["종목코드"] = _ret_df["종목코드"].astype(str).str.strip()
-        _mx = pd.merge(_krx_df[["종목코드", "순매수"]], _ret_df, on="종목코드", how="inner")
-        _mx = _mx.dropna(subset=["수익률_pct", "순매수"])
+        _mx_full = pd.merge(_krx_df[["종목코드", "순매수"]], _ret_df, on="종목코드", how="inner")
+        _mx_full = _mx_full.dropna(subset=["수익률_pct", "순매수"])
+        # 수익률Top10 + Bottom10 + 거래대금Top10 = 최대 30개만 표시
+        _top_ret  = _mx_full.nlargest(10,  "수익률_pct")["종목코드"]
+        _bot_ret  = _mx_full.nsmallest(10, "수익률_pct")["종목코드"]
+        _top_vol  = _mx_full.nlargest(10,  "순매수")["종목코드"]
+        _sel_codes = set(_top_ret) | set(_bot_ret) | set(_top_vol)
+        _mx = _mx_full[_mx_full["종목코드"].isin(_sel_codes)].copy()
 
         if _mx.empty:
             st.info("수익률 + 순매수 교집합 데이터가 없습니다.")

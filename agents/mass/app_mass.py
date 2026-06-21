@@ -369,10 +369,9 @@ with st.expander("🔗 비교군 매핑", expanded=True):
         row_etf = analyzer.loader.get_etf_row(current_df, code, code)
         etf_name = row_etf.name if row_etf else code
 
-        if code in COMPARISON_MAP:
-            comps = COMPARISON_MAP[code]["competitors"]
-        else:
-            comps = auto_map_competitors(etf_name, code, etf_universe)
+        from etf_mapping_loader import get_competitors as _get_comp_mass
+        _code_s = code.replace("*001","").strip()
+        comps = _get_comp_mass(_code_s) or auto_map_competitors(etf_name, _code_s, etf_universe)
 
         _pc = {"KODEX":"#4d9fff","TIGER":"#f4a261","ACE":"#e76f51","PLUS":"#2a9d8f","SOL":"#e9c46a","RISE":"#6b9fff","HANARO":"#a78bfa"}
         total_cards = 1 + len(comps)

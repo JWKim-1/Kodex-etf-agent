@@ -76,6 +76,7 @@ CHANNEL_LABELS = {
     "rise_kakao":       "RISE ETF 카카오채널 (KB자산운용)",
     "hanaro_kakao":     "HANARO ETF 카카오채널 (NH-Amundi)",
     "plus_kakao":       "PLUS ETF 카카오채널 (한화자산운용)",
+    "sol_kakao":        "SOL ETF 카카오채널 (신한자산운용)",
     "sol_blog":         "SOL ETF 블로그 (네이버)",
     "etf_am_news":      "ETF 운용사 뉴스 (네이버/구글)",
 }
@@ -291,6 +292,7 @@ class DataCollector:
             ("rise_kakao",     lambda: self._ch_kakao_etf("_lFdxhs", "rise_kakao")),
             ("hanaro_kakao",   lambda: self._ch_kakao_etf("_xlimsG", "hanaro_kakao")),
             ("plus_kakao",     lambda: self._ch_kakao_etf("_LdQkG", "plus_kakao")),
+            ("sol_kakao",      lambda: self._ch_kakao_etf("_JAxkgG", "sol_kakao")),
         ]
 
     _yt_handle_cache: dict = {}  # @handle → UC 채널 ID 캐시 (클래스 공유)

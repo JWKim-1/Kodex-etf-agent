@@ -86,10 +86,9 @@ _default_idx = len(labeled) - 1
 if not _is_friday and len(labeled) >= 2:
     _default_idx = len(labeled) - 2
     st.caption("💡 금요일 장 마감 후 이번 주 데이터가 완성됩니다.")
-if "mass_sheet" in st.session_state and st.session_state["mass_sheet"] in labeled:
-    _default_idx = labeled.index(st.session_state["mass_sheet"])
-
-selected_label = st.selectbox("분석할 주차 시트 선택", labeled, index=_default_idx, key="mass_sheet")
+if "mass_sheet" not in st.session_state or st.session_state["mass_sheet"] not in labeled:
+    st.session_state["mass_sheet"] = labeled[_default_idx]
+selected_label = st.selectbox("분석할 주차 시트 선택", labeled, key="mass_sheet")
 current_sheet = sheet_names[labeled.index(selected_label)]
 
 # 날짜 파싱

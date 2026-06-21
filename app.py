@@ -786,10 +786,9 @@ _default_idx = len(labeled) - 1
 if not _is_friday and len(labeled) >= 2:
     _default_idx = len(labeled) - 2
     st.caption("💡 금요일 장 마감 후 이번 주 데이터가 완성됩니다.")
-# 마지막 선택 주차 유지
-if "sec_selected_label" in st.session_state and st.session_state["sec_selected_label"] in labeled:
-    _default_idx = labeled.index(st.session_state["sec_selected_label"])
-selected_label = st.selectbox("분석할 주차 시트 선택", labeled, index=_default_idx, key="sec_selected_label")
+if "sec_selected_label" not in st.session_state or st.session_state["sec_selected_label"] not in labeled:
+    st.session_state["sec_selected_label"] = labeled[_default_idx]
+selected_label = st.selectbox("분석할 주차 시트 선택", labeled, key="sec_selected_label")
 current_sheet = sheet_names[labeled.index(selected_label)]
 
 # 과거 주차 선택 시 신뢰도 경고
@@ -1524,9 +1523,9 @@ for code, res in did_results.items():
                 f"  ② 비교군 (각 ETF):\n"
                 f"{comp_lines}"
                 f"     평균  = ({ctrl_str}) ÷ {n} = {int(res.control_avg_pct*100):+d}%\n\n"
-                f"  ③ DiD   = ① − ② = {int(res.kodex_change_pct*100):+d}% − {int(res.control_avg_pct*100):+d}% = {res.raw_did_value:+.4f}\n\n"
-                f"  ④ Z-score = (DiD − 이력평균) ÷ 이력표준편차 = {res.zscore:+.3f}\n"
-                f"  ⑤ 점수   = 100 ÷ (1 + exp(−Z×1.5)) = {res.marketing_score:.1f}점\n\n"
+                f"  ③ DiD   = ① − ② = {int(res.kodex_change_pct*100):+d}% − {int(res.control_avg_pct*100):+d}% = {float(res.raw_did_value or 0):+.4f}\n\n"
+                f"  ④ Z-score = (DiD − 이력평균) ÷ 이력표준편차 = {float(res.zscore or 0):+.3f}\n"
+                f"  ⑤ 점수   = 100 ÷ (1 + exp(−Z×1.5)) = {float(res.marketing_score or 50):.1f}점\n\n"
                 f"  판정   {res.judgement_emoji} {res.judgement}\n"
                 f"  기준   ≥75점: 마케팅 효과 있음 / ≥60점: 효과 있을 수 있음 / ≥40점: 중립 / <40점: 경쟁사 우위{single_note}"
             )

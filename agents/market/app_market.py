@@ -174,10 +174,9 @@ def _week_label_display(w: str) -> str:
 
 display_labels = [_week_label_display(w) for w in week_labels_sorted]
 default_idx = 1 if (not _is_friday and len(week_labels_sorted) >= 2) else 0
-if "market_week" in st.session_state and st.session_state["market_week"] in display_labels:
-    default_idx = display_labels.index(st.session_state["market_week"])
-
-selected_display = st.selectbox("분석 주차", display_labels, index=default_idx, key="market_week")
+if "market_week" not in st.session_state or st.session_state["market_week"] not in display_labels:
+    st.session_state["market_week"] = display_labels[default_idx]
+selected_display = st.selectbox("분석 주차", display_labels, key="market_week")
 selected_week = week_labels_sorted[display_labels.index(selected_display)]
 
 week_start_date = _parse_week_label(selected_week)

@@ -397,16 +397,35 @@ class MarketingAnalyzerBase:
             if caum > 0:
                 comp_ratios.append(cval / (caum * 1e5))
 
-        # 경쟁사도 없으면 산출 불가
+        # 경쟁사 없으면 절대변화율 기반 점수 (DiD 미적용)
         if not comp_ratios:
-            log.append(f"[AUM상대강도 폴백] 경쟁사 없음 — 산출 불가 (베이스라인 {weeks_used}주)")
+            # 베이스라인에서 절대변화율 계산
+            _baseline = _get_aum if False else None  # AUM 이미 구했음
+            _col_avg = "fi_avg" if metric == "financial" else "ind_avg"
+            _col_mabs = "fi_mabs" if metric == "financial" else "ind_mabs"
+            # _compute_baseline은 이미 호출됐으므로 직접 재계산
+            _hist_vals = []
+            for _hdf in comp_defs[:0]:  # 비어있으므로 건너뜀
+                pass
+            # kodex_ratio를 절대 기준으로만 사용 (비교 없이 자기 수준)
+            # 0 기준 sigmoid: 양수면 순유입 우위, 음수면 순유출
+            z_abs = kodex_val / (kodex_aum * 1e5 + 1e-10) * 500  # 스케일
+            score_abs = round(100 / (1 + np.exp(-z_abs * 1.5)), 1)
+            log.append(
+                f"[절대변화율 모드] 경쟁사 없음 → DiD 불가  "
+                f"KODEX {metric}/AUM={kodex_ratio:.6f}  절대점수={score_abs:.1f}"
+            )
+            judgement_abs, emoji_abs = self._judge_score(score_abs)
             return ETFDiDResult(
                 kodex_code=kodex_code, kodex_name=kodex_name,
-                did_value=0.0, raw_did_value=None,
-                zscore=None, marketing_score=50.0,
-                judgement="산출 불가 (경쟁사 없음 + 데이터 부족)", judgement_emoji="⚫",
+                did_value=kodex_ratio, raw_did_value=kodex_ratio,
+                zscore=None, marketing_score=score_abs,
+                judgement=judgement_abs + " (절대수준·DiD미적용)", judgement_emoji=emoji_abs,
                 competitors=[], no_competitors=True,
-                notes=[f"신규상장+경쟁사 없음 — 베이스라인 {weeks_used}주, 비교 불가"],
+                notes=[
+                    f"⚠️ 경쟁사 없음 — DiD 미적용. 자기 순매수/AUM 절대 수준만 측정.",
+                    f"신규상장 또는 고유전략 ETF (베이스라인 {weeks_used}주). 다른 종목 점수와 직접 비교 불가."
+                ],
                 calculation_log=log,
             )
 

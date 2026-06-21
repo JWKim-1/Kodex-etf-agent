@@ -247,7 +247,73 @@ for tab, (sess_key, sess_label) in zip(tabs, SESSION_LABELS.items()):
 
         # 이벤트 카드 (LLM 분석 결과)
         sess_evs = [ev for ev in all_events if ev.get("_sess_key") == sess_key]
-        if sess_evs:
+
+        # 경쟁사 세션: 채널 아카이브에서 이벤트+썸네일 추가 표시
+        if sess_key == "competitor":
+            try:
+                from channel_archive import has_archive, load_channel_results, load_raw_data
+                _arch_key = f"competitor_{selected}"
+                _llm_key  = f"comp_llm_{selected}"
+                _comp_res = load_channel_results(_arch_key) if has_archive(_arch_key) else {}
+                _comp_llm = load_raw_data(_llm_key) if has_archive(_llm_key) else {}
+
+                # 카카오 썸네일 풀
+                _kakao_pool = {}
+                for _cr in _comp_res.values():
+                    if not _cr.success or not _cr.data: continue
+                    _pv = next((p for p in ["TIGER","ACE","RISE","HANARO","SOL","PLUS","KODEX"]
+                                if p in _cr.channel_name.upper()), "")
+                    for _a in _cr.data.get("articles",[]):
+                        _th = _a.get("thumbnail","")
+                        if _th and "kakaocdn" in _th and _pv:
+                            _kakao_pool.setdefault(_pv,[]).append(_th)
+
+                # 이벤트 카드 (기간 있는 것 우선)
+                _comp_evs = (_comp_llm or {}).get("events",[]) or sess_evs
+                if not _comp_evs:
+                    # keyword fallback으로 직접 추출
+                    from agents.competitor.app_competitor import keyword_fallback_competitor
+                    _fb = keyword_fallback_competitor(_comp_res)
+                    _comp_evs = _fb.get("events",[])
+
+                # 기간 있는 것 / 없는 것 분리
+                _main = [e for e in _comp_evs if e.get("event_period") and e["event_period"] not in ("null","None","")]
+                _other = [e for e in _comp_evs if e not in _main]
+
+                _PROV_COLOR = {"KODEX":"#4d9fff","TIGER":"#ff8c42","ACE":"#05b169",
+                               "RISE":"#a78bfa","HANARO":"#00c6ff","SOL":"#f43f5e","PLUS":"#fb923c"}
+
+                if _main:
+                    st.markdown("**📋 이번 주 이벤트 카드**")
+                    _cds = '<div class="ev-board">'
+                    for _ev in _main:
+                        _prov = _ev.get("provider","기타")
+                        _color = _PROV_COLOR.get(_prov, color)
+                        _title = (_ev.get("title") or "")[:60]
+                        _period = _ev.get("event_period") or ""
+                        _url = _ev.get("url","")
+                        _img = _ev.get("image_url","") or (_kakao_pool.get(_prov,[None])[0] or "")
+                        _th_html = (f'<img class="ev-card-img" src="{_img}" onerror="this.style.display=\'none\'">'
+                                    if _img else f'<div class="ev-card-img-placeholder" style="font-size:1.5rem;">{_prov[:1]}</div>')
+                        _t_html = (f'<a href="{_url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{_html.escape(_title)}</a>'
+                                   if _url and _url.startswith("http") else _html.escape(_title))
+                        _cds += (f'<div class="ev-card" style="border-color:{_color}33;">'
+                                 f'{_th_html}<div class="ev-card-body">'
+                                 f'<span class="ev-card-type ev-type-event" style="background:{_color}18;color:{_color};">🎁 {_prov}</span>'
+                                 f'<div class="ev-title">{_t_html}</div>'
+                                 f'<div class="ev-period">📅 {_period}</div>'
+                                 f'</div></div>')
+                    _cds += "</div>"
+                    st.markdown(_cds, unsafe_allow_html=True)
+                if _other:
+                    with st.expander(f"기타 감지 ({len(_other)}건)", expanded=False):
+                        for _ev in _other:
+                            _url = _ev.get("url",""); _t = (_ev.get("title") or "")[:60]
+                            st.markdown(f"• {'['+_t+']('+_url+')' if _url.startswith('http') else _t}")
+            except Exception as _e:
+                pass
+
+        if sess_evs and sess_key != "competitor":
             if summary:
                 st.caption(summary)
             cards_html = '<div class="ev-board">'

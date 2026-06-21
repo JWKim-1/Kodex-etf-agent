@@ -124,6 +124,22 @@ if not _has_individual:
 st.header("🎯 개인 채널 분석")
 st.caption(f"채널: 삼성자산운용 직접 채널 (KODEX 유튜브·이벤트·뉴스) | 기준: 개인 순매수 | {week_range_str}")
 
+with st.expander("📐 마케팅 점수(0~100) 산정 방식", expanded=False):
+    st.markdown("""
+**개인(대고객) 채널**은 KODEX 공식 채널·운용사 SNS의 마케팅 활동이 개인투자자 순매수에 미친 영향을 측정합니다.
+
+| 단계 | 내용 |
+|------|------|
+| ① 변화율 | `(현재 개인순매수 − 8주평균) ÷ (8주절댓값평균 + 라플라스α)` |
+| ② DiD | `KODEX 변화율 − 경쟁사평균 변화율` (시장 공통 효과 제거) |
+| ③ Z-score | `(이번주 DiD − 15주 DiD평균) ÷ 15주 DiD표준편차` |
+| ④ sigmoid 점수 | `100 ÷ (1 + exp(−Z × 1.5))` → 0~100점 |
+
+**판정 기준:** 🟢 ≥75점 효과 있음 / 🟡 ≥60점 가능성 / ⚪ ≥40점 중립 / 🔴 <40점 경쟁사 우위
+
+*기준 컬럼: 개인 순매수 (금융투자·은행 제외)*
+    """)
+
 # 아카이브 있으면 버튼 없이 자동 진행
 if not st.session_state.get("mass_analysis_run", False):
     if has_archive(f"mass_{current_sheet}") or has_archive(f"mass_llm_{current_sheet}"):

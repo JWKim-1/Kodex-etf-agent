@@ -667,6 +667,22 @@ def keyword_fallback(collection_results, all_kodex_etfs: dict) -> dict:
 st.title("📊 증권사 채널 KODEX ETF 마케팅 효과 측정 Agent")
 st.caption("마케팅 활동 감지 → ETF 특정 → 비교군 매핑 → DiD 분석")
 
+with st.expander("📐 마케팅 점수(0~100) 산정 방식", expanded=False):
+    st.markdown("""
+**증권사 채널**은 유튜브·블로그·이벤트에서 마케팅 활동을 감지한 뒤 해당 ETF의 금융투자 순매수 변화를 측정합니다.
+
+| 단계 | 내용 |
+|------|------|
+| ① 변화율 | `(현재 금융투자순매수 − 8주평균) ÷ (8주절댓값평균 + 라플라스α)` |
+| ② DiD | `KODEX 변화율 − 경쟁사평균 변화율` (시장 공통 효과 제거) |
+| ③ Z-score | `(이번주 DiD − 15주 DiD평균) ÷ 15주 DiD표준편차` |
+| ④ sigmoid 점수 | `100 ÷ (1 + exp(−Z × 1.5))` → 0~100점 |
+
+**판정 기준:** 🟢 ≥75점 효과 있음 / 🟡 ≥60점 가능성 / ⚪ ≥40점 중립 / 🔴 <40점 경쟁사 우위
+
+*기준 컬럼: 금융투자 순매수 (LP 노이즈 감지 시 개인 컬럼으로 자동 전환)*
+    """)
+
 # ── 데이터 로드 ───────────────────────────────────────────────────────────────
 from analyzer import (ExcelLoader, MarketingAnalyzer, COMPARISON_MAP,
                       auto_map_competitors, extract_keyword,

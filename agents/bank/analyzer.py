@@ -564,7 +564,7 @@ class MarketingAnalyzer:
 
         # ── Step B-0: 베이스라인 부족 시 AUM 상대강도 DiD ──────────────────
         # 신규상장 등 4주 미만: 순매수/AUM 비율로 KODEX vs 경쟁사 DiD
-        MIN_BASELINE = 4
+        MIN_BASELINE = 8  # 8주 미만이면 AUM 상대강도 모드 (4~7주도 포함)
         if baseline.weeks_used < MIN_BASELINE:
             _bank_col = "은행" if "은행" in current_df.columns else None
             _code_col = "종목코드" if "종목코드" in current_df.columns else "단축코드"

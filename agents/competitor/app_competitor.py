@@ -321,32 +321,48 @@ with _main_tab1:
 
 
     def _inject_images(comp_result: dict, collection_results: dict) -> dict:
-        """LLM 결과 events에 image_url을 collection_results event_details에서 URL 매칭으로 주입."""
+        """LLM 결과 events에 image_url을 collection_results에서 URL/title 매칭으로 주입.
+        event_details, articles, videos (카카오 썸네일 등) 모두 활용."""
         if not comp_result.get("events"):
             return comp_result
-        # URL → image_url 역색인 만들기
+
         url_to_img: dict = {}
-        for r in collection_results.values():
-            if not r.success or not r.data: continue
-            for ev in r.data.get("event_details", []):
-                u = ev.get("url","")
-                img = ev.get("image_url","")
-                if u and img:
-                    url_to_img[u] = img
-        # title 매칭용 dict도 (URL이 약간 달라질 수 있어서)
         title_to_img: dict = {}
+        prov_to_imgs: dict = {}  # 운용사별 썸네일 pool
+
         for r in collection_results.values():
             if not r.success or not r.data: continue
-            for ev in r.data.get("event_details", []):
-                t = ev.get("title","")[:40]
-                img = ev.get("image_url","")
-                if t and img:
-                    title_to_img[t] = img
+            d = r.data
+            # event_details
+            for ev in d.get("event_details", []):
+                u, img, t = ev.get("url",""), ev.get("image_url",""), ev.get("title","")[:40]
+                if u and img: url_to_img[u] = img
+                if t and img: title_to_img[t] = img
+            # articles (카카오 채널 게시물 - thumbnail 필드)
+            for a in d.get("articles", []):
+                u = a.get("url",""); img = a.get("thumbnail",""); t = a.get("title","")[:40]
+                if u and img: url_to_img[u] = img
+                if t and img: title_to_img[t] = img
+                # 채널명에서 운용사 감지해서 pool에 추가
+                prov = next((p for p in ["TIGER","ACE","RISE","HANARO","SOL","PLUS","KODEX"]
+                             if p in r.channel_name.upper()), "")
+                if prov and img: prov_to_imgs.setdefault(prov, []).append(img)
+            # videos (유튜브 썸네일)
+            for v in d.get("videos", []):
+                u = v.get("url",""); img = v.get("thumbnail",""); t = v.get("title","")[:40]
+                if u and img: url_to_img[u] = img
+                if t and img: title_to_img[t] = img
+
         for ev in comp_result["events"]:
             if ev.get("image_url"): continue
             url = ev.get("url","")
             title = (ev.get("title") or "")[:40]
-            ev["image_url"] = url_to_img.get(url) or title_to_img.get(title) or ""
+            prov = ev.get("provider","")
+            # URL > title > 같은 운용사 첫 번째 썸네일 순으로 매칭
+            img = (url_to_img.get(url) or
+                   title_to_img.get(title) or
+                   (prov_to_imgs.get(prov, [None])[0] if prov else None) or "")
+            ev["image_url"] = img
         return comp_result
 
 

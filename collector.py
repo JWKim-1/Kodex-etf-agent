@@ -1704,7 +1704,15 @@ class DataCollector:
                     period_m = re.search(r"\d{4}[-./]\d{2}[-./]\d{2}\s*[-~]\s*\d{4}[-./]\d{2}[-./]\d{2}", parent.get_text())
                     if period_m:
                         period = period_m.group()
-                events.append({"title": title[:60], "url": url_full, "period": period, "image_url": ""})
+                # og:image 수집 (외부 이벤트 사이트는 이벤트별 고유 이미지 있음)
+                img_url = ""
+                try:
+                    ir = requests.get(url_full, headers=BROWSER_HEADERS, timeout=6)
+                    iog = BeautifulSoup(ir.text,"lxml").find("meta", property="og:image")
+                    if iog: img_url = iog.get("content","")
+                except Exception:
+                    pass
+                events.append({"title": title[:60], "url": url_full, "period": period, "image_url": img_url})
             if not events:
                 return ChannelResult(ch, name, True,
                     data={"events": [], "event_details": [], "raw_text": ""},

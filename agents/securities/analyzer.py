@@ -86,27 +86,29 @@ class MarketingAnalyzer(MarketingAnalyzerBase):
                 current_sheet_name, etf_universe
             )
             if result:
-                # ── 2단계: Z-score + sigmoid 점수 ──
-                if not result.no_competitors:
-                    did_history = []
-                    for hw in list(history_sheets.keys())[-self.ZSCORE_WINDOW:]:
-                        hidx = sheet_names.index(hw)
-                        hhistory = {k: all_sheets[k] for k in sheet_names[:hidx]}
-                        hres = self._analyze_one(code, kodex_name, hhistory, all_sheets[hw], hw, etf_universe)
-                        if hres and not hres.no_competitors:
-                            did_history.append(hres.did_value)
-                    z, score = self._compute_zscore_score(result.did_value, did_history)
-                    if z is not None:
-                        result.raw_did_value = result.did_value
-                        result.zscore = z
-                        result.marketing_score = score
-                        result.did_value = z
-                        j, e = self._judge_score(score)
-                        result.judgement = j
-                        result.judgement_emoji = e
-                        result.calculation_log.append(
-                            f"[2단계 Z-score] 이력 {len(did_history)}주  Z={z:+.4f}  점수={score:.1f}"
-                        )
+                # ── 2단계: Z-score + sigmoid 점수 (비교군 없어도 절대변화율 기반으로 산출) ──
+                did_history = []
+                for hw in list(history_sheets.keys())[-self.ZSCORE_WINDOW:]:
+                    hidx = sheet_names.index(hw)
+                    hhistory = {k: all_sheets[k] for k in sheet_names[:hidx]}
+                    hres = self._analyze_one(code, kodex_name, hhistory, all_sheets[hw], hw, etf_universe)
+                    if hres:
+                        did_history.append(hres.did_value)
+                z, score = self._compute_zscore_score(result.did_value, did_history)
+                if z is not None:
+                    result.raw_did_value = result.did_value
+                    result.zscore = z
+                    result.marketing_score = score
+                    result.did_value = z
+                    j, e = self._judge_score(score)
+                    result.judgement = j
+                    result.judgement_emoji = e
+                    no_did_note = " ⚠️ DiD 미적용(시장효과 미제거)" if result.no_competitors else ""
+                    result.calculation_log.append(
+                        f"[2단계 Z-score] 이력 {len(did_history)}주  Z={z:+.4f}  점수={score:.1f}{no_did_note}"
+                    )
+                    if result.no_competitors:
+                        result.notes.append("⚠️ 비교군 없음 — 절대변화율 Z-score (시장 공통 효과 미제거, 참고용)")
                 results[code] = result
 
         # ── DiD 결과 누적 저장 ──

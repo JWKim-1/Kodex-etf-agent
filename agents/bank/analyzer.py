@@ -449,9 +449,9 @@ class MarketingAnalyzer:
                 current_sheet_name, etf_universe
             )
             if result:
-                # ── 2단계: DiD 값 자체의 8주 이동평균 이상지수 계산 ──
-                # 비교군 없는 경우는 1단계 DiD 자체가 의미없으므로 2단계 건너뜀
-                if not result.no_competitors and result.competitors:
+                # ── 2단계: Z-score (비교군 없어도 절대변화율 기반으로 산출, 경고 주석 부착) ──
+                if True:  # 비교군 유무 무관하게 Z-score 산출
+                    _no_did_warn = result.no_competitors or not result.competitors
                     WINDOW_2ND = 16
                     did_history = []
 
@@ -496,7 +496,7 @@ class MarketingAnalyzer:
                         hidx = history_names.index(hw)
                         hhistory = {k: all_sheets[k] for k in history_names[:hidx]}
                         hres = self._analyze_one(code, kodex_name, hhistory, hdf, hw, etf_universe)
-                        if hres and not hres.no_competitors and hres.competitors:
+                        if hres:
                             self._did_cache[cache_key] = hres.did_value
                             self._parquet_cache[cache_key] = hres.did_value
                             did_history.append(hres.did_value)
@@ -527,9 +527,12 @@ class MarketingAnalyzer:
                         result.marketing_score = score
                         result.judgement = judgement2
                         result.judgement_emoji = emoji2
+                        no_did_note = " ⚠️ DiD 미적용(시장효과 미제거)" if _no_did_warn else ""
                         result.calculation_log.append(
-                            f"[최종판정] {emoji2} {judgement2}  (Z={z_score:+.4f}, 점수={score:.1f}, raw DiD={raw_did:+.4f})"
+                            f"[최종판정] {emoji2} {judgement2}  (Z={z_score:+.4f}, 점수={score:.1f}, raw DiD={raw_did:+.4f}){no_did_note}"
                         )
+                        if _no_did_warn:
+                            result.notes.append("⚠️ 비교군 없음 — 절대변화율 Z-score (시장 공통 효과 미제거, 참고용)")
 
                 results[code] = result
 

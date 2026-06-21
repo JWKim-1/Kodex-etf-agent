@@ -750,11 +750,12 @@ SKIP_SHEETS = {"참고사항", "설명", "readme", "README", "시트설명"}
 sheet_names = [s for s in all_sheets.keys()
                if s not in SKIP_SHEETS and not s.lower().startswith("sheet")]
 
-# 미래 주차 제외
+# 미래 주차 제외 + 시간순 정렬 (삽입 순서 의존 금지)
 from krx_data_fetcher import _parse_week_label
 _today = datetime.now().date()
 sheet_names = [s for s in sheet_names
                if (_parse_week_label(s) is None or _parse_week_label(s) <= _today)]
+sheet_names = sorted(sheet_names, key=lambda s: _parse_week_label(s) or _today)
 if not sheet_names:
     st.error("유효한 데이터 시트를 찾지 못했습니다.")
     st.stop()

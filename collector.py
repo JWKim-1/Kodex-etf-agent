@@ -915,48 +915,107 @@ class DataCollector:
     # ── CH9: 구글 트렌드 ─────────────────────────────────────────────────────
 
     def _ch_google_trends(self) -> ChannelResult:
+        """
+        구글 트렌드 대체 수집 (pytrends 봇 차단 우회):
+        1) 구글 트렌드 RSS — 한국 실시간 인기 검색어, ETF/KODEX 포함 여부 감지
+        2) 네이버 데이터랩 — KODEX/ETF/TIGER 주간 검색량 트렌드 (권한 있을 때)
+        """
         ch, name = "google_trends", CHANNEL_LABELS["google_trends"]
-        keywords = ["KODEX", "삼성증권 ETF", "KODEX 200"]
+        ETF_KEYWORDS = {"ETF", "KODEX", "코덱스", "TIGER", "ACE", "RISE", "상장지수펀드"}
+
+        results = {}
+        raw_parts = []
+
+        # ── 1) 구글 트렌드 RSS (실시간 인기 검색어) ─────────────────────────
         try:
-            from pytrends.request import TrendReq
-            import requests as _req
-
-            # 세션 공유: 쿠키를 먼저 취득해서 봇 탐지 우회
-            _sess = _req.Session()
-            _sess.headers.update({**BROWSER_HEADERS, "Referer": "https://trends.google.com/"})
-            try:
-                _sess.get("https://trends.google.com/trends/?geo=KR", timeout=10)
-            except Exception:
-                pass
-
-            pt = TrendReq(hl="ko", tz=540, timeout=(15, 30))
-            pt.build_payload(keywords, cat=0, timeframe="today 4-w", geo="KR")
-            df = pt.interest_over_time()
-
-            if df.empty:
-                return ChannelResult(ch, name, True,
-                    data={"trends": {}},
-                    error_label="이번 주 구글 트렌드 데이터 없음 (해당 기간 검색량 없음)")
-
-            trends = {}
-            for kw in keywords:
-                if kw in df.columns:
-                    s = df[kw]
-                    cur = float(s.iloc[-1])
-                    avg = float(s.mean())
-                    chg = round((cur - avg) / avg * 100, 1) if avg > 0 else 0.0
-                    trends[kw] = {"current": int(cur), "avg_4w": round(avg, 1), "change_pct": chg,
-                                  "weekly": [int(v) for v in s.tolist()]}
-            return ChannelResult(ch, name, True, data={"trends": trends})
-        except ImportError:
-            return ChannelResult(ch, name, False, error="pytrends 미설치 — pip install pytrends", error_type="UNKNOWN")
+            import xml.etree.ElementTree as ET
+            r = requests.get(
+                "https://trends.google.com/trending/rss?geo=KR",
+                headers={**BROWSER_HEADERS, "Accept": "application/rss+xml,application/xml"},
+                timeout=10,
+            )
+            root = ET.fromstring(r.text)
+            trending = []
+            etf_hits = []
+            for item in root.findall(".//item"):
+                title = item.findtext("title", "").strip()
+                trending.append(title)
+                if any(k.lower() in title.lower() for k in ETF_KEYWORDS):
+                    etf_hits.append(title)
+            results["google_trending"] = {
+                "keywords": trending,
+                "etf_hits": etf_hits,
+                "etf_in_trend": bool(etf_hits),
+            }
+            if etf_hits:
+                raw_parts.append(f"구글 인기검색어 ETF 감지: {', '.join(etf_hits)}")
+            else:
+                raw_parts.append(f"구글 인기검색어 {len(trending)}개 (ETF 미포함)")
         except Exception as e:
-            err = str(e)
-            if "400" in err or "429" in err or "Too Many" in err or "method_whitelist" in err:
-                return ChannelResult(ch, name, False,
-                    error=f"Google 트렌드 봇 차단 (400/429) — 서버측 IP 차단",
-                    error_type="BOT_DETECTED")
-            return ChannelResult(ch, name, False, error=err, error_type="UNKNOWN")
+            results["google_trending"] = {"error": str(e)}
+
+        # ── 2) 네이버 데이터랩 (검색어 트렌드) ──────────────────────────────
+        naver_id  = self.naver_client_id  if hasattr(self, "naver_client_id")  else os.getenv("NAVER_CLIENT_ID", "")
+        naver_sec = self.naver_client_secret if hasattr(self, "naver_client_secret") else os.getenv("NAVER_CLIENT_SECRET", "")
+        if naver_id and naver_sec:
+            try:
+                import json as _json
+                from datetime import timedelta as _td
+                end_dt   = self.week_end
+                start_dt = end_dt - _td(days=28)
+                body = _json.dumps({
+                    "startDate": start_dt.strftime("%Y-%m-%d"),
+                    "endDate":   end_dt.strftime("%Y-%m-%d"),
+                    "timeUnit":  "week",
+                    "keywordGroups": [
+                        {"groupName": "KODEX", "keywords": ["KODEX", "코덱스"]},
+                        {"groupName": "ETF",   "keywords": ["ETF", "상장지수펀드"]},
+                        {"groupName": "TIGER", "keywords": ["TIGER ETF", "타이거ETF"]},
+                        {"groupName": "ACE",   "keywords": ["ACE ETF"]},
+                    ],
+                }, ensure_ascii=False)
+                resp = requests.post(
+                    "https://openapi.naver.com/v1/datalab/search",
+                    headers={
+                        "X-Naver-Client-Id":     naver_id,
+                        "X-Naver-Client-Secret": naver_sec,
+                        "Content-Type":          "application/json; charset=UTF-8",
+                    },
+                    data=body.encode("utf-8"),
+                    timeout=10,
+                )
+                if resp.status_code == 200:
+                    datalab = resp.json()
+                    trend_data = {}
+                    for result in datalab.get("results", []):
+                        kw_name = result["title"]
+                        series  = result.get("data", [])
+                        if series:
+                            latest = series[-1]
+                            prev   = series[-2] if len(series) >= 2 else latest
+                            chg    = round(latest["ratio"] - prev["ratio"], 1)
+                            trend_data[kw_name] = {
+                                "ratio":      latest["ratio"],
+                                "prev_ratio": prev["ratio"],
+                                "change":     chg,
+                                "weekly":     [d["ratio"] for d in series],
+                            }
+                    results["naver_datalab"] = trend_data
+                    summaries = [f"{k} {v['ratio']:.0f}({'+' if v['change']>=0 else ''}{v['change']:.0f})"
+                                 for k, v in trend_data.items()]
+                    raw_parts.append("네이버 검색트렌드: " + " / ".join(summaries))
+                else:
+                    results["naver_datalab"] = {"error": f"HTTP {resp.status_code} — 데이터랩 권한 미부여"}
+            except Exception as e:
+                results["naver_datalab"] = {"error": str(e)}
+
+        if not results:
+            return ChannelResult(ch, name, False, error="수집 실패", error_type="UNKNOWN")
+
+        detected = bool(results.get("google_trending", {}).get("etf_hits")) or \
+                   bool(results.get("naver_datalab") and "error" not in results["naver_datalab"])
+        return ChannelResult(ch, name, detected,
+            data={"trends": results, "raw_text": " | ".join(raw_parts)})
 
     # ── CH10: 퇴직연금 상품가이드 PDF ────────────────────────────────────────
 

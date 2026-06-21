@@ -468,3 +468,112 @@ else:
             )
         else:
             st.info("bank_zscore_history에 marketing_detected=False 주차가 없어 비교 불가 (모든 수집 주차가 마케팅 기간).")
+
+# ── 이벤트 캘린더 ─────────────────────────────────────────────────────────────
+import re as _re, plotly.graph_objects as _go
+from datetime import datetime as _dt, timedelta as _td
+
+_DATE_PAT = _re.compile(r'(20\d{2})[.\-/](\d{1,2})[.\-/](\d{1,2})')
+
+def _parse_date(s):
+    m = _DATE_PAT.search(str(s or ''))
+    if m:
+        try: return _dt(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        except: pass
+    return None
+
+_SESS_COLOR_CAL = {"securities":"#4d9fff","bank":"#05b169","mass":"#f0c040","competitor":"#f43f5e"}
+_SESS_LBL_CAL   = {"securities":"증권","bank":"은행","mass":"개인","competitor":"경쟁사"}
+_PROV_COLOR_CAL = {"KODEX":"#4d9fff","TIGER":"#ff8c42","ACE":"#05b169","RISE":"#a78bfa",
+                   "HANARO":"#00c6ff","SOL":"#f43f5e","PLUS":"#fb923c"}
+
+# 전체 히스토리에서 기간 있는 이벤트 수집
+_cal_events = []
+for _wk in sorted(history.keys(), key=lambda w: _parse_week_label(w) or date.min):
+    for _sk in ["securities","bank","mass","competitor"]:
+        _sess = (history[_wk].get(_sk) or {})
+        for _ev in (_sess.get("events") or {}).get("events") or []:
+            _s = _parse_date(_ev.get("event_period",""))
+            _dates = _DATE_PAT.findall(str(_ev.get("event_period","") or ""))
+            if len(_dates) >= 2:
+                try:
+                    _sd = _dt(int(_dates[0][0]),int(_dates[0][1]),int(_dates[0][2]))
+                    _ed = _dt(int(_dates[1][0]),int(_dates[1][1]),int(_dates[1][2]))
+                except: continue
+            elif len(_dates) == 1:
+                try:
+                    _sd = _ed = _dt(int(_dates[0][0]),int(_dates[0][1]),int(_dates[0][2]))
+                except: continue
+            else:
+                continue
+            _prov = _ev.get("provider","") or _sk
+            _cal_events.append({
+                "session": _sk, "provider": _prov,
+                "title": (_ev.get("title") or "")[:28],
+                "start": _sd, "end": _ed,
+                "color": _PROV_COLOR_CAL.get(_prov, _SESS_COLOR_CAL.get(_sk,"#888")),
+                "label": f"[{_SESS_LBL_CAL.get(_sk,_sk)}] {(_ev.get('title') or '')[:25]}",
+            })
+
+st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+st.markdown("### 📅 마케팅 이벤트 캘린더")
+st.caption("전체 수집 이력에서 기간 정보가 있는 이벤트를 달력으로 표시합니다.")
+
+if _cal_events:
+    # 월 선택
+    _all_months = sorted(set(f"{e['start'].year}-{e['start'].month:02d}" for e in _cal_events), reverse=True)
+    _sel_month = st.selectbox("월 선택", _all_months, index=0, key="cal_month")
+    _yr, _mo = int(_sel_month.split("-")[0]), int(_sel_month.split("-")[1])
+    _mo_start = _dt(_yr, _mo, 1)
+    _mo_end   = (_mo_start + _td(days=32)).replace(day=1) - _td(days=1)
+
+    # 해당 월 이벤트 필터
+    _mo_events = [e for e in _cal_events if e["end"] >= _mo_start and e["start"] <= _mo_end]
+
+    if _mo_events:
+        fig_cal = _go.Figure()
+        for i, ev in enumerate(_mo_events):
+            _s = max(ev["start"], _mo_start)
+            _e = min(ev["end"], _mo_end)
+            fig_cal.add_trace(_go.Bar(
+                x=[(_e - _s).days + 1],
+                y=[ev["label"]],
+                orientation="h",
+                base=_s.strftime("%Y-%m-%d"),
+                marker=dict(color=ev["color"], opacity=0.8,
+                            line=dict(color="rgba(255,255,255,0.3)", width=1)),
+                hovertemplate=(
+                    f"<b>{ev['title']}</b><br>"
+                    f"{ev['start'].strftime('%Y.%m.%d')} ~ {ev['end'].strftime('%Y.%m.%d')}<br>"
+                    f"채널: {_SESS_LBL_CAL.get(ev['session'],ev['session'])}"
+                    "<extra></extra>"
+                ),
+                showlegend=False,
+            ))
+        # 오늘 날짜 선
+        _today_str = date.today().strftime("%Y-%m-%d")
+        if _mo_start.date() <= date.today() <= _mo_end.date():
+            fig_cal.add_vline(x=_today_str, line_color="rgba(255,255,255,0.4)",
+                              line_width=1.5, line_dash="dot",
+                              annotation_text="오늘", annotation_font_color="#aaa",
+                              annotation_font_size=10)
+
+        fig_cal.update_layout(
+            height=max(250, len(_mo_events) * 32 + 80),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(20,20,30,0.5)",
+            font=dict(color="#e8eaed", size=11),
+            xaxis=dict(type="date",
+                       range=[_mo_start.strftime("%Y-%m-%d"), (_mo_end + _td(days=1)).strftime("%Y-%m-%d")],
+                       gridcolor="rgba(255,255,255,0.06)",
+                       tickformat="%m/%d", dtick="D3", title=""),
+            yaxis=dict(autorange="reversed", showgrid=False),
+            margin=dict(l=10, r=20, t=20, b=30),
+            barmode="overlay",
+        )
+        st.plotly_chart(fig_cal, use_container_width=True)
+        st.caption(f"{_sel_month} 기준 {len(_mo_events)}개 이벤트 표시")
+    else:
+        st.info(f"{_sel_month}에 기간 정보 있는 이벤트 없음")
+else:
+    st.info("기간 정보 있는 이벤트 없음 — 마케팅 수집 후 이벤트 기간이 추출되면 표시됩니다.")

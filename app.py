@@ -1061,6 +1061,17 @@ else:
                 ev_etf_names = [all_kodex_etfs.get(c,c) for c in ev_etf_codes if c]
                 etf_label = target or (", ".join(ev_etf_names[:2]) if ev_etf_names else "")
                 img_url = ev.get("image_url","")
+                # 썸네일 없으면 채널 수집 결과에서 자동 매칭
+                if not img_url and collection_results:
+                    for _cr in collection_results.values():
+                        if not _cr.success or not _cr.data: continue
+                        for _v in (_cr.data.get("videos") or []):
+                            if _v.get("thumbnail") and (title[:15] in _v.get("title","") or _v.get("url","") == url):
+                                img_url = _v["thumbnail"]; break
+                        for _a in (_cr.data.get("articles") or []):
+                            if _a.get("thumbnail") and _a.get("url","") == url:
+                                img_url = _a["thumbnail"]; break
+                        if img_url: break
                 title_html  = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>' if url and url.startswith("http") else title
                 period_html = f'<div class="ev-period">📅 {period}</div>' if period and period not in ("","null") else ""
                 etf_html    = f'<div class="ev-etf" style="color:#4d9fff;">🎯 {etf_label}</div>' if etf_label else ""

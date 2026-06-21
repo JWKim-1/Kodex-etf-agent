@@ -322,18 +322,33 @@ if llm_result.get("marketing_detected"):
             url = ev.get("url","")
             ev_etf_codes = ev.get("etf_codes", [])
             ev_etf_names = [all_kodex_etfs.get(c, c) for c in ev_etf_codes if c]
+            # 썸네일 수집 결과에서 자동 매칭
+            img_url = ev.get("image_url","")
+            if not img_url and collection_results:
+                for _cr in collection_results.values():
+                    if not _cr.success or not _cr.data: continue
+                    for _v in (_cr.data.get("videos") or []):
+                        if _v.get("thumbnail") and (title[:15] in _v.get("title","") or _v.get("url","") == url):
+                            img_url = _v["thumbnail"]; break
+                    for _a in (_cr.data.get("articles") or []):
+                        if _a.get("thumbnail") and _a.get("url","") == url:
+                            img_url = _a["thumbnail"]; break
+                    if img_url: break
             title_html = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>' if url and url.startswith("http") else title
             period_html = f'<div class="ev-period">📅 {period}</div>' if period and period != "null" else ""
             etf_html = f'<div style="font-size:.7rem;color:#f0c040;margin-top:4px;">🎯 {", ".join(ev_etf_names)}</div>' if ev_etf_names else ""
+            img_html = f'<img class="ev-card-img" src="{img_url}" onerror="this.style.display=\'none\'">' if img_url else '<div class="ev-card-img-placeholder">🎯</div>'
             import html as _html_m
             cards_html += (
                 f'<div class="ev-card">'
+                f'{img_html}'
+                f'<div class="ev-card-body">'
                 f'<span class="ev-card-type {cls}">{icon} {mtype}</span>'
                 f'<div class="ev-title">{title_html}</div>'
                 + period_html + etf_html +
                 f'<div class="ev-summary">{_html_m.escape(str(summary)[:120])}</div>'
                 f'<div class="ev-channel">출처: {_html_m.escape(str(channel))}</div>'
-                f'</div>'
+                f'</div></div>'
             )
         cards_html += "</div>"
         st.markdown(cards_html, unsafe_allow_html=True)

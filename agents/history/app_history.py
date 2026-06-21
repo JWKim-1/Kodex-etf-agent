@@ -550,13 +550,15 @@ if _cal_events:
                 ),
                 showlegend=False,
             ))
-        # 오늘 날짜 선
-        _today_str = date.today().strftime("%Y-%m-%d")
+        # 오늘 날짜 선 (shape으로 대체 - add_vline은 날짜 타입 충돌)
         if _mo_start.date() <= date.today() <= _mo_end.date():
-            fig_cal.add_vline(x=_today_str, line_color="rgba(255,255,255,0.4)",
-                              line_width=1.5, line_dash="dot",
-                              annotation_text="오늘", annotation_font_color="#aaa",
-                              annotation_font_size=10)
+            fig_cal.add_shape(type="line",
+                x0=date.today().strftime("%Y-%m-%d"), x1=date.today().strftime("%Y-%m-%d"),
+                y0=0, y1=1, yref="paper",
+                line=dict(color="rgba(255,255,255,0.4)", width=1.5, dash="dot"))
+            fig_cal.add_annotation(x=date.today().strftime("%Y-%m-%d"), y=1,
+                yref="paper", text="오늘", showarrow=False,
+                font=dict(color="#aaa", size=10), yanchor="bottom")
 
         fig_cal.update_layout(
             height=max(250, len(_mo_events) * 32 + 80),

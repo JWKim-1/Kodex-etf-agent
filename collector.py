@@ -88,6 +88,7 @@ CHANNEL_LABELS = {
     "sol_blog":         "SOL ETF 블로그 (네이버)",
     "rise_blog":        "RISE ETF 블로그 (네이버)",
     "plus_insight":     "PLUS ETF 인사이트 (plusetf.co.kr)",
+    "plus_event":       "PLUS ETF 이벤트 공지 (plusetf.co.kr)",
     "etf_am_news":      "ETF 운용사 뉴스·이벤트 (네이버/구글)",
 }
 
@@ -302,6 +303,7 @@ class DataCollector:
             ("sol_blog",       self._ch_sol_blog),
             ("rise_blog",      self._ch_rise_blog),
             ("plus_insight",   self._ch_plus_insight),
+            ("plus_event",     self._ch_plus_event),
             ("kodex_blog",     self._ch_kodex_blog),
             ("etf_am_news",    self._ch_etf_am_news),
             # 카카오 채널
@@ -1677,7 +1679,7 @@ class DataCollector:
             return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
 
     def _ch_rise_event(self) -> ChannelResult:
-        """RISE ETF 이벤트 페이지 — KB자산운용 (SSR)."""
+        """RISE ETF 이벤트 페이지 — KB자산운용."""
         ch, name = "rise_event", CHANNEL_LABELS["rise_event"]
         list_url = "https://www.riseetf.co.kr/cust/event"
         base_url = "https://www.riseetf.co.kr"
@@ -1686,23 +1688,31 @@ class DataCollector:
             r.raise_for_status()
             soup = BeautifulSoup(r.text, "lxml")
             events = []
-            # 이벤트 목록: li 구조, /cust/event/[ID] 링크
-            for a in soup.find_all("a", href=re.compile(r"/cust/event/\d+")):
-                title_el = a.find(text=True, recursive=True)
-                title = a.get_text(" ", strip=True)
+            seen = set()
+            # 이벤트 링크: 내부(/cust/event/) + 외부(riseetf-event.com) 모두 수집
+            for a in soup.find_all("a", href=True):
                 href = a.get("href", "")
-                if not title or len(title) < 5:
+                if not (re.search(r"/cust/event/\d+|riseetf-event\.com/event", href)):
                     continue
-                url_full = base_url + href if href.startswith("/") else href
-                # 기간 추출 (YYYY-MM-DD ~ YYYY-MM-DD)
+                raw_title = a.get_text(" ", strip=True)
+                # 진행중/이벤트/기간 같은 메타 텍스트 제거
+                title = re.sub(r"(진행중|종료|이벤트\s*기간|이벤트\s*$|^\s*이벤트\s*)", "", raw_title).strip()
+                title = re.sub(r"\s+", " ", title).strip()
+                if not title or len(title) < 5 or title in seen:
+                    continue
+                seen.add(title)
+                url_full = (base_url + href) if href.startswith("/") else href
+                # 종료 이벤트 제외
+                if re.search(r"종료|당첨자", raw_title):
+                    continue
+                # 기간 추출
                 period = ""
                 parent = a.find_parent()
                 if parent:
-                    period_m = re.search(r"\d{4}-\d{2}-\d{2}\s*~\s*\d{4}-\d{2}-\d{2}", parent.get_text())
+                    period_m = re.search(r"\d{4}[-./]\d{2}[-./]\d{2}\s*[-~]\s*\d{4}[-./]\d{2}[-./]\d{2}", parent.get_text())
                     if period_m:
                         period = period_m.group()
-                img_url = self._fetch_og_image(url_full, base_url)
-                events.append({"title": title, "url": url_full, "period": period, "image_url": img_url})
+                events.append({"title": title[:60], "url": url_full, "period": period, "image_url": ""})
             if not events:
                 return ChannelResult(ch, name, True,
                     data={"events": [], "event_details": [], "raw_text": ""},
@@ -1851,6 +1861,45 @@ class DataCollector:
             code = getattr(getattr(e, "response", None), "status_code", 0)
             et = "ACCESS_BLOCKED" if code in (403, 429) else "CONNECTION_ERROR"
             return ChannelResult(ch, name, False, error=str(e), error_type=et)
+        except Exception as e:
+            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
+
+    def _ch_plus_event(self) -> ChannelResult:
+        """PLUS ETF 이벤트 공지 — 한화자산운용."""
+        ch, name = "plus_event", CHANNEL_LABELS.get("plus_event", "PLUS ETF 이벤트")
+        try:
+            r = requests.get("https://www.plusetf.co.kr/customer/notice/list",
+                             headers=BROWSER_HEADERS, timeout=10)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "lxml")
+            articles, raw_texts = [], []
+            seen = set()
+            for a in soup.find_all("a", href=True):
+                href = a.get("href", "")
+                if "/customer/notice/detail" not in href:
+                    continue
+                raw_title = a.get_text(" ", strip=True)
+                # 이벤트/프로모션 관련 항목만
+                if not any(k in raw_title for k in ["이벤트","프로모션","혜택","수수료","매수"]):
+                    continue
+                # 날짜 + 번호 제거
+                title = re.sub(r"^\d+\s*", "", raw_title)
+                title = re.sub(r"\d{4}\.\d{2}\.\d{2}.*", "", title).strip()
+                if not title or len(title) < 5 or title in seen:
+                    continue
+                seen.add(title)
+                full_url = f"https://www.plusetf.co.kr{href}" if href.startswith("/") else href
+                date_m = re.search(r"20\d{2}\.\d{2}\.\d{2}", raw_title)
+                period = date_m.group() if date_m else ""
+                articles.append({"title": title[:60], "url": full_url,
+                                  "thumbnail": "", "description": period})
+                raw_texts.append(title)
+            if not articles:
+                return ChannelResult(ch, name, True,
+                    data={"articles":[],"raw_text":""},
+                    error_label="PLUS ETF 이벤트 없음")
+            return ChannelResult(ch, name, True,
+                data={"articles": articles, "raw_text": " / ".join(raw_texts[:5])[:400]})
         except Exception as e:
             return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
 

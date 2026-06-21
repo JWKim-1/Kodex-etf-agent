@@ -606,6 +606,37 @@ if _cal_events:
     _html += '</tr></table>'
 
     st.markdown(_html, unsafe_allow_html=True)
-    st.caption(f"{_yr}년 {_mo}월 · 이벤트 {len(_mo_events)}개")
+    st.caption(f"{_yr}년 {_mo}월 · 이 달에 진행된 이벤트 {len(_mo_events)}개 (다른 달 시작~6월 이어진 것 포함)")
+
+    # ── 월별 이벤트 목록 탭 ─────────────────────────────────────────────
+    st.markdown('<div style="height:1px;background:rgba(255,255,255,0.07);margin:1.2rem 0;"></div>', unsafe_allow_html=True)
+    st.markdown("#### 📋 월별 이벤트 목록")
+
+    # 월별 그룹핑 (이벤트 시작월 기준)
+    _month_groups: dict = {}
+    for _ev in _cal_events:
+        _mk = f"{_ev['start'].year}-{_ev['start'].month:02d}"
+        _month_groups.setdefault(_mk, []).append(_ev)
+
+    _sorted_months = sorted(_month_groups.keys(), reverse=True)
+    if _sorted_months:
+        _mtab_labels = [f"{int(m[5:])}월 ({len(_month_groups[m])}건)" for m in _sorted_months]
+        _mtabs = st.tabs(_mtab_labels)
+        for _mt, _mk in zip(_mtabs, _sorted_months):
+            with _mt:
+                _mevs = sorted(_month_groups[_mk], key=lambda e: e["start"])
+                for _mev in _mevs:
+                    _color = _mev["color"]
+                    _s_str = _mev["start"].strftime("%m/%d")
+                    _e_str = _mev["end"].strftime("%m/%d")
+                    _period = f"{_s_str}" if _mev["start"] == _mev["end"] else f"{_s_str} ~ {_e_str}"
+                    _sess_lbl = _SESS_LBL_CAL.get(_mev["session"], _mev["session"])
+                    st.markdown(
+                        f'<div style="border-left:3px solid {_color};padding:6px 12px;margin:4px 0;background:{_color}0d;border-radius:0 8px 8px 0;">'
+                        f'<span style="font-size:.65rem;color:{_color};font-weight:700;">[{_sess_lbl}] {_period}</span>'
+                        f'<div style="font-size:.85rem;font-weight:600;color:#e8eaed;margin-top:2px;">{_mev["title"]}</div>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
 else:
     st.info("기간 정보 있는 이벤트 없음 — 마케팅 수집 후 이벤트 기간이 추출되면 표시됩니다.")

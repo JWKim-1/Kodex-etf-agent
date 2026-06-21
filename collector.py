@@ -74,6 +74,7 @@ CHANNEL_LABELS = {
     "tiger_event":      "TIGER ETF 이벤트 페이지",
     "ace_event":        "ACE ETF 이벤트 공지",
     "rise_event":       "RISE ETF 이벤트 페이지",
+    "rise_notice":      "RISE ETF 공지사항",
     "hanaro_event":     "HANARO ETF 이벤트 공지",
     "sol_event":        "SOL ETF 이벤트 공지",
     # ── ETF 운용사 카카오 채널 ──────────────────────────────────────────────
@@ -295,6 +296,7 @@ class DataCollector:
             ("tiger_event",    self._ch_tiger_event),
             ("ace_event",      self._ch_ace_event),
             ("rise_event",     self._ch_rise_event),
+            ("rise_notice",    self._ch_rise_notice),
             ("hanaro_event",   self._ch_hanaro_event),
             ("sol_event",      self._ch_sol_event),
             ("sol_blog",       self._ch_sol_blog),
@@ -1622,6 +1624,45 @@ class DataCollector:
             code = getattr(getattr(e, "response", None), "status_code", 0)
             et = "ACCESS_BLOCKED" if code in (403, 429) else "CONNECTION_ERROR"
             return ChannelResult(ch, name, False, error=str(e), error_type=et)
+        except Exception as e:
+            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
+
+    def _ch_rise_notice(self) -> ChannelResult:
+        """RISE ETF 공지사항 — KB자산운용."""
+        ch, name = "rise_notice", CHANNEL_LABELS["rise_notice"]
+        try:
+            r = requests.get("https://www.riseetf.co.kr/cust/notice",
+                             headers=BROWSER_HEADERS, timeout=10)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "lxml")
+            text = soup.get_text()
+            # (날짜, 제목, href) 추출
+            links = [(a.get_text(" ", strip=True), a.get("href",""))
+                     for a in soup.find_all("a", href=True)
+                     if "/cust/notice/" in a.get("href","") and len(a.get_text(strip=True)) > 8]
+            dates = re.findall(r"20\d{2}[./]\d{2}[./]\d{2}", text)
+
+            articles, raw_texts = [], []
+            for i, (title, href) in enumerate(links):
+                if i >= len(dates):
+                    break
+                date_str = dates[i]
+                try:
+                    d = datetime(*[int(x) for x in re.split(r"[./]", date_str)])
+                    if not self._in_range(d):
+                        continue
+                except Exception:
+                    continue
+                full_url = f"https://www.riseetf.co.kr{href}" if href.startswith("/") else href
+                articles.append({"title": title[:80], "url": full_url, "thumbnail": "", "description": date_str})
+                raw_texts.append(title)
+
+            if not articles:
+                return ChannelResult(ch, name, True,
+                    data={"articles":[], "raw_text":""},
+                    error_label="이번 주 RISE 공지 없음")
+            return ChannelResult(ch, name, True,
+                data={"articles": articles, "raw_text": " / ".join(raw_texts[:5])[:400]})
         except Exception as e:
             return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
 

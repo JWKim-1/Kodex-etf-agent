@@ -207,11 +207,11 @@ if st.session_state.selected_mode is None:
         st.markdown("""
         <div class="mode-card">
             <div class="mode-icon">📈</div>
-            <div class="mode-title">증권사 채널</div>
-            <div class="mode-desc">증권사 이벤트·유튜브·블로그 수집 → KODEX ETF 금융투자 순매수 DiD 측정</div>
+            <div class="mode-title">증권 채널</div>
+            <div class="mode-desc">삼성·미래에셋·키움·한투·신한·KB 유튜브·이벤트·카카오 수집 → 금융투자 순매수 DiD + Z-score 측정</div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("증권사 채널 →", key="btn_securities", use_container_width=True, type="primary"):
+        if st.button("증권 채널 →", key="btn_securities", use_container_width=True, type="primary"):
             st.session_state.selected_mode = "securities"
             st.session_state["analysis_run"] = False
             st.rerun()
@@ -221,7 +221,7 @@ if st.session_state.selected_mode is None:
         <div class="mode-card">
             <div class="mode-icon">🏦</div>
             <div class="mode-title">은행 채널</div>
-            <div class="mode-desc">KB·신한·하나 등 은행 순매수 이상 감지 + Z-score 2단계 분석으로 은행 채널 마케팅 효과 측정</div>
+            <div class="mode-desc">KB·신한·하나·우리·농협 유튜브·블로그·카카오 수집 → 은행 순매수 AUM DiD + Z-score 역방향 이상 감지</div>
         </div>
         """, unsafe_allow_html=True)
         if st.button("은행 채널 →", key="btn_bank", use_container_width=True, type="primary"):
@@ -233,7 +233,7 @@ if st.session_state.selected_mode is None:
         <div class="mode-card">
             <div class="mode-icon">🎯</div>
             <div class="mode-title">개인 채널</div>
-            <div class="mode-desc">삼성자산운용 직접 채널(이벤트·KODEX유튜브·뉴스) 마케팅 효과를 개인 순매수 DiD로 측정</div>
+            <div class="mode-desc">KODEX 유튜브·공식블로그·카카오·이벤트·뉴스 수집 → 개인 순매수 DiD로 대고객 마케팅 효과 측정</div>
         </div>
         """, unsafe_allow_html=True)
         if st.button("개인 채널 →", key="btn_mass", use_container_width=True, type="primary"):
@@ -250,7 +250,7 @@ if st.session_state.selected_mode is None:
         <div class="mode-card">
             <div class="mode-icon">📊</div>
             <div class="mode-title">ETF 시장 트렌드</div>
-            <div class="mode-desc">국내 ETF 수익률·거래대금 Top 10 + 운용사별 점유율 자동 정리</div>
+            <div class="mode-desc">국내 ETF 수익률·거래대금 Top 10 + 운용사별 점유율 + 수익률×순매수 전략 매트릭스</div>
         </div>
         """, unsafe_allow_html=True)
         if st.button("시장 트렌드 →", key="btn_trend", use_container_width=True, type="primary"):
@@ -262,7 +262,7 @@ if st.session_state.selected_mode is None:
         <div class="mode-card">
             <div class="mode-icon">🏢</div>
             <div class="mode-title">경쟁사 채널</div>
-            <div class="mode-desc">TIGER·ACE·RISE·HANARO·SOL 유튜브·블로그 이벤트 감지 → 이벤트명·기간·내용 자동 정리</div>
+            <div class="mode-desc">TIGER·ACE·RISE·HANARO·SOL·PLUS 유튜브·블로그·카카오·인사이트 수집 → 경쟁사 마케팅 활동 자동 정리</div>
         </div>
         """, unsafe_allow_html=True)
         if st.button("경쟁사 채널 →", key="btn_competitor", use_container_width=True, type="primary"):
@@ -274,7 +274,7 @@ if st.session_state.selected_mode is None:
         <div class="mode-card">
             <div class="mode-icon">🏷️</div>
             <div class="mode-title">ETF 사후관리</div>
-            <div class="mode-desc">신규상장 자동 감지 · 상폐 모니터링 · 만기청산 분류 · 주차별 ETF 수 추이</div>
+            <div class="mode-desc">신규상장 감지 · 상폐 LLM 자동검증 · 만기청산 분류 · 뉴스·DART 공시 연동</div>
         </div>
         """, unsafe_allow_html=True)
         if st.button("ETF 사후관리 →", key="btn_lifecycle", use_container_width=True, type="primary"):
@@ -310,12 +310,12 @@ if st.session_state.selected_mode is None:
         <div class="collect-banner-icon">🔄</div>
         <div class="collect-banner-text">
             <div class="collect-banner-title">이번 주 전체 채널 수집</div>
-            <div class="collect-banner-desc">증권사 · 은행 · 개인(ETF AM) · 경쟁사 — 4개 세션 수집 + LLM 분석 + 자동 저장까지 한 번에</div>
+            <div class="collect-banner-desc">증권 · 은행 · 개인(KODEX) · 경쟁사(ETF AM) — 4개 세션 수집 + LLM 분석 + 자동 저장까지 한 번에</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("🔄  전체 채널 수집  —  증권사·은행·개인·경쟁사 4개 세션 일괄 수집 & 저장", key="btn_collect_all", use_container_width=True):
+    if st.button("🔄  전체 채널 수집  —  증권·은행·개인·경쟁사 4개 세션 일괄 수집 & 저장", key="btn_collect_all", use_container_width=True):
         import scheduled_collect as _sc
         from datetime import date as _date, timedelta as _td
         _today = _date.today()
@@ -664,12 +664,12 @@ def keyword_fallback(collection_results, all_kodex_etfs: dict) -> dict:
     return {"marketing_detected": False, "etf_codes": [], "summary": "마케팅 활동 미감지 (키워드 방식)", "evidence": []}
 
 # ── 메인 ──────────────────────────────────────────────────────────────────────
-st.title("📊 증권사 채널 KODEX ETF 마케팅 효과 측정 Agent")
+st.title("📊 증권 채널 KODEX ETF 마케팅 효과 측정 Agent")
 st.caption("마케팅 활동 감지 → ETF 특정 → 비교군 매핑 → DiD 분석")
 
 with st.expander("📐 마케팅 점수(0~100) 산정 방식", expanded=False):
     st.markdown("""
-**증권사 채널**은 유튜브·블로그·이벤트에서 마케팅 활동을 감지한 뒤 해당 ETF의 금융투자 순매수 변화를 측정합니다.
+**증권 채널**은 유튜브·블로그·이벤트에서 마케팅 활동을 감지한 뒤 해당 ETF의 금융투자 순매수 변화를 측정합니다.
 
 | 단계 | 내용 |
 |------|------|

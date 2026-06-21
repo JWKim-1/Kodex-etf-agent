@@ -1,1705 +1,1800 @@
 {
-  "generated_at": "2026-06-20T01:58:26.429014",
-  "n_total_weeks_in_marketing_history": 2,
+  "generated_at": "2026-06-21T23:28:31.521374",
+  "n_total_weeks_in_marketing_history": 39,
   "marketing_history_weeks": [
     "6.8-6.12",
-    "6.15-6.19"
+    "6.15-6.19",
+    "1.12-1.16",
+    "1.19-1.23",
+    "1.26-1.30",
+    "1.5-1.9",
+    "10.13-10.17",
+    "10.20-10.24",
+    "10.27-10.31",
+    "10.6-10.10",
+    "11.10-11.14",
+    "11.17-11.21",
+    "11.24-11.28",
+    "11.3-11.7",
+    "12.1-12.5",
+    "12.15-12.19",
+    "12.22-12.26",
+    "12.29-1.2",
+    "12.8-12.12",
+    "2.16-2.20",
+    "2.2-2.6",
+    "2.23-2.27",
+    "2.9-2.13",
+    "3.16-3.20",
+    "3.2-3.6",
+    "3.23-3.27",
+    "3.30-4.3",
+    "3.9-3.13",
+    "4.13-4.17",
+    "4.20-4.24",
+    "4.27-5.1",
+    "4.6-4.10",
+    "5.11-5.15",
+    "5.18-5.22",
+    "5.25-5.29",
+    "5.4-5.8",
+    "6.1-6.5",
+    "9.22-9.26",
+    "9.29-10.3"
   ],
   "week_map": {
-    "6.8-6.12": "6.9-6.13",
-    "6.15-6.19": null
+    "6.8-6.12": "6.8-6.12",
+    "6.15-6.19": "6.15-6.19",
+    "1.12-1.16": null,
+    "1.19-1.23": null,
+    "1.26-1.30": null,
+    "1.5-1.9": null,
+    "10.13-10.17": null,
+    "10.20-10.24": null,
+    "10.27-10.31": null,
+    "10.6-10.10": null,
+    "11.10-11.14": null,
+    "11.17-11.21": null,
+    "11.24-11.28": null,
+    "11.3-11.7": null,
+    "12.1-12.5": null,
+    "12.15-12.19": null,
+    "12.22-12.26": null,
+    "12.29-1.2": null,
+    "12.8-12.12": null,
+    "2.16-2.20": null,
+    "2.2-2.6": null,
+    "2.23-2.27": null,
+    "2.9-2.13": null,
+    "3.16-3.20": "3.16-3.20",
+    "3.2-3.6": "3.2-3.6",
+    "3.23-3.27": null,
+    "3.30-4.3": null,
+    "3.9-3.13": "3.9-3.13",
+    "4.13-4.17": null,
+    "4.20-4.24": null,
+    "4.27-5.1": null,
+    "4.6-4.10": null,
+    "5.11-5.15": null,
+    "5.18-5.22": null,
+    "5.25-5.29": "5.25-5.29",
+    "5.4-5.8": null,
+    "6.1-6.5": "6.1-6.5",
+    "9.22-9.26": null,
+    "9.29-10.3": null
   },
   "data_weeks": {
     "did_securities": [
       "3.16-3.20",
       "3.2-3.6",
-      "3.9-3.13"
+      "3.9-3.13",
+      "6.15-6.19",
+      "6.8-6.12"
     ],
     "did_mass": [
-      "5.25-5.28",
+      "5.25-5.29",
       "6.1-6.5",
-      "6.9-6.13"
+      "6.15-6.19",
+      "6.8-6.12"
     ],
     "bank_zscore": [
       "6.1-6.5",
-      "6.9-6.13"
+      "6.15-6.19",
+      "6.8-6.12"
     ]
   },
   "channels": {
     "securities": {
-      "status": "insufficient_data",
-      "reason": "유효한 DiD/Z-score 값 없음 (NaN 또는 주차 불일치)",
-      "data_limitation": ""
+      "status": "ok",
+      "n_weeks_with_marketing": 3,
+      "n_weeks_without": 0,
+      "mean_did_with": 0.25,
+      "mean_did_without": null,
+      "t_stat": null,
+      "p_value": null,
+      "significant": false,
+      "pearson_r": -0.9970501410659873,
+      "pearson_p": 0.04891055169193228,
+      "data_limitation": "",
+      "by_etf": {
+        "069500": {
+          "name": "KODEX 200",
+          "mean_with": 0.25,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
+        }
+      }
     },
     "mass": {
       "status": "insufficient_data",
       "reason": "유효한 DiD/Z-score 값 없음 (NaN 또는 주차 불일치)",
-      "data_limitation": "did_history(mass) 주차: ['5.25-5.28', '6.1-6.5', '6.9-6.13'] | 6.9-6.13 주차 did 값이 모두 NaN (수집 미완성 가능성)"
+      "data_limitation": "did_history(mass) 주차: ['5.25-5.29', '6.1-6.5', '6.15-6.19', '6.8-6.12'] | 6.9-6.13 주차 did 값이 모두 NaN (수집 미완성 가능성)"
     },
     "bank": {
       "status": "ok",
-      "n_weeks_with_marketing": 0,
-      "n_weeks_without": 1,
-      "mean_did_with": null,
-      "mean_did_without": 0.2225517755434245,
+      "n_weeks_with_marketing": 3,
+      "n_weeks_without": 0,
+      "mean_did_with": 0.05147341559881378,
+      "mean_did_without": null,
       "t_stat": null,
       "p_value": null,
       "significant": false,
-      "pearson_r": null,
-      "pearson_p": null,
-      "data_limitation": "bank_zscore 주차: ['6.1-6.5', '6.9-6.13'] | marketing_history(bank) 이벤트 있는 주: ['6.15-6.19']",
+      "pearson_r": 0.6986158006472918,
+      "pearson_p": 0.5075993919954764,
+      "data_limitation": "bank_zscore 주차: ['6.1-6.5', '6.15-6.19', '6.8-6.12'] | marketing_history(bank) 이벤트 있는 주: ['6.8-6.12', '6.15-6.19', '1.12-1.16', '1.19-1.23', '1.26-1.30', '1.5-1.9', '10.13-10.17', '10.20-10.24', '10.27-10.31', '10.6-10.10', '11.10-11.14', '11.17-11.21', '11.24-11.28', '11.3-11.7', '12.1-12.5', '12.15-12.19', '12.22-12.26', '12.29-1.2', '12.8-12.12', '2.16-2.20', '2.2-2.6', '2.23-2.27', '2.9-2.13', '3.16-3.20', '3.2-3.6', '3.23-3.27', '3.30-4.3', '3.9-3.13', '4.13-4.17', '4.20-4.24', '4.27-5.1', '4.6-4.10', '5.11-5.15', '5.18-5.22', '5.25-5.29', '5.4-5.8', '6.1-6.5', '9.22-9.26', '9.29-10.3']",
       "by_etf": {
         "0000H0": {
           "name": "KODEX 인도Nifty미드캡100",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.18342331168547074,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0005A0": {
           "name": "KODEX 미국S&P500데일리커버드콜OTM",
-          "mean_with": null,
-          "mean_without": -1.152919090723217,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.6017173951753615,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0007F0": {
           "name": "KODEX 27-12 회사채(AA-이상)액티브",
-          "mean_with": null,
-          "mean_without": 0.6007018250439762,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.0009150913256280868,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0026E0": {
           "name": "KODEX 미국S&P500버퍼3월액티브",
-          "mean_with": null,
-          "mean_without": -0.5621604826866744,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.5900053727939358,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0028X0": {
           "name": "KODEX 미국금융테크액티브",
-          "mean_with": null,
-          "mean_without": 0.0156,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.25527668831452927,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0038A0": {
           "name": "KODEX 미국휴머노이드로봇",
-          "mean_with": null,
-          "mean_without": 0.9623361493427,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.4795225208542291,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0041D0": {
           "name": "KODEX 미국AI소프트웨어TOP10",
-          "mean_with": null,
-          "mean_without": -0.5024153201864052,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.10625543851688672,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0041E0": {
           "name": "KODEX 미국S&P500액티브",
-          "mean_with": null,
-          "mean_without": -0.16025080485326568,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.03942085015676966,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0048J0": {
           "name": "KODEX 미국머니마켓액티브",
-          "mean_with": null,
-          "mean_without": 0.3492,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.13912331168547074,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0048K0": {
           "name": "KODEX 차이나휴머노이드로봇",
-          "mean_with": null,
-          "mean_without": -1.2465580927824738,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.6261019651484392,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0064K0": {
           "name": "KODEX 금액티브",
-          "mean_with": null,
-          "mean_without": -0.8807866556557129,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.1915507537245884,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0065G0": {
           "name": "KODEX 차이나테크TOP10",
-          "mean_with": null,
-          "mean_without": -0.3830822191388341,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.46169150106451484,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0068M0": {
           "name": "KODEX 미국S&P500버퍼6월액티브",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.3708766883145292,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0080G0": {
           "name": "KODEX 방산TOP10",
-          "mean_with": null,
-          "mean_without": -0.9352743520321585,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.2070139740404766,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0082V0": {
           "name": "KODEX TDF2060액티브 적격",
-          "mean_with": null,
-          "mean_without": 0.985225115831903,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.4301231652716022,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0089C0": {
           "name": "KODEX 미국S&P500변동성확대시커버드콜",
-          "mean_with": null,
-          "mean_without": -0.5681400174411867,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.4123118974210296,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0089D0": {
           "name": "KODEX 금융고배당TOP10",
-          "mean_with": null,
-          "mean_without": -0.25214248240420445,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.6231225814560499,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0091C0": {
           "name": "KODEX 미국10년국채액티브(H)",
-          "mean_with": null,
-          "mean_without": -0.210140900177558,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.28656015672007257,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0098F0": {
           "name": "KODEX 원자력SMR",
-          "mean_with": null,
-          "mean_without": 0.8892586834484965,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.19280722349748639,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0100K0": {
           "name": "KODEX 방산TOP10레버리지",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.24725664501880407,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0115D0": {
           "name": "KODEX 조선TOP10",
-          "mean_with": null,
-          "mean_without": -0.37124529085170055,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.22763521022141595,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0115E0": {
           "name": "KODEX 코리아소버린AI",
-          "mean_with": null,
-          "mean_without": -0.0755,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.36642331168547077,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0117L0": {
           "name": "KODEX 26-12 금융채(AA-이상)액티브",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.2879899783521374,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0119H0": {
           "name": "KODEX 28-12 회사채(AA-이상)액티브",
-          "mean_with": null,
-          "mean_without": 1.1840853412376946,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.015630639105585376,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0132H0": {
           "name": "KODEX 미국원자력SMR",
-          "mean_with": null,
-          "mean_without": -0.6601845916502697,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.40689658997315853,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0144L0": {
           "name": "KODEX 미국성장커버드콜액티브",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.08606666666666667,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0144M0": {
           "name": "KODEX 미국드론UAM TOP10",
-          "mean_with": null,
-          "mean_without": 1.098080693687874,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.16842274712647906,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0151S0": {
           "name": "KODEX 미국AI반도체TOP3플러스",
-          "mean_with": null,
-          "mean_without": 0.19108312871106445,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.5093532689206577,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0153K0": {
           "name": "KODEX 주주환원고배당주",
-          "mean_with": null,
-          "mean_without": 0.10741260352412721,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.21558368825274288,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0162L0": {
           "name": "KODEX 차이나AI반도체TOP10",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.08606666666666667,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0162M0": {
           "name": "KODEX 금융채1~2년(AA-이상)PLUS액티브",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.16105664501880407,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0167Z0": {
           "name": "KODEX 미국우주항공",
-          "mean_with": null,
-          "mean_without": -1.3216030406181876,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -1.0289940793877916,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0173Y0": {
           "name": "KODEX 미국AI광통신네트워크",
-          "mean_with": null,
-          "mean_without": -0.4238562820826023,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.4463482166704247,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0177N0": {
           "name": "KODEX 삼성전자SK하이닉스채권혼합50",
-          "mean_with": null,
-          "mean_without": 1.3893543887606077,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 1.2444486515168198,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0190G0": {
           "name": "KODEX 반도체타겟위클리커버드콜",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.14572331168547073,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "0204D0": {
           "name": "KODEX 현대차로보틱스밸류체인TOP3플러스",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.0,
+          "mean_without": null,
+          "n_with": 1,
+          "n_without": 0
         },
         "069500": {
           "name": "KODEX 200",
-          "mean_with": null,
-          "mean_without": 0.14013299766214501,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.26093330351715593,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "091160": {
           "name": "KODEX 반도체",
-          "mean_with": null,
-          "mean_without": 1.811987977187809,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 1.05517786198559,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "091170": {
           "name": "KODEX 은행",
-          "mean_with": null,
-          "mean_without": 0.20713348900847262,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.4789200500717102,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "091180": {
           "name": "KODEX 자동차",
-          "mean_with": null,
-          "mean_without": 0.9011605644990989,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.3893304795120495,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "099140": {
           "name": "KODEX 차이나H",
-          "mean_with": null,
-          "mean_without": -0.17243002640666927,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.8243497466844175,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "101280": {
           "name": "KODEX 일본TOPIX100",
-          "mean_with": null,
-          "mean_without": -0.01858318375280208,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.08097464581362095,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "102780": {
           "name": "KODEX 삼성그룹",
-          "mean_with": null,
-          "mean_without": -0.191581862829548,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.8040457709988095,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "102960": {
           "name": "KODEX 기계장비",
-          "mean_with": null,
-          "mean_without": -0.0005,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.4656233116854707,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "102970": {
           "name": "KODEX 증권",
-          "mean_with": null,
-          "mean_without": 0.15095709908091187,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.6825551990236675,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "114260": {
           "name": "KODEX 국고채3년",
-          "mean_with": null,
-          "mean_without": 0.7603422007539997,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.4395740811668589,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "114800": {
           "name": "KODEX 인버스",
-          "mean_with": null,
-          "mean_without": -0.17610476460031646,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.5917463637655994,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "117460": {
           "name": "KODEX 에너지화학",
-          "mean_with": null,
-          "mean_without": -0.08334058627023674,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.26169744184363725,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "117680": {
           "name": "KODEX 철강",
-          "mean_with": null,
-          "mean_without": -0.4761071046703895,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.8365121836712118,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "117700": {
           "name": "KODEX 건설",
-          "mean_with": null,
-          "mean_without": 0.11581222733328031,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.19360259725652854,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "122630": {
           "name": "KODEX 레버리지",
-          "mean_with": null,
-          "mean_without": -0.08980860505449881,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.34687605773320307,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "132030": {
           "name": "KODEX 골드선물(H)",
-          "mean_with": null,
-          "mean_without": 1.6084063128951147,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.05264266285897912,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "138910": {
           "name": "KODEX 구리선물(H)",
-          "mean_with": null,
-          "mean_without": 0.0283,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.0646100216478626,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "138920": {
           "name": "KODEX 콩선물(H)",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.23787668831452927,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "140700": {
           "name": "KODEX 보험",
-          "mean_with": null,
-          "mean_without": 0.0391,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.21412331168547075,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "140710": {
           "name": "KODEX 운송",
-          "mean_with": null,
-          "mean_without": -0.092,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.5959899783521374,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "144600": {
           "name": "KODEX 은선물(H)",
-          "mean_with": null,
-          "mean_without": 0.8985247141211035,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.03392087112015576,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "152380": {
           "name": "KODEX 국채선물10년",
-          "mean_with": null,
-          "mean_without": -0.48562930116812014,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.6675052290638016,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "153130": {
           "name": "KODEX 단기채권",
-          "mean_with": null,
-          "mean_without": 0.2837195578148659,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.021872270350448215,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "156080": {
           "name": "KODEX MSCI Korea",
-          "mean_with": null,
-          "mean_without": 0.28360108577712456,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.8714682292277267,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "169950": {
           "name": "KODEX 차이나A50",
-          "mean_with": null,
-          "mean_without": 0.0166,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.3877566450188041,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "176950": {
           "name": "KODEX 국채선물10년인버스",
-          "mean_with": null,
-          "mean_without": -0.6401593493375183,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.27461464557472953,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "185680": {
           "name": "KODEX 미국S&P바이오(합성)",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.1754100216478626,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "200030": {
           "name": "KODEX 미국S&P500산업재(합성)",
-          "mean_with": null,
-          "mean_without": -1.6487548035273902,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.6630786735416075,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "204450": {
           "name": "KODEX 차이나H레버리지(H)",
-          "mean_with": null,
-          "mean_without": 0.09847974283648014,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.062466849149776495,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "211900": {
           "name": "KODEX 코리아배당성장",
-          "mean_with": null,
-          "mean_without": 0.29280580890900143,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.41090738051675135,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "213610": {
           "name": "KODEX 삼성그룹밸류",
-          "mean_with": null,
-          "mean_without": 0.22779509577174842,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.5398289767112906,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "214980": {
           "name": "KODEX 단기채권PLUS",
-          "mean_with": null,
-          "mean_without": 0.11547322286787513,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.33556285353265697,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "218420": {
           "name": "KODEX 미국S&P500에너지(합성)",
-          "mean_with": null,
-          "mean_without": 0.3414100714211364,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.20666351408673755,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "219480": {
           "name": "KODEX 미국S&P500선물(H)",
-          "mean_with": null,
-          "mean_without": -1.0667984443091734,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.22781986846235544,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "223190": {
           "name": "KODEX 200가치저변동",
-          "mean_with": null,
-          "mean_without": 0.2537,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.4501566450188041,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "226490": {
           "name": "KODEX 코스피",
-          "mean_with": null,
-          "mean_without": 0.20160687698170796,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.5372803926195614,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "226980": {
           "name": "KODEX 200 중소형",
-          "mean_with": null,
-          "mean_without": 0.17298065551368194,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.6960809566576921,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "229200": {
           "name": "KODEX 코스닥150",
-          "mean_with": null,
-          "mean_without": 0.7375375539953656,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 1.3174541189008984,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "229720": {
           "name": "KODEX KTOP30",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.35896666666666666,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "233740": {
           "name": "KODEX 코스닥150레버리지",
-          "mean_with": null,
-          "mean_without": 0.11785131913774083,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.1016395603420525,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "237350": {
           "name": "KODEX 코스피100",
-          "mean_with": null,
-          "mean_without": -0.18240289384647565,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.23925549810052663,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "237370": {
           "name": "KODEX 코리아배당성장채권혼합",
-          "mean_with": null,
-          "mean_without": -0.4174470696147502,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.4680952867297024,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "244580": {
           "name": "KODEX 바이오",
-          "mean_with": null,
-          "mean_without": -0.24721238832917708,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.3722899235765374,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "244620": {
           "name": "KODEX 모멘텀Plus",
-          "mean_with": null,
-          "mean_without": 0.02495388069428763,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.16728871094361417,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "244660": {
           "name": "KODEX 퀄리티Plus",
-          "mean_with": null,
-          "mean_without": 0.46347605705147205,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.05433076793261413,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "244670": {
           "name": "KODEX 밸류Plus",
-          "mean_with": null,
-          "mean_without": -0.23677557478816358,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.5936082025389938,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "251340": {
           "name": "KODEX 코스닥150선물인버스",
-          "mean_with": null,
-          "mean_without": 0.15474905862017319,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.1255580993607489,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "251350": {
           "name": "KODEX MSCI선진국",
-          "mean_with": null,
-          "mean_without": 0.901,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.5403566450188041,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "252650": {
           "name": "KODEX 200동일가중",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.0699,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "252670": {
           "name": "KODEX 200선물인버스2X",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.18433333333333335,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "256750": {
           "name": "KODEX 차이나심천ChiNext(합성)",
-          "mean_with": null,
-          "mean_without": 0.0502,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.7038899783521373,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "261220": {
           "name": "KODEX WTI원유선물(H)",
-          "mean_with": null,
-          "mean_without": 0.0014,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.12404335498119594,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "261240": {
           "name": "KODEX 미국달러선물",
-          "mean_with": null,
-          "mean_without": -0.4467410883306521,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.6997255904325294,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "261250": {
           "name": "KODEX 미국달러선물레버리지",
-          "mean_with": null,
-          "mean_without": 0.11160581186720113,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.32468970836503935,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "261260": {
           "name": "KODEX 미국달러선물인버스2X",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.014233333333333334,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "261270": {
           "name": "KODEX 미국달러선물인버스",
-          "mean_with": null,
-          "mean_without": -0.13827533768429,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.03262330300440613,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "266360": {
           "name": "KODEX K콘텐츠",
-          "mean_with": null,
-          "mean_without": -0.0031,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.07464335498119593,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "266370": {
           "name": "KODEX IT",
-          "mean_with": null,
-          "mean_without": 0.6489858120005082,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -1.7021742109882727,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "266390": {
           "name": "KODEX 경기소비재",
-          "mean_with": null,
-          "mean_without": -0.0011756150357457027,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.39883347034401123,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "266410": {
           "name": "KODEX 필수소비재",
-          "mean_with": null,
-          "mean_without": 0.0032,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.004723311685470736,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "266420": {
           "name": "KODEX 헬스케어",
-          "mean_with": null,
-          "mean_without": 0.05080555800609209,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.7587135214258401,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "269420": {
           "name": "KODEX S&P글로벌인프라(합성)",
-          "mean_with": null,
-          "mean_without": 0.03892068110441751,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.09848751086945151,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "271050": {
           "name": "KODEX WTI원유선물인버스(H)",
-          "mean_with": null,
-          "mean_without": -0.0012,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.3232566450188041,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "271060": {
           "name": "KODEX 3대농산물선물(H)",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.16777668831452927,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "273130": {
           "name": "KODEX 종합채권(AA-이상)액티브",
-          "mean_with": null,
-          "mean_without": -0.10640008093359311,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.04876964091188698,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "273140": {
           "name": "KODEX 단기변동금리부채권액티브",
-          "mean_with": null,
-          "mean_without": 0.2449,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.07427668831452926,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "275280": {
           "name": "KODEX 모멘텀주",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.9820766883145292,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "275290": {
           "name": "KODEX 가치주",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.7118666666666668,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "275300": {
           "name": "KODEX 우량주",
-          "mean_with": null,
-          "mean_without": -0.0213,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.6471433549811959,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "276970": {
           "name": "KODEX 미국S&P500배당귀족커버드콜(합성 H)",
-          "mean_with": null,
-          "mean_without": 0.0021,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.1678766883145293,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "276990": {
           "name": "KODEX 글로벌로봇(합성)",
-          "mean_with": null,
-          "mean_without": 0.2421,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.2898566450188041,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "278530": {
           "name": "KODEX 200TR",
-          "mean_with": null,
-          "mean_without": -0.26351693807283877,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.1272893256220752,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "278540": {
           "name": "KODEX MSCI Korea TR",
-          "mean_with": null,
-          "mean_without": -0.1368552891754296,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.5067481317317388,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "279530": {
           "name": "KODEX 고배당주",
-          "mean_with": null,
-          "mean_without": 0.4683233727082633,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.4487240810589898,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "279540": {
           "name": "KODEX 최소변동성",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.04005664501880407,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "280930": {
           "name": "KODEX 미국러셀2000(H)",
-          "mean_with": null,
-          "mean_without": 0.292,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.44341002164786253,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "280940": {
           "name": "KODEX 골드선물인버스(H)",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.19557668831452926,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "283580": {
           "name": "KODEX 차이나CSI300",
-          "mean_with": null,
-          "mean_without": -2.1361009970118325,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.9567565993011681,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "284430": {
           "name": "KODEX 200미국채혼합",
-          "mean_with": null,
-          "mean_without": -0.5066,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.03368997835213736,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "289040": {
           "name": "KODEX MSCI KOREA ESG유니버설",
-          "mean_with": null,
-          "mean_without": 0.1716519820315499,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.39091112553508056,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "291890": {
           "name": "KODEX MSCI EM선물(H)",
-          "mean_with": null,
-          "mean_without": -0.02577631076876075,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.04912137844280009,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "292190": {
           "name": "KODEX KRX300",
-          "mean_with": null,
-          "mean_without": -0.17559151669263948,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.12080741564660942,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "292770": {
           "name": "KODEX 국채선물3년인버스",
-          "mean_with": null,
-          "mean_without": -0.7585199718862727,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.10267973977959262,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "298770": {
           "name": "KODEX 한국대만IT프리미어",
-          "mean_with": null,
-          "mean_without": -0.0141,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.5585233116854708,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "300950": {
           "name": "KODEX 게임산업",
-          "mean_with": null,
-          "mean_without": 0.0352,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.014956645018804072,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "304660": {
           "name": "KODEX 미국30년국채울트라선물(H)",
-          "mean_with": null,
-          "mean_without": -0.2748533565339674,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.3366108733951654,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "304670": {
           "name": "KODEX 미국30년국채울트라선물인버스(H)",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.24622331168547074,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "304940": {
           "name": "KODEX 미국나스닥100선물(H)",
-          "mean_with": null,
-          "mean_without": 1.0968480466338428,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.07604413179313618,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "305720": {
           "name": "KODEX 2차전지산업",
-          "mean_with": null,
-          "mean_without": -0.5625506790129545,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.3336604678171235,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "306950": {
           "name": "KODEX KRX300레버리지",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.19076666666666667,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "308620": {
           "name": "KODEX 미국10년국채선물",
-          "mean_with": null,
-          "mean_without": -0.6037500805349703,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.42244666241250356,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "314250": {
           "name": "KODEX 미국빅테크10(H)",
-          "mean_with": null,
-          "mean_without": 0.9037834792482747,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.11701058035487903,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "315930": {
           "name": "KODEX Top5PlusTR",
-          "mean_with": null,
-          "mean_without": 0.1381,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.41754335498119577,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "321410": {
           "name": "KODEX 멀티에셋하이인컴(H)",
-          "mean_with": null,
-          "mean_without": 0.0096,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 1.302256645018804,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "325010": {
           "name": "KODEX 성장주",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.18913333333333335,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "325020": {
           "name": "KODEX 배당가치",
-          "mean_with": null,
-          "mean_without": 0.0641,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.18245664501880407,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "329650": {
           "name": "KODEX TRF3070",
-          "mean_with": null,
-          "mean_without": 0.3444,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.3152899783521374,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "329660": {
           "name": "KODEX TRF5050",
-          "mean_with": null,
-          "mean_without": 0.5319,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.18087668831452927,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "329670": {
           "name": "KODEX TRF7030",
-          "mean_with": null,
-          "mean_without": 0.1871,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.19424335498119594,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "337120": {
           "name": "KODEX 멀티팩터",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.0862899783521374,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "337140": {
           "name": "KODEX 코스피대형주",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.6995,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "337150": {
           "name": "KODEX 200exTOP",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.1720100216478626,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "337160": {
           "name": "KODEX 200ESG",
-          "mean_with": null,
-          "mean_without": -1.9178548434160179,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.2714596164760478,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "352540": {
           "name": "KODEX 일본부동산리츠(H)",
-          "mean_with": null,
-          "mean_without": -0.0128,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.3541100216478626,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "352560": {
           "name": "KODEX 미국부동산리츠(H)",
-          "mean_with": null,
-          "mean_without": -0.3122717006766691,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.004390031020643966,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "359210": {
           "name": "KODEX 코스피TR",
-          "mean_with": null,
-          "mean_without": 0.32697479287980036,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.05295428764534386,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "360140": {
           "name": "KODEX 200롱코스닥150숏선물",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -2.1123100216478625,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "360150": {
           "name": "KODEX 코스닥150롱코스피200숏선물",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.9977100216478626,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "363570": {
           "name": "KODEX 장기종합채권(AA-이상)액티브",
-          "mean_with": null,
-          "mean_without": 0.2458942472736977,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.09372992195186043,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "363580": {
           "name": "KODEX 200IT TR",
-          "mean_with": null,
-          "mean_without": 0.5382072524352908,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -1.9212655365755476,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "364690": {
           "name": "KODEX 혁신기술테마액티브",
-          "mean_with": null,
-          "mean_without": -0.0322,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.8267233116854708,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "368680": {
           "name": "KODEX K-뉴딜디지털플러스",
-          "mean_with": null,
-          "mean_without": -2.4258338741072323,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.6395820857811574,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "372330": {
           "name": "KODEX 차이나항셍테크",
-          "mean_with": null,
-          "mean_without": 0.36948840361849206,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.13821114342599872,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "373490": {
           "name": "KODEX 코리아혁신성장액티브",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.23832331168547072,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "375770": {
           "name": "KODEX 탄소효율그린뉴딜",
-          "mean_with": null,
-          "mean_without": -0.044105340857293944,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.15990126279438058,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "379800": {
           "name": "KODEX 미국S&P500",
-          "mean_with": null,
-          "mean_without": 1.929576007638644,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.7666986289595011,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "379810": {
           "name": "KODEX 미국나스닥100",
-          "mean_with": null,
-          "mean_without": -0.20097802611571614,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.33494138574935145,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "385510": {
           "name": "KODEX 신재생에너지액티브",
-          "mean_with": null,
-          "mean_without": -0.4902435632021093,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.17831363637122452,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "385520": {
           "name": "KODEX 자율주행액티브",
-          "mean_with": null,
-          "mean_without": 0.06562170591706859,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.19166242481947635,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "390390": {
           "name": "KODEX 미국반도체",
-          "mean_with": null,
-          "mean_without": 0.12087063853952171,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.00334367390963064,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "390400": {
           "name": "KODEX 미국스마트모빌리티S&P",
-          "mean_with": null,
-          "mean_without": 0.0537,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.01818997835213741,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "395150": {
           "name": "KODEX 웹툰&드라마",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.36588997835213743,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "395160": {
           "name": "KODEX AI반도체TOP2플러스",
-          "mean_with": null,
-          "mean_without": 0.07972993111800361,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.20745501138172576,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "395170": {
           "name": "KODEX Top10동일가중",
-          "mean_with": null,
-          "mean_without": 0.031175133075280664,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.18807658865826757,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "400570": {
           "name": "KODEX 유럽탄소배출권선물ICE(H)",
-          "mean_with": null,
-          "mean_without": 0.6069875642684579,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.19504697777183397,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "401470": {
           "name": "KODEX 메타버스액티브",
-          "mean_with": null,
-          "mean_without": -0.03700594803440316,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.851210332618909,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "404260": {
           "name": "KODEX 기후변화솔루션",
-          "mean_with": null,
-          "mean_without": -0.12870019125633736,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.10967295386066385,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "409810": {
           "name": "KODEX 미국나스닥100선물인버스(H)",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.07497668831452926,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "409820": {
           "name": "KODEX 미국나스닥100레버리지(합성 H)",
-          "mean_with": null,
-          "mean_without": 0.17727866440577705,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.8659658054310847,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "411420": {
           "name": "KODEX 미국나스닥AI테크액티브",
-          "mean_with": null,
-          "mean_without": -0.4132510090924675,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.4761563444101724,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "415340": {
           "name": "KODEX 차이나과창판STAR50(합성)",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.6536333333333334,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "419420": {
           "name": "KODEX 미국클린에너지나스닥",
-          "mean_with": null,
-          "mean_without": 0.0123,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.035923311685470735,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "419430": {
           "name": "KODEX 차이나2차전지MSCI(합성)",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.0401899783521374,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "423160": {
           "name": "KODEX KOFR금리액티브(합성)",
-          "mean_with": null,
-          "mean_without": 0.11266139281397426,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.3453942164996378,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "428510": {
           "name": "KODEX 차이나AI테크액티브",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.08606666666666667,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "428560": {
           "name": "KODEX 미국ETF산업Top10 Indxx",
-          "mean_with": null,
-          "mean_without": 0.001,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.06414335498119593,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "433970": {
           "name": "KODEX TDF2030액티브 적격",
-          "mean_with": null,
-          "mean_without": 4.006777695516752,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.7893829622116266,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "433980": {
           "name": "KODEX TDF2040액티브 적격",
-          "mean_with": null,
-          "mean_without": 0.013446173017531102,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.35891058075075755,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "434060": {
           "name": "KODEX TDF2050액티브 적격",
-          "mean_with": null,
-          "mean_without": -0.13073929942668083,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.10209372968131392,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "437070": {
           "name": "KODEX 아시아달러채권ESG플러스액티브",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.10497668831452926,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "437080": {
           "name": "KODEX 미국종합채권ESG액티브(H)",
-          "mean_with": null,
-          "mean_without": 0.3999,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.014210021647862614,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "439860": {
           "name": "KODEX ESG종합채권(A-이상)액티브",
-          "mean_with": null,
-          "mean_without": 0.2820921834105863,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.6117949635489496,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "439870": {
           "name": "KODEX 국고채30년액티브",
-          "mean_with": null,
-          "mean_without": 1.0398774502657497,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.4356969495682073,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "441640": {
           "name": "KODEX 미국배당커버드콜액티브",
-          "mean_with": null,
-          "mean_without": 0.3648471538257241,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.10999680148460352,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "445150": {
           "name": "KODEX 친환경조선해운액티브",
-          "mean_with": null,
-          "mean_without": 0.1316,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.23272331168547075,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "445290": {
           "name": "KODEX 로봇액티브",
-          "mean_with": null,
-          "mean_without": 0.13812821335575437,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.4410349881380169,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "446690": {
           "name": "KODEX 아시아AI반도체exChina액티브",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.1393100216478626,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "448330": {
           "name": "KODEX 삼성전자채권혼합",
-          "mean_with": null,
-          "mean_without": 0.7785670239116217,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.2863068410309708,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "449180": {
           "name": "KODEX 미국S&P500(H)",
-          "mean_with": null,
-          "mean_without": -1.422090686593881,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 1.1954044551786105,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "449190": {
           "name": "KODEX 미국나스닥100(H)",
-          "mean_with": null,
-          "mean_without": 1.9881799476458395,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.7857643045505699,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "450180": {
           "name": "KODEX 한중전기차(합성)",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -1.6666666666666667,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "450190": {
           "name": "KODEX 한중반도체(합성)",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.12983333333333333,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "453630": {
           "name": "KODEX 미국S&P500필수소비재",
-          "mean_with": null,
-          "mean_without": 0.22922876587215163,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.05916831267181405,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "453640": {
           "name": "KODEX 미국S&P500헬스케어",
-          "mean_with": null,
-          "mean_without": -0.0045,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.19407668831452926,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "453650": {
           "name": "KODEX 미국S&P500금융",
-          "mean_with": null,
-          "mean_without": -1.4783160209300357,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 1.3989865074624062,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "453660": {
           "name": "KODEX 미국S&P500경기소비재",
-          "mean_with": null,
-          "mean_without": -0.5681400174411867,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.45007856408769625,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "453810": {
           "name": "KODEX 인도Nifty50",
-          "mean_with": null,
-          "mean_without": 1.1629003074451543,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.7000887842958313,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "453820": {
           "name": "KODEX 인도Nifty50레버리지(합성)",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.7218233116854708,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "455030": {
           "name": "KODEX 미국달러SOFR금리액티브(합성)",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.6996333333333333,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "456250": {
           "name": "KODEX 유럽명품TOP10 STOXX",
-          "mean_with": null,
-          "mean_without": -0.0067,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.48795664501880404,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "457690": {
           "name": "KODEX 33-06 국고채액티브",
-          "mean_with": null,
-          "mean_without": -0.503120065816089,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.18006628840428504,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "457700": {
           "name": "KODEX 53-09 국고채액티브",
-          "mean_with": null,
-          "mean_without": -1.3014096439096803,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.46527485836715354,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "459560": {
           "name": "KODEX 테슬라밸류체인FactSet",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.22812331168547073,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "459580": {
           "name": "KODEX CD금리액티브(합성)",
-          "mean_with": null,
-          "mean_without": -0.08840230912425152,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.10887709618362047,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "461450": {
           "name": "KODEX 코스닥글로벌",
-          "mean_with": null,
-          "mean_without": -0.5301614985226886,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.15529259891214023,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "461950": {
           "name": "KODEX 2차전지핵심소재10",
-          "mean_with": null,
-          "mean_without": -0.4826977996292182,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.13545258380753666,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "462330": {
           "name": "KODEX 2차전지산업레버리지",
-          "mean_with": null,
-          "mean_without": -0.6168846954617307,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.46295504779816793,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "463640": {
           "name": "KODEX 미국S&P500유틸리티",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.32551002164786264,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "463680": {
           "name": "KODEX 미국S&P500테크놀로지",
-          "mean_with": null,
-          "mean_without": 0.2637,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.6420899783521373,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "463690": {
           "name": "KODEX 미국S&P500커뮤니케이션",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -1.4353766883145294,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "468370": {
           "name": "KODEX iShares미국인플레이션국채액티브",
-          "mean_with": null,
-          "mean_without": -0.009,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.3096899783521374,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "468380": {
           "name": "KODEX iShares미국하이일드액티브",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.11875664501880406,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "468630": {
           "name": "KODEX iShares미국투자등급회사채액티브",
-          "mean_with": null,
-          "mean_without": 0.0666,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.12241002164786258,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "471230": {
           "name": "KODEX 국고채10년액티브",
-          "mean_with": null,
-          "mean_without": -0.37748643579322755,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.14522734614849797,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "471990": {
           "name": "KODEX AI반도체핵심장비",
-          "mean_with": null,
-          "mean_without": 0.5728361793224126,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.18294481227611623,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "473290": {
           "name": "KODEX 26-12 회사채(AA-이상)액티브",
-          "mean_with": null,
-          "mean_without": -0.24946702806078974,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.7476547949018585,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "473460": {
           "name": "KODEX 미국서학개미",
-          "mean_with": null,
-          "mean_without": 0.5459,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.21212331168547074,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "475080": {
           "name": "KODEX 테슬라커버드콜채권혼합액티브",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.07122331168547073,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "476070": {
           "name": "KODEX 글로벌비만치료제TOP2 Plus",
-          "mean_with": null,
-          "mean_without": -0.07409846543850775,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.32775648387594686,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "476800": {
           "name": "KODEX 한국부동산리츠인프라",
-          "mean_with": null,
-          "mean_without": 0.16297327194203354,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.09789128003284077,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "477730": {
           "name": "KODEX 인도타타그룹",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.4244899783521374,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "481050": {
           "name": "KODEX CD1년금리플러스액티브(합성)",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -1.181443354981196,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "481060": {
           "name": "KODEX 미국30년국채타겟커버드콜(합성 H)",
-          "mean_with": null,
-          "mean_without": 0.6361063959190405,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.5472454643115384,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "483280": {
           "name": "KODEX 미국AI테크TOP10타겟커버드콜",
-          "mean_with": null,
-          "mean_without": 0.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.25643333333333335,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "483290": {
           "name": "KODEX 미국배당다우존스타겟커버드콜",
-          "mean_with": null,
-          "mean_without": -0.8333544253012823,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.15065884340395683,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "484790": {
           "name": "KODEX 미국30년국채액티브(H)",
-          "mean_with": null,
-          "mean_without": 0.04281627755513493,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.08730793196014619,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "485540": {
           "name": "KODEX 미국AI테크TOP10",
-          "mean_with": null,
-          "mean_without": -0.16077318796725026,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.3151570205962029,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "487230": {
           "name": "KODEX 미국AI전력핵심인프라",
-          "mean_with": null,
-          "mean_without": 0.09603000755064192,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.37329171415738105,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "487240": {
           "name": "KODEX AI전력핵심설비",
-          "mean_with": null,
-          "mean_without": -0.06201794320806359,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.07518195863715459,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "487950": {
           "name": "KODEX 대만테크고배당다우존스",
-          "mean_with": null,
-          "mean_without": 0.0416,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.44412331168547076,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "488770": {
           "name": "KODEX 머니마켓액티브",
-          "mean_with": null,
-          "mean_without": -0.4754337267196276,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.18901468231919416,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "489250": {
           "name": "KODEX 미국배당다우존스",
-          "mean_with": null,
-          "mean_without": -0.9135398468449272,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.004996928206480067,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "491090": {
           "name": "KODEX 미국테크TOP3플러스",
-          "mean_with": null,
-          "mean_without": -0.5885926873426058,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.5172346497563692,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "494300": {
           "name": "KODEX 미국나스닥100데일리커버드콜OTM",
-          "mean_with": null,
-          "mean_without": -1.4134751605067128,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.7022426263045256,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "494310": {
           "name": "KODEX 반도체레버리지",
-          "mean_with": null,
-          "mean_without": 50.0,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 16.687566666666665,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "494890": {
           "name": "KODEX 200액티브",
-          "mean_with": null,
-          "mean_without": 0.06335154306097403,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -1.0675472568516846,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "495850": {
           "name": "KODEX 코리아밸류업",
-          "mean_with": null,
-          "mean_without": 0.26125916940836796,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": -0.05356817733599876,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "498400": {
           "name": "KODEX 200타겟위클리커버드콜",
-          "mean_with": null,
-          "mean_without": 0.5058570734107776,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 1.1463091273602826,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         },
         "498410": {
           "name": "KODEX 금융고배당TOP10타겟위클리커버드콜",
-          "mean_with": null,
-          "mean_without": -0.5115852725783734,
-          "n_with": 0,
-          "n_without": 1
+          "mean_with": 0.007368800878302088,
+          "mean_without": null,
+          "n_with": 3,
+          "n_without": 0
         }
       }
     }
   },
   "bank_aux_analysis": {
     "note": "bank_zscore 내 marketing_detected=False 주차 없음 (모든 수집 주차가 마케팅 기간)",
-    "mean_did_with": 0.11322539694235838,
+    "mean_did_with": 0.05147341559881378,
     "mean_did_without": null
   },
   "analysis_note": "현재 marketing_history(2주)와 did/bank 데이터 기간 불일치로 대부분 채널에서 통계적 유의성 검증이 제한됩니다. 데이터가 누적될수록 분석 신뢰도 향상 예상."

@@ -229,6 +229,7 @@ class CompetitorResult:
     baseline_fi_avg: float
     baseline_ind_avg: float
     metric_used: str   # "financial" or "individual"
+    corr: float = None  # 수익률 상관계수
 
 
 @dataclass
@@ -501,7 +502,7 @@ class MarketingAnalyzer:
                             self._parquet_cache[cache_key] = hres.did_value
                             did_history.append(hres.did_value)
 
-                    if len(did_history) >= 4:  # 최소 4주는 있어야 σ 의미있음
+                    if len(did_history) >= 2:  # 최소 2주 이상이면 산출 (초기 데이터 부족 시 완화)
                         import numpy as _np
                         did_avg = float(_np.mean(did_history))
                         did_std = float(_np.std(did_history, ddof=1))

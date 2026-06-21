@@ -112,12 +112,11 @@ newlist_news  = [x for x in lc_history.get("newlist_news", [])  if "ETF" in x.ge
 dart_notices  = lc_history.get("dart_notices", [])
 lc_updated    = lc_history.get("collected_at", "미수집")
 
-# ── 탭: 신규상장 / 상폐 / 만기청산 / 뉴스 ────────────────────────────────────
-tab_new, tab_del, tab_mat, tab_gap, tab_news = st.tabs([
+# ── 탭: 신규상장 / 상폐 / 만기청산 / 뉴스 (수집갭 제거) ──────────────────────
+tab_new, tab_del, tab_mat, tab_news = st.tabs([
     f"🆕 신규상장 ({len(new_confirmed)+len(new_pending)})",
     f"⛔ 상폐 ({len(delist_conf)+len(delist_pend)})",
     f"⏳ 만기청산 ({len(maturity)})",
-    f"🔍 수집 갭 ({len(gaps)})",
     f"📰 뉴스·공시 ({len(delist_news)+len(dart_notices)})",
 ])
 
@@ -168,19 +167,28 @@ GAP_BADGE = {
 
 with tab_new:
     st.caption("다음 주에도 등장하면 '확정', 첫 주 등장이면 '추적 중'")
-    _cards(new_confirmed + new_pending, "status", NEW_BADGE)
+    all_new = new_confirmed + new_pending
+    cutoff_1m = date.today() - timedelta(days=31)
+    recent_new = [x for x in all_new if (_parse_week_label(x["week"]) or date.min) >= cutoff_1m]
+    older_new  = [x for x in all_new if (_parse_week_label(x["week"]) or date.min) < cutoff_1m]
+    _cards(recent_new, "status", NEW_BADGE)
+    if older_new:
+        with st.expander(f"📁 이전 신규상장 ({len(older_new)}건)", expanded=False):
+            _cards(older_new, "status", NEW_BADGE)
 
 with tab_del:
     st.caption("2주+ 연속 미등장 → 상폐 확정 / 1주 미등장 → 추적 중")
-    _cards(delist_conf + delist_pend, "reason", DEL_BADGE)
+    # 상폐 확정/추적 + 뉴스 LLM 검증 결과 함께 표시
+    all_del = delist_conf + delist_pend
+    if not all_del:
+        st.info("감지된 상폐 없음 — KRX 데이터에서 2주+ 연속 미등장 종목 없음")
+        st.caption("※ 만기 정상 청산 ETF(ACE 26-06 등)는 만기청산 탭에 있음")
+    else:
+        _cards(all_del, "reason", DEL_BADGE)
 
 with tab_mat:
     st.caption("이름에 YY-MM 만기 패턴 포함, 재등장 없음 → 만기 정상 청산")
     _cards(maturity, "reason", MAT_BADGE)
-
-with tab_gap:
-    st.caption("1주 미등장 후 다시 등장 → 수집 오류 (실제 상폐 아님)")
-    _cards(gaps, "reason", GAP_BADGE)
 
 with tab_news:
     st.caption(f"네이버 뉴스 + DART 공시 기반 · 마지막 수집: {lc_updated}")

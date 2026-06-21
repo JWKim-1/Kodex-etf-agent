@@ -309,15 +309,16 @@ if llm_result.get("marketing_detected"):
             title_html = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>' if url and url.startswith("http") else title
             period_html = f'<div class="ev-period">📅 {period}</div>' if period and period != "null" else ""
             etf_html = f'<div style="font-size:.7rem;color:#f0c040;margin-top:4px;">🎯 {", ".join(ev_etf_names)}</div>' if ev_etf_names else ""
-            cards_html += f"""
-            <div class="ev-card">
-              <span class="ev-card-type {cls}">{icon} {mtype}</span>
-              <div class="ev-title">{title_html}</div>
-              {period_html}
-              {etf_html}
-              <div class="ev-summary">{summary[:120]}</div>
-              <div class="ev-channel">출처: {channel}</div>
-            </div>"""
+            import html as _html_m
+            cards_html += (
+                f'<div class="ev-card">'
+                f'<span class="ev-card-type {cls}">{icon} {mtype}</span>'
+                f'<div class="ev-title">{title_html}</div>'
+                + period_html + etf_html +
+                f'<div class="ev-summary">{_html_m.escape(str(summary)[:120])}</div>'
+                f'<div class="ev-channel">출처: {_html_m.escape(str(channel))}</div>'
+                f'</div>'
+            )
         cards_html += "</div>"
         st.markdown(cards_html, unsafe_allow_html=True)
 else:
@@ -410,11 +411,10 @@ with st.expander("📊 베이스라인 상세", expanded=False):
         cur = analyzer.loader.get_etf_row(current_df, code, etf_name)
 
         st.markdown(f"**{etf_name}**")
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("이번주 개인",    f"{cur.individual/1e6:.1f}M" if cur else "N/A")
-        c2.metric("4주평균 개인",   f"{bl.ind_avg/1e6:.1f}M")
-        c3.metric("이번주 금융투자", f"{cur.financial_investment/1e6:.1f}M" if cur else "N/A")
-        c4.metric("데이터 주수",    f"{bl.weeks_used}주")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("이번주 개인",  f"{cur.individual/1e6:.1f}M" if cur else "N/A")
+        c2.metric("8주평균 개인", f"{bl.ind_avg/1e6:.1f}M")
+        c3.metric("데이터 주수",  f"{bl.weeks_used}주")
 
         if bl.history:
             hdf = pd.DataFrame(bl.history).rename(columns={"week":"시트","fi":"금융투자","ind":"개인"})
@@ -426,22 +426,11 @@ with st.expander("📊 베이스라인 상세", expanded=False):
                 line=dict(color="#f0c040", width=2),
                 hovertemplate="%{x}<br>개인: %{y:.1f}M<extra></extra>",
             ))
-            fig_bl.add_trace(go.Scatter(
-                x=hdf["시트"], y=hdf["금융투자"]/1e6,
-                mode="lines+markers", name="금융투자",
-                line=dict(color="#4d9fff", width=2, dash="dot"),
-                hovertemplate="%{x}<br>금융투자: %{y:.1f}M<extra></extra>",
-            ))
             if cur:
                 fig_bl.add_trace(go.Scatter(
                     x=[current_sheet], y=[cur.individual/1e6],
                     mode="markers", name="이번주(개인)",
                     marker=dict(color="#f0c040", size=12, symbol="star"),
-                ))
-                fig_bl.add_trace(go.Scatter(
-                    x=[current_sheet], y=[cur.financial_investment/1e6],
-                    mode="markers", name="이번주(금융투자)",
-                    marker=dict(color="#4d9fff", size=12, symbol="star"),
                 ))
             fig_bl.update_layout(
                 title=f"{etf_name} 순매수 추세 (단위: M)",

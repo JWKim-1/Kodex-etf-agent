@@ -170,14 +170,14 @@ class CompetitorResult:
 class ETFDiDResult:
     kodex_code: str
     kodex_name: str
-    current: ETFWeekData
-    baseline: Baseline
-    lp: LPResult
-    kodex_change_pct: float
-    control_avg_pct: float
     did_value: float
     judgement: str
     judgement_emoji: str
+    current: Optional[ETFWeekData] = None
+    baseline: Optional[Baseline] = None
+    lp: Optional[LPResult] = None
+    kodex_change_pct: float = 0.0
+    control_avg_pct: float = 0.0
     competitors: List[CompetitorResult] = field(default_factory=list)
     mapping_source: str = ""
     tiger_change_pct: Optional[float] = None
@@ -185,9 +185,9 @@ class ETFDiDResult:
     no_competitors: bool = False
     notes: List[str] = field(default_factory=list)
     calculation_log: List[str] = field(default_factory=list)
-    raw_did_value: float = 0.0       # 1단계 원값 (2단계에서 Z-score로 교체 전 보존)
-    zscore: float = 0.0              # 2단계 Z-score
-    marketing_score: float = 50.0   # sigmoid 0~100점
+    raw_did_value: float = 0.0
+    zscore: float = 0.0
+    marketing_score: float = 50.0
 
 
 # ── Excel 로더 ────────────────────────────────────────────────────────────────
@@ -408,7 +408,7 @@ class MarketingAnalyzerBase:
             f"DiD={did_aum:+.6f}  점수={score:.1f}"
         )
         judgement, emoji = self._judge_score(score)
-        return CompetitorResult(
+        return ETFDiDResult(
             kodex_code=kodex_code, kodex_name=kodex_name,
             did_value=did_aum, raw_did_value=did_aum,
             zscore=None, marketing_score=score,

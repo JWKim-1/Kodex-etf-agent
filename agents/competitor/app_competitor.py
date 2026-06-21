@@ -533,14 +533,23 @@ with _main_tab1:
     st.plotly_chart(fig, use_container_width=True)
 
     # 새로고침
-    if st.button("🔄 데이터 새로고침 (재수집)", key="comp_refresh"):
-        from channel_archive import _load_all, _save_all
-        arch = _load_all()
-        if _archive_key in arch:
-            del arch[_archive_key]
+    col_r1, col_r2 = st.columns(2)
+    with col_r1:
+        if st.button("🔄 전체 재수집 (채널+LLM)", key="comp_refresh"):
+            from channel_archive import _load_all, _save_all
+            arch = _load_all()
+            for k in [_archive_key, _llm_cache_key]:
+                if k in arch: del arch[k]
             _save_all(arch)
-        st.session_state["comp_analysis_run"] = False
-        st.rerun()
+            st.session_state["comp_analysis_run"] = False
+            st.rerun()
+    with col_r2:
+        if st.button("🤖 LLM만 재분석", key="comp_llm_refresh"):
+            from channel_archive import _load_all, _save_all
+            arch = _load_all()
+            if _llm_cache_key in arch: del arch[_llm_cache_key]
+            _save_all(arch)
+            st.rerun()
 
     st.caption(f"경쟁사 채널 모니터링 · {week_str} · 삼성자산운용 ETF AI Agent")
 

@@ -262,7 +262,7 @@ if st.session_state.selected_mode is None:
         <div class="mode-card">
             <div class="mode-icon">🏢</div>
             <div class="mode-title">경쟁사 채널</div>
-            <div class="mode-desc">TIGER·ACE·RISE·HANARO·SOL·PLUS 유튜브·블로그·카카오·인사이트 수집 → 경쟁사 마케팅 활동 자동 정리</div>
+            <div class="mode-desc">TIGER·ACE·RISE·HANARO·SOL·PLUS 유튜브·블로그·카카오 수집 + 주차별 전체 채널 히스토리·백테스트·이벤트 캘린더</div>
         </div>
         """, unsafe_allow_html=True)
         if st.button("경쟁사 채널 →", key="btn_competitor", use_container_width=True, type="primary"):
@@ -373,13 +373,6 @@ if st.session_state.selected_mode is None:
         st.warning("KRX 계정 미설정 — `.env`에 `KRX_ID` / `KRX_PW` 를 추가하면 사용 가능합니다.")
 
     st.markdown("<div style='margin:16px 0 4px;'></div>", unsafe_allow_html=True)
-    if st.button(
-        "📁  채널 수집 히스토리  —  주차별 마케팅 채널 수집 결과 및 이벤트 내역",
-        key="btn_history",
-        use_container_width=True,
-    ):
-        st.session_state.selected_mode = "history"
-        st.rerun()
 
     st.markdown("<div style='margin:4px 0;'></div>", unsafe_allow_html=True)
     st.markdown("""
@@ -415,15 +408,6 @@ if st.session_state.selected_mode == "lifecycle":
             st.session_state.selected_mode = None
             st.rerun()
     exec(open(os.path.join(os.path.dirname(__file__), "agents/lifecycle/app_lifecycle.py"), encoding="utf-8").read())
-    st.stop()
-
-# 채널 수집 히스토리 모드
-if st.session_state.selected_mode == "history":
-    with st.sidebar:
-        if st.button("← 채널 선택", key="back_history"):
-            st.session_state.selected_mode = None
-            st.rerun()
-    exec(open(os.path.join(os.path.dirname(__file__), "agents/history/app_history.py"), encoding="utf-8").read())
     st.stop()
 
 # 주간 종합 리포트 모드

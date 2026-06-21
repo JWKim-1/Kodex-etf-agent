@@ -508,14 +508,18 @@ def did_pct(v: float) -> str:
     return f"Z={v:+.2f}"
 
 def score_label(res) -> str:
-    """마케팅 점수 표시. 2단계 미적용 시 raw DiD 표시."""
-    score = getattr(res, 'marketing_score', 50.0)
-    zscore = getattr(res, 'zscore', 0.0)
-    if zscore != 0.0 or score != 50.0:
+    """마케팅 점수 표시. 2단계 미적용 시 산출중 표시."""
+    score = getattr(res, 'marketing_score', None)
+    zscore = getattr(res, 'zscore', None)
+    if score is not None and score != 50.0:
         return f"{score:.0f}점"
+    if zscore is not None and zscore != 0.0:
+        return f"{score:.0f}점" if score is not None else f"Z={zscore:+.2f}"
+    # Z-score 미산출 시 — raw_did_value만 표시 (did_value는 Z로 덮어쓰여 있을 수 있음)
     raw = getattr(res, 'raw_did_value', None)
-    v = raw if raw else getattr(res, 'did_value', 0.0)
-    return f"산출중 ({v*100:+.0f}%)"
+    if raw is not None:
+        return f"산출중 ({raw*100:+.0f}%)"
+    return "산출중"
 
 def _parse_sheet_dates(sheet_name: str):
     """시트명에서 시작/종료 날짜 추출. 예: '5.25-5.28' → (date(5/25), date(5/28))"""
@@ -1076,8 +1080,11 @@ else:
             if items:
                 non_detected_tabs[r.channel_name] = items
 
+        _SKIP_EXPANDER_CHANNELS = {"삼성자산운용 이벤트 페이지", "삼성자산운용 웹사이트", "삼성자산운용 공식 웹사이트"}
         if by_channel:
             for ch_name, evs in by_channel.items():
+                if ch_name in _SKIP_EXPANDER_CHANNELS:
+                    continue  # 카드로 이미 표시됨
                 with st.expander(f"📡 {ch_name}", expanded=True):
                     for ev in evs:
                         title  = ev.get("title", "")
@@ -1185,7 +1192,8 @@ with st.expander("🔗 비교군 매핑", expanded=True):
             for comp in comps:
                 c = _pc.get(comp['provider'], "#adb5bd")
                 short_name = comp["name"].replace("TIGER ","").replace("PLUS ","").replace("ACE ","").replace("SOL ","").replace("RISE ","").replace("HANARO ","")
-                cards_html += _card(comp['provider'], short_name, comp["code"], c)
+                corr_html = f'<div style="font-size:.62rem;color:#888;margin-top:3px;">r={comp["corr"]:.3f}</div>' if comp.get("corr") is not None else ""
+                cards_html += _card(comp['provider'], short_name, comp["code"], c) .replace('</div>', corr_html + '</div>', 1) if corr_html else _card(comp['provider'], short_name, comp["code"], c)
             cards_html += '</div>'
             st.markdown(cards_html, unsafe_allow_html=True)
             if len(comps) == 1:

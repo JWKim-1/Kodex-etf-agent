@@ -227,6 +227,7 @@ class CompetitorResult:
     baseline_fi_mabs: float = 0.0   # 정규화 분모 (UI 수식 박스 표시용)
     baseline_ind_mabs: float = 0.0
     metric_used: str = "financial"   # "financial" or "individual"
+    corr: float = None               # 수익률 상관계수 (etf_mapping.json 기준)
 
 
 @dataclass
@@ -251,6 +252,10 @@ class ETFDiDResult:
     no_competitors: bool = False
     notes: List[str] = field(default_factory=list)
     calculation_log: List[str] = field(default_factory=list)
+    # 2단계 Z-score + sigmoid 점수
+    raw_did_value: Optional[float] = None
+    zscore: Optional[float] = None
+    marketing_score: float = 50.0
 
 
 # ── Excel 로더 ────────────────────────────────────────────────────────────────
@@ -515,6 +520,7 @@ class MarketingAnalyzer:
                 baseline_fi_avg=cb.fi_avg, baseline_ind_avg=cb.ind_avg,
                 baseline_fi_mabs=cb.fi_mabs, baseline_ind_mabs=cb.ind_mabs,
                 metric_used=force_metric,
+                corr=comp.get("corr"),
             ))
 
         # 호환성: TIGER/ACE 별도 추출

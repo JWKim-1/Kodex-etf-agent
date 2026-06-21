@@ -69,6 +69,13 @@ CHANNEL_LABELS = {
     "rise_event":       "RISE ETF 이벤트 페이지",
     "hanaro_event":     "HANARO ETF 이벤트 공지",
     "sol_event":        "SOL ETF 이벤트 공지",
+    # ── ETF 운용사 카카오 채널 ──────────────────────────────────────────────
+    "kodex_kakao":      "KODEX ETF 카카오채널 (삼성자산운용)",
+    "tiger_kakao":      "TIGER ETF 카카오채널 (미래에셋자산운용)",
+    "ace_kakao":        "ACE ETF 카카오채널 (한국투자신탁운용)",
+    "rise_kakao":       "RISE ETF 카카오채널 (KB자산운용)",
+    "hanaro_kakao":     "HANARO ETF 카카오채널 (NH-Amundi)",
+    "plus_kakao":       "PLUS ETF 카카오채널 (한화자산운용)",
     "sol_blog":         "SOL ETF 블로그 (네이버)",
     "etf_am_news":      "ETF 운용사 뉴스 (네이버/구글)",
 }
@@ -277,6 +284,13 @@ class DataCollector:
             ("sol_event",      self._ch_sol_event),
             ("sol_blog",       self._ch_sol_blog),
             ("etf_am_news",    self._ch_etf_am_news),
+            # 카카오 채널
+            ("kodex_kakao",    lambda: self._ch_kakao_etf("_UxctLxb", "kodex_kakao")),
+            ("tiger_kakao",    lambda: self._ch_kakao_etf("_NVuxexb", "tiger_kakao")),
+            ("ace_kakao",      lambda: self._ch_kakao_etf("_xnRfxoxj", "ace_kakao")),
+            ("rise_kakao",     lambda: self._ch_kakao_etf("_lFdxhs", "rise_kakao")),
+            ("hanaro_kakao",   lambda: self._ch_kakao_etf("_xlimsG", "hanaro_kakao")),
+            ("plus_kakao",     lambda: self._ch_kakao_etf("_LdQkG", "plus_kakao")),
         ]
 
     _yt_handle_cache: dict = {}  # @handle → UC 채널 ID 캐시 (클래스 공유)
@@ -848,6 +862,53 @@ class DataCollector:
 
         except Exception as e:
             return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
+
+    def _ch_kakao_etf(self, channel_id: str, ch_key: str) -> ChannelResult:
+        """ETF 운용사 카카오 채널 공통 수집 (rocket-web 내부 API)."""
+        name = CHANNEL_LABELS.get(ch_key, ch_key)
+        api_url = f"https://pf.kakao.com/rocket-web/web/profiles/{channel_id}/posts?includePinnedPost=true"
+        try:
+            r = requests.get(api_url, headers={
+                **BROWSER_HEADERS,
+                "Referer": f"https://pf.kakao.com/{channel_id}/posts",
+                "Accept": "application/json, text/plain, */*",
+            }, timeout=10)
+            r.raise_for_status()
+            items = r.json().get("items", [])
+            if not items:
+                return ChannelResult(ch_key, name, False, error="게시물 없음", error_type="NO_DATA")
+
+            cutoff_ts = int(self.week_start.timestamp() * 1000)
+            end_ts    = int(self.week_end.timestamp() * 1000)
+
+            articles, raw_texts = [], []
+            for item in items:
+                pub_ts = item.get("published_at", 0)
+                if pub_ts < cutoff_ts or pub_ts > end_ts:
+                    continue
+                title = item.get("title") or item.get("text", "")[:60] or "카카오 게시물"
+                post_url = f"https://pf.kakao.com/{channel_id}/posts/{item.get('id','')}"
+                media = item.get("media", [])
+                thumbnail = media[0].get("medium_url", "") if media else ""
+                text_body = item.get("text", "") or ""
+                articles.append({
+                    "title":        title[:80],
+                    "url":          post_url,
+                    "thumbnail":    thumbnail,
+                    "published_at": str(pub_ts),
+                    "description":  text_body[:200],
+                })
+                raw_texts.append(f"{title} {text_body[:80]}")
+
+            if not articles:
+                return ChannelResult(ch_key, name, True,
+                    data={"articles": [], "raw_text": ""},
+                    error_label=f"이번 주 게시물 없음 (전체 {len(items)}개)")
+
+            return ChannelResult(ch_key, name, True,
+                data={"articles": articles, "raw_text": " / ".join(raw_texts[:5])[:500]})
+        except Exception as e:
+            return ChannelResult(ch_key, name, False, error=str(e), error_type="UNKNOWN")
 
     # ── CH9: 구글 트렌드 ─────────────────────────────────────────────────────
 

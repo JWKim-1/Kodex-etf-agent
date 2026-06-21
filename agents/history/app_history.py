@@ -655,7 +655,10 @@ if _cal_events:
         _mtabs = st.tabs(_mtab_labels)
         for _mt, _mk in zip(_mtabs, _sorted_months):
             with _mt:
-                _mevs = sorted(_month_groups[_mk], key=lambda e: e["start"])
+                # 증권→은행→경쟁사 순, 같은 세션 내 날짜 정렬
+                _sess_order = {"securities":0,"bank":1,"competitor":2}
+                _mevs = sorted(_month_groups[_mk],
+                               key=lambda e: (_sess_order.get(e["session"],9), e["start"]))
                 for _mev in _mevs:
                     _color = _mev["color"]
                     _s_str = _mev["start"].strftime("%m/%d")

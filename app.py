@@ -1289,8 +1289,16 @@ with st.expander("📊 베이스라인 상세", expanded=False):
 # ════════════════════════════════════════════════════════════════════
 st.markdown('<div class="step-header">Step 5 · DiD 계산 (이중차분법)</div>', unsafe_allow_html=True)
 
-with st.spinner("DiD 분석 중..."):
-    did_results = analyzer.analyze(all_sheets, target_codes, current_sheet)
+# did_history 캐시에서 먼저 로드 (빠름) → 없으면 실시간 계산
+_did_cache_key = f"sec_did_{current_sheet}"
+if _did_cache_key in st.session_state:
+    did_results = st.session_state[_did_cache_key]
+    st.caption(f"📦 이전 계산 결과 사용 ({current_sheet})")
+else:
+    with st.spinner("DiD 분석 중..."):
+        did_results = analyzer.analyze(all_sheets, target_codes, current_sheet)
+    if did_results:
+        st.session_state[_did_cache_key] = did_results
 
 # ── DiD 결과 요약 바 차트 (Plotly) ──
 if did_results:
@@ -1436,7 +1444,7 @@ ETF 시장에서 설정·해지 헤징을 위해 기계적으로 매수·매도�
 for code, res in did_results.items():
     c_map = {"🟢":"#28a745","🟡":"#ffc107","⚪":"#6c757d","🔴":"#dc3545","⚫":"#343a40"}
     border_c = c_map.get(res.judgement_emoji, "#6c757d")
-    metric_label = "금융투자" if res.lp.use_metric == "financial" else "개인"
+    metric_label = "금융투자" if (res.lp and res.lp.use_metric == "financial") else "개인"
 
     with st.expander(
         f"{res.judgement_emoji} {res.kodex_name}  |  {score_label(res)}  —  {res.judgement}",
@@ -1460,11 +1468,12 @@ for code, res in did_results.items():
             )
 
         # ── LP 상태 + 지표 한 줄 ──
-        lp_badge = '<span class="badge-lp">⚠️ LP 의심</span>' if res.lp.suspicious else '<span class="badge-ok">✅ 정상</span>'
-        st.markdown(
-            f"<small>{lp_badge} &nbsp;|&nbsp; 사용 지표: <b>{metric_label}</b> &nbsp;|&nbsp; {res.lp.note}</small>",
-            unsafe_allow_html=True
-        )
+        if res.lp:
+            lp_badge = '<span class="badge-lp">⚠️ LP 의심</span>' if res.lp.suspicious else '<span class="badge-ok">✅ 정상</span>'
+            st.markdown(
+                f"<small>{lp_badge} &nbsp;|&nbsp; 사용 지표: <b>{metric_label}</b> &nbsp;|&nbsp; {res.lp.note}</small>",
+                unsafe_allow_html=True
+            )
 
         st.divider()
 
@@ -1495,7 +1504,7 @@ for code, res in did_results.items():
             if len(res.competitors) == 1:
                 st.caption("※ 동일 유형 ETF 1종만 존재 — 단일 비교 (÷1)")
         # ── DiD 계산식 (이쁘게) ──
-        if not res.no_competitors:
+        if not res.no_competitors and res.lp and res.current and res.baseline:
             metric = res.lp.use_metric
             cur_val  = res.current.financial_investment if metric=="financial" else res.current.individual
             avg_val  = res.baseline.fi_avg  if metric=="financial" else res.baseline.ind_avg

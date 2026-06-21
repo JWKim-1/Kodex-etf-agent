@@ -422,10 +422,15 @@ with _main_tab1:
             comp_result = extract_competitor_events(collection_results, anthropic_key or "")
         comp_result = _inject_images(comp_result, collection_results)
         _llm_failed = "실패" in comp_result.get("summary", "")
-        if not _llm_failed and comp_result.get("marketing_detected") is not None:
+        _events = comp_result.get("events", [])
+        # KODEX만 있는 빈약한 결과는 캐시 저장 안 함 (keyword_fallback으로 보완)
+        _providers = set(e.get("provider","") for e in _events)
+        _only_kodex = _providers <= {"KODEX", "기타", ""} and len(_events) < 10
+        if not _llm_failed and comp_result.get("marketing_detected") is not None and not _only_kodex:
             save_raw_data(_llm_cache_key, comp_result)
-        elif _llm_failed:
-            st.warning("LLM 호출 실패 — 키워드 기반으로 전환합니다.")
+        elif _llm_failed or _only_kodex:
+            if _llm_failed:
+                st.warning("LLM 호출 실패 — 키워드 기반으로 전환합니다.")
             comp_result = keyword_fallback_competitor(collection_results)
     else:
         st.info("💡 API 키 미입력 — 키워드 기반으로 경쟁사 이벤트를 감지합니다. (LLM 보다 정밀도 낮음)")

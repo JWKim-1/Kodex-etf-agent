@@ -38,6 +38,7 @@ CHANNEL_LABELS = {
     "kodex_blog":          "KODEX 공식 블로그 (samsungfundblog.com)",
     # ── 미래에셋증권 ─────────────────────────────────
     "mirae_youtube":       "미래에셋증권 유튜브",
+    "mirae_event":         "미래에셋증권 이벤트 페이지",
     "mirae_blog":          "미래에셋증권 블로그 (how2invest)",
     # ── 키움증권 ─────────────────────────────────────
     "kiwoom_youtube":      "키움증권 유튜브",
@@ -239,6 +240,7 @@ class DataCollector:
             ("samsung_blog",       self._ch_samsung_blog),
             # 미래에셋증권
             ("mirae_youtube",      self._ch_mirae_youtube),
+            ("mirae_event",        self._ch_mirae_event),
             ("mirae_blog",         self._ch_mirae_blog),
             # 키움증권
             ("kiwoom_youtube",     self._ch_kiwoom_youtube),
@@ -1296,6 +1298,43 @@ class DataCollector:
             "mirae_blog", CHANNEL_LABELS["mirae_blog"],
             "https://rss.blog.naver.com/how2invest.xml"
         )
+
+    def _ch_mirae_event(self) -> ChannelResult:
+        """미래에셋증권 진행중 이벤트 페이지."""
+        ch, name = "mirae_event", CHANNEL_LABELS["mirae_event"]
+        ETF_KW = ["ETF","펀드","KODEX","TIGER","연금","IRP","ISA","수수료","국내주식","해외주식"]
+        try:
+            r = requests.get(
+                "https://securities.miraeasset.com/hki/hki7000/r05.do",
+                headers=BROWSER_HEADERS, timeout=12)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "lxml")
+            text = soup.get_text()
+            # 이벤트명 + 날짜 패턴 추출
+            import re as _re
+            pairs = _re.findall(r"([가-힣a-zA-Z()&\s]{8,60})\s*(20\d{2}[./]\d{2}[./]\d{2})", text)
+            articles, raw_texts = [], []
+            seen = set()
+            for title_raw, date_str in pairs:
+                title = title_raw.strip()
+                if title in seen or len(title) < 8:
+                    continue
+                if not any(k in title for k in ETF_KW):
+                    continue
+                seen.add(title)
+                articles.append({
+                    "title": title[:80], "url": "https://securities.miraeasset.com/hki/hki7000/r05.do",
+                    "thumbnail": "", "description": date_str,
+                })
+                raw_texts.append(title)
+            if not articles:
+                return ChannelResult(ch, name, True,
+                    data={"articles":[],"raw_text":""},
+                    error_label="이번 주 미래에셋 ETF 이벤트 없음")
+            return ChannelResult(ch, name, True,
+                data={"articles": articles, "raw_text": " / ".join(raw_texts[:5])[:400]})
+        except Exception as e:
+            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
 
     # ── 키움증권 채널 ────────────────────────────────────────────────────────
 

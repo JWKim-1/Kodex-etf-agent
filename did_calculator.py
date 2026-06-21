@@ -397,7 +397,20 @@ class MarketingAnalyzerBase:
             if caum > 0:
                 comp_ratios.append(cval / (caum * 1e5))
 
-        comp_avg = float(np.mean(comp_ratios)) if comp_ratios else 0.0
+        # 경쟁사도 없으면 산출 불가
+        if not comp_ratios:
+            log.append(f"[AUM상대강도 폴백] 경쟁사 없음 — 산출 불가 (베이스라인 {weeks_used}주)")
+            return ETFDiDResult(
+                kodex_code=kodex_code, kodex_name=kodex_name,
+                did_value=0.0, raw_did_value=None,
+                zscore=None, marketing_score=50.0,
+                judgement="산출 불가 (경쟁사 없음 + 데이터 부족)", judgement_emoji="⚫",
+                competitors=[], no_competitors=True,
+                notes=[f"신규상장+경쟁사 없음 — 베이스라인 {weeks_used}주, 비교 불가"],
+                calculation_log=log,
+            )
+
+        comp_avg = float(np.mean(comp_ratios))
         did_aum = round(kodex_ratio - comp_avg, 6)
         z_approx = did_aum * 1000
         score = round(100 / (1 + np.exp(-z_approx * 1.5)), 1)
@@ -413,7 +426,7 @@ class MarketingAnalyzerBase:
             did_value=did_aum, raw_did_value=did_aum,
             zscore=None, marketing_score=score,
             judgement=judgement + " (AUM상대강도)", judgement_emoji=emoji,
-            competitors=[], no_competitors=not bool(comp_ratios),
+            competitors=[], no_competitors=False,
             notes=[f"신규/데이터부족 — AUM상대강도 DiD (베이스라인 {weeks_used}주)"],
             calculation_log=log,
         )

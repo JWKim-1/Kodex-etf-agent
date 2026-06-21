@@ -492,41 +492,45 @@ with _main_tab1:
             unsafe_allow_html=True
         )
 
-        cards_html = '<div class="ev-board">'
-        for ev in prov_events:
-            mtype      = ev.get("marketing_type", "기타")
-            cls        = _type_cls.get(mtype, "ev-type-etc")
-            ev_icon    = _type_icon.get(mtype, "📋")
-            title      = (ev.get("title") or "")[:60]
-            period     = ev.get("event_period") or ""
-            summary    = ev.get("event_summary") or ""
-            channel    = ev.get("channel", "")
-            url        = ev.get("url", "")
-            target_etf = ev.get("target_etf") or ""
-            img_url    = ev.get("image_url","")
+        # 기간 있는 이벤트 = 카드 / 없는 것 = 기타 탭
+        main_evs  = [e for e in prov_events if e.get("event_period") and e["event_period"] not in ("null","None","")]
+        other_evs = [e for e in prov_events if e not in main_evs]
 
+        def _ev_card(ev):
+            mtype   = ev.get("marketing_type","기타")
+            cls     = _type_cls.get(mtype,"ev-type-etc")
+            ev_icon = _type_icon.get(mtype,"📋")
+            title   = (ev.get("title") or "")[:60]
+            period  = ev.get("event_period") or ""
+            summary = ev.get("event_summary") or ""
+            channel = ev.get("channel","")
+            url     = ev.get("url","")
+            target  = ev.get("target_etf") or ""
+            img_url = ev.get("image_url","")
             title_html  = (f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>'
                            if url and url.startswith("http") else title)
             period_html = f'<div class="ev-period">📅 {period}</div>' if period and period not in ("","null") else ""
-            etf_html    = (f'<div style="font-size:.7rem;color:{pinfo["color"]};margin-top:4px;">🎯 {target_etf}</div>'
-                           if target_etf and target_etf != "null" else "")
+            etf_html    = (f'<div style="font-size:.7rem;color:{pinfo["color"]};margin-top:4px;">🎯 {target}</div>'
+                           if target and target != "null" else "")
             img_html    = (f'<img class="ev-card-img" src="{img_url}" onerror="this.style.display=\'none\'">'
                            if img_url else f'<div class="ev-card-img-placeholder" style="background:{pinfo["bg"]};">{ev_icon}</div>')
+            return (f'<div class="ev-card" style="border-color:{pinfo["color"]}33;">'
+                    f'{img_html}<div class="ev-card-body">'
+                    f'<span class="ev-card-type {cls}">{ev_icon} {mtype}</span>'
+                    f'<div class="ev-title">{title_html}</div>'
+                    f'{period_html}<div class="ev-summary">{summary[:140]}</div>'
+                    f'{etf_html}<div class="ev-channel">📡 {channel}</div>'
+                    f'</div></div>')
 
-            cards_html += (
-                f'<div class="ev-card" style="border-color:{pinfo["color"]}33;">'
-                f'{img_html}'
-                f'<div class="ev-card-body">'
-                f'<span class="ev-card-type {cls}">{ev_icon} {mtype}</span>'
-                f'<div class="ev-title">{title_html}</div>'
-                f'{period_html}'
-                f'<div class="ev-summary">{summary[:140]}</div>'
-                f'{etf_html}'
-                f'<div class="ev-channel">📡 {channel}</div>'
-                f'</div></div>'
-            )
-        cards_html += "</div>"
-        st.markdown(cards_html, unsafe_allow_html=True)
+        if main_evs:
+            cards_html = '<div class="ev-board">' + "".join(_ev_card(e) for e in main_evs) + "</div>"
+            st.markdown(cards_html, unsafe_allow_html=True)
+        if other_evs:
+            with st.expander(f"📋 기타 감지 항목 ({len(other_evs)}건 — 기간 미정/리밸런싱/세미나 등)", expanded=False):
+                for e in other_evs:
+                    url = e.get("url",""); title = (e.get("title") or "")[:70]
+                    link = f'[{title}]({url})' if url and url.startswith("http") else f'**{title}**'
+                    st.markdown(f"• {link}")
 
     # ── 운용사별 이벤트 건수 요약 바 ─────────────────────────────────────────────
     st.markdown('<div class="comp-divider"></div>', unsafe_allow_html=True)

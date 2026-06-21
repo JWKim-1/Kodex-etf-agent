@@ -1,9 +1,9 @@
 """
 ETF 상장폐지 / 신규상장 모니터링
-- 네이버 뉴스 API: "ETF 상장폐지" / "ETF 신규상장" 키워드
-- DART API: 삼성자산운용 등 주요 운용사 공시 (만기/청산)
-- pykrx: 주차별 티커 비교로 변동 감지
-결과 → lifecycle_history.json 저장
+흐름:
+  네이버뉴스 수집 → LLM 판별(실제 상폐/신규인지, ETF명/운용사) → 키워드 폴백
+  신규상장 감지 시 → 해당 ETF명으로 뉴스/유튜브 검색 → 마케팅 활동 요약
+  수집 단위: 최근 1주 (히스토리에 누적)
 """
 
 import os, sys, json, re, requests, logging
@@ -15,12 +15,12 @@ sys.path.insert(0, str(_ROOT))
 from dotenv import load_dotenv
 load_dotenv()
 
-HISTORY_FILE = _ROOT / "lifecycle_history.json"
-DART_API_KEY = os.getenv("DART_API_KEY", "")
-NAVER_ID     = os.getenv("NAVER_CLIENT_ID", "")
-NAVER_SEC    = os.getenv("NAVER_CLIENT_SECRET", "")
+HISTORY_FILE  = _ROOT / "lifecycle_history.json"
+DART_API_KEY  = os.getenv("DART_API_KEY", "")
+NAVER_ID      = os.getenv("NAVER_CLIENT_ID", "")
+NAVER_SEC     = os.getenv("NAVER_CLIENT_SECRET", "")
+ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
-# 주요 운용사 DART corp_code
 CORP_CODES = {
     "삼성자산운용":     "00260453",
     "미래에셋자산운용": "00259776",
@@ -28,6 +28,10 @@ CORP_CODES = {
     "한국투자신탁운용": "00324548",
     "키움투자자산운용": "00120191",
 }
+
+# 키워드 폴백용
+_KW_DELIST  = ["상장폐지", "상폐", "만기상환", "청산", "해지상환"]
+_KW_NEW     = ["신규상장", "상장 예정", "새로 상장", "상장일"]
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +42,7 @@ def load_history() -> dict:
             return json.loads(HISTORY_FILE.read_text(encoding="utf-8"))
         except Exception:
             pass
-    return {"delistings": [], "new_listings": [], "last_updated": ""}
+    return {"weeks": {}, "last_updated": ""}
 
 
 def save_history(h: dict):
@@ -50,18 +54,25 @@ def _clean_html(text: str) -> str:
     return re.sub(r"<[^>]+>", "", text).strip()
 
 
+def _week_label() -> str:
+    today = date.today()
+    mon = today - timedelta(days=today.weekday())
+    fri = mon + timedelta(days=4)
+    return f"{mon.month}.{mon.day}-{fri.month}.{fri.day}"
+
+
 # ── 네이버 뉴스 수집 ─────────────────────────────────────────────────────────
-def fetch_naver_news(query: str, days_back: int = 90) -> list:
+def _naver_news(query: str, days: int = 7) -> list:
     if not NAVER_ID:
         return []
     try:
         r = requests.get(
             "https://openapi.naver.com/v1/search/news.json",
-            params={"query": query, "display": 50, "sort": "date"},
+            params={"query": query, "display": 30, "sort": "date"},
             headers={"X-Naver-Client-Id": NAVER_ID, "X-Naver-Client-Secret": NAVER_SEC},
             timeout=10,
         )
-        cutoff = datetime.now() - timedelta(days=days_back)
+        cutoff = datetime.now() - timedelta(days=days)
         items = []
         for x in r.json().get("items", []):
             try:
@@ -70,134 +81,218 @@ def fetch_naver_news(query: str, days_back: int = 90) -> list:
                 pub = datetime.now()
             if pub >= cutoff:
                 items.append({
-                    "title":    _clean_html(x.get("title", "")),
-                    "link":     x.get("link", ""),
-                    "pub_date": pub.strftime("%Y-%m-%d"),
+                    "title":       _clean_html(x.get("title", "")),
+                    "link":        x.get("link", ""),
+                    "pub_date":    pub.strftime("%Y-%m-%d"),
                     "description": _clean_html(x.get("description", ""))[:200],
                 })
         return items
     except Exception as e:
-        logger.warning(f"네이버 뉴스 조회 실패 ({query}): {e}")
+        logger.warning(f"네이버뉴스 실패 ({query}): {e}")
         return []
 
 
 # ── DART 공시 수집 ───────────────────────────────────────────────────────────
-def fetch_dart_notices(corp_code: str, bgn_de: str, end_de: str, keywords=("만기", "해지", "청산", "상장폐지")) -> list:
+def _dart_notices(days: int = 7) -> list:
     if not DART_API_KEY:
         return []
+    bgn = (datetime.now() - timedelta(days=days)).strftime("%Y%m%d")
+    end = datetime.now().strftime("%Y%m%d")
     results = []
-    for page in range(1, 6):
+    kw = ("만기", "해지", "청산", "상장폐지")
+    for corp_name, corp_code in CORP_CODES.items():
         try:
             r = requests.get("https://opendart.fss.or.kr/api/list.json", params={
                 "crtfc_key": DART_API_KEY,
                 "corp_code": corp_code,
-                "bgn_de": bgn_de,
-                "end_de": end_de,
-                "page_count": 100,
-                "page_no": page,
+                "bgn_de": bgn, "end_de": end,
+                "page_count": 50,
             }, timeout=10)
-            items = r.json().get("list") or []
-            if not items:
-                break
-            for x in items:
-                name = x.get("report_nm", "")
-                if any(k in name for k in keywords):
+            for x in (r.json().get("list") or []):
+                nm = x.get("report_nm", "")
+                if any(k in nm for k in kw):
                     results.append({
                         "date":        x.get("rcept_dt", ""),
-                        "report_name": name,
-                        "rcept_no":    x.get("rcept_no", ""),
+                        "report_name": nm,
                         "corp_name":   x.get("corp_name", ""),
+                        "운용사":      corp_name,
                         "dart_url":    f"https://dart.fss.or.kr/dsaf001/main.do?rcpNo={x.get('rcept_no','')}",
                     })
-            if len(items) < 100:
-                break
         except Exception as e:
-            logger.warning(f"DART 조회 실패: {e}")
-            break
+            logger.warning(f"DART {corp_name}: {e}")
     return results
 
 
-# ── pykrx 티커 비교 (신규/소멸 감지) ─────────────────────────────────────────
-def detect_krx_changes(weeks_back: int = 4) -> dict:
-    """최근 N주간 pykrx ETF 티커 목록 비교."""
+# ── LLM 판별 ────────────────────────────────────────────────────────────────
+def _llm_classify(news_items: list, task: str) -> list:
+    """
+    1단계: 키워드로 후보만 추림
+    2단계: 후보가 있을 때만 LLM에 넘겨서 실제 상폐/신규인지 + ETF명/운용사 추출
+    키워드 후보 없으면 LLM 완전 스킵
+    """
+    if not news_items:
+        return []
+
+    kw_list = _KW_DELIST if task == "delist" else _KW_NEW
+
+    # 1단계: 키워드 필터
+    candidates = [x for x in news_items
+                  if any(k in x["title"] or k in x.get("description","") for k in kw_list)]
+
+    if not candidates:
+        return []
+
+    # 키워드만으로도 충분히 명확한 경우 or API 키 없으면 그대로 반환
+    if not ANTHROPIC_KEY:
+        for x in candidates:
+            x.setdefault("etf_name", "")
+            x.setdefault("운용사", "")
+        return candidates
+
+    # 2단계: 후보만 LLM에 전달
+    action = "ETF 상장폐지·만기상환·청산" if task == "delist" else "ETF 신규상장·상장 예정"
+    lines = "\n".join(f"[{i}] {x['pub_date']} {x['title']} — {x.get('description','')[:80]}"
+                      for i, x in enumerate(candidates))
+
+    prompt = f"""다음은 키워드로 1차 필터링된 뉴스입니다. 실제 '{action}' 기사만 남기고,
+ETF 이름과 운용사를 추출하세요. 관련 없는 기사(시황·전략·추천 등)는 제외합니다.
+
+{lines}
+
+JSON 배열로만 응답 (설명 없이):
+[{{"idx": 번호, "etf_name": "ETF명(모르면 빈값)", "운용사": "운용사명(모르면 빈값)"}}]
+없으면 []"""
+
     try:
-        from pykrx import stock
-    except ImportError:
-        return {"new": [], "gone": []}
+        import anthropic as ant
+        client = ant.Anthropic(api_key=ANTHROPIC_KEY)
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=600,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = msg.content[0].text.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        hits = json.loads(raw)
+        results = []
+        for h in hits:
+            idx = h.get("idx")
+            if idx is None or idx >= len(candidates):
+                continue
+            item = dict(candidates[idx])
+            item["etf_name"] = h.get("etf_name", "")
+            item["운용사"]   = h.get("운용사", "")
+            results.append(item)
+        return results
+    except Exception as e:
+        logger.warning(f"LLM 판별 실패 ({task}): {e} → 키워드 후보 그대로 반환")
+        for x in candidates:
+            x.setdefault("etf_name", "")
+            x.setdefault("운용사", "")
+        return candidates
 
-    today = date.today()
-    results = {"new": [], "gone": []}
-    prev_set = None
-    prev_date = None
 
-    for i in range(weeks_back, -1, -1):
-        target = today - timedelta(weeks=i)
-        # 금요일로 보정
-        target = target - timedelta(days=target.weekday()) + timedelta(days=4)
-        date_str = target.strftime("%Y%m%d")
+# ── 신규상장 마케팅 활동 수집 ─────────────────────────────────────────────────
+def _fetch_launch_marketing(etf_name: str, 운용사: str, days: int = 14) -> dict:
+    """신규상장 ETF의 뉴스·유튜브 홍보 활동 요약."""
+    if not etf_name:
+        return {}
+
+    query = etf_name.replace("KODEX", "").replace("TIGER", "").replace("ACE", "").strip()
+    news = _naver_news(f"{etf_name} 상장", days=days)
+    yt_news = _naver_news(f"{운용사} {query} ETF", days=days)
+
+    all_titles = [x["title"] for x in news + yt_news][:10]
+
+    if not all_titles:
+        return {"summary": "마케팅 활동 정보 없음", "activities": []}
+
+    if ANTHROPIC_KEY:
         try:
-            tickers = set(stock.get_etf_ticker_list(date_str) or [])
+            import anthropic as ant
+            client = ant.Anthropic(api_key=ANTHROPIC_KEY)
+            msg = client.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=300,
+                messages=[{"role": "user", "content":
+                    f"다음은 '{etf_name}' ETF 신규상장 관련 뉴스 제목들입니다.\n"
+                    f"{chr(10).join(all_titles)}\n\n"
+                    f"이 ETF 출시 시 {운용사}가 어떤 마케팅 활동을 했는지 2-3문장으로 요약하세요. "
+                    f"(뉴스 보도, 유튜브, 블로그 홍보 여부 등)"
+                }],
+            )
+            summary = msg.content[0].text.strip()
         except Exception:
-            continue
-        if prev_set is not None and tickers:
-            new = tickers - prev_set
-            gone = prev_set - tickers
-            for code in new:
-                try:
-                    name = stock.get_etf_ticker_name(code) or code
-                except Exception:
-                    name = code
-                results["new"].append({"code": code, "name": name, "detected_week": target.strftime("%Y-%m-%d")})
-            for code in gone:
-                try:
-                    name = stock.get_etf_ticker_name(code) or code
-                except Exception:
-                    name = code
-                results["gone"].append({"code": code, "name": name, "detected_week": target.strftime("%Y-%m-%d")})
-        prev_set = tickers
-        prev_date = target
+            summary = f"관련 뉴스 {len(all_titles)}건 발견"
+    else:
+        summary = f"관련 뉴스 {len(all_titles)}건 발견"
 
-    return results
+    return {
+        "summary": summary,
+        "activities": [{"title": x["title"], "link": x["link"], "date": x["pub_date"]}
+                       for x in (news + yt_news)[:5]],
+    }
 
 
-# ── 메인 수집 함수 ───────────────────────────────────────────────────────────
-def collect_lifecycle(days_back: int = 180) -> dict:
+# ── 메인 수집 함수 (최근 1주) ────────────────────────────────────────────────
+def collect_lifecycle(days: int = 7) -> dict:
     history = load_history()
-    bgn_de = (datetime.now() - timedelta(days=days_back)).strftime("%Y%m%d")
-    end_de = datetime.now().strftime("%Y%m%d")
+    week = _week_label()
 
-    # 1. 네이버 뉴스
-    delist_news   = fetch_naver_news("ETF 상장폐지", days_back)
-    newlist_news  = fetch_naver_news("ETF 신규상장", days_back)
-    maturity_news = fetch_naver_news("ETF 만기상환", days_back)
-    logger.info(f"뉴스 수집: 상폐 {len(delist_news)}건 / 신규 {len(newlist_news)}건 / 만기 {len(maturity_news)}건")
+    # 이미 이번 주 수집됐으면 스킵
+    if week in history.get("weeks", {}) and not os.getenv("LIFECYCLE_FORCE"):
+        logger.info(f"이번 주({week}) 이미 수집됨 — 스킵")
+        return history
 
-    # 2. DART 공시 (삼성자산운용 위주)
-    dart_notices = []
-    for corp_name, corp_code in CORP_CODES.items():
-        notices = fetch_dart_notices(corp_code, bgn_de, end_de)
-        for n in notices:
-            n["운용사"] = corp_name
-        dart_notices.extend(notices)
-        if notices:
-            logger.info(f"DART {corp_name}: {len(notices)}건")
+    logger.info(f"[lifecycle] {week} 수집 시작...")
 
-    # 3. 저장
-    history["delist_news"]   = delist_news
-    history["newlist_news"]  = newlist_news
-    history["maturity_news"] = maturity_news
-    history["dart_notices"]  = dart_notices
-    history["collected_at"]  = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # 1. 뉴스 수집
+    delist_raw  = _naver_news("ETF 상장폐지", days)
+    newlist_raw = _naver_news("ETF 신규상장", days)
+    dart        = _dart_notices(days)
+    logger.info(f"  뉴스: 상폐후보 {len(delist_raw)}건 / 신규후보 {len(newlist_raw)}건 / DART {len(dart)}건")
+
+    # 2. LLM 판별
+    delistings  = _llm_classify(delist_raw,  "delist")
+    new_listings = _llm_classify(newlist_raw, "newlist")
+    logger.info(f"  판별 후: 상폐 {len(delistings)}건 / 신규 {len(new_listings)}건")
+
+    # 3. 신규상장 마케팅 활동
+    for item in new_listings:
+        etf_name = item.get("etf_name", item.get("title", ""))[:20]
+        운용사   = item.get("운용사", "")
+        item["launch_marketing"] = _fetch_launch_marketing(etf_name, 운용사, days=14)
+        logger.info(f"  마케팅수집: {etf_name}")
+
+    # 4. 히스토리 누적 저장
+    if "weeks" not in history:
+        history["weeks"] = {}
+    history["weeks"][week] = {
+        "collected_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "delistings":   delistings,
+        "new_listings": new_listings,
+        "dart_notices": dart,
+    }
+    # 전체 집계 (UI용 플랫 리스트)
+    history["delist_news"]  = [x for w in history["weeks"].values() for x in w.get("delistings", [])]
+    history["newlist_news"] = [x for w in history["weeks"].values() for x in w.get("new_listings", [])]
+    history["dart_notices"] = [x for w in history["weeks"].values() for x in w.get("dart_notices", [])]
+
     save_history(history)
-    logger.info(f"lifecycle_history.json 저장 완료")
+    logger.info(f"  저장 완료: lifecycle_history.json")
     return history
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
-    result = collect_lifecycle(days_back=180)
-    print(f"상폐 뉴스: {len(result['delist_news'])}건")
-    print(f"신규 뉴스: {len(result['newlist_news'])}건")
-    print(f"DART 공시: {len(result['dart_notices'])}건")
-    for x in result["delist_news"][:5]:
-        print(" ", x["pub_date"], x["title"])
+    result = collect_lifecycle(days=7)
+    week = _week_label()
+    w = result.get("weeks", {}).get(week, {})
+    print(f"상폐: {len(w.get('delistings',[]))}건")
+    print(f"신규: {len(w.get('new_listings',[]))}건")
+    print(f"DART: {len(w.get('dart_notices',[]))}건")
+    for x in w.get("delistings", []):
+        print(" ", x.get("pub_date"), x.get("etf_name"), x.get("title","")[:50])

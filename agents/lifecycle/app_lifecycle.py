@@ -183,9 +183,9 @@ with tab_news:
     st.caption(f"네이버 뉴스 + DART 공시 기반 · 마지막 수집: {lc_updated}")
 
     # 수집 버튼
-    if st.button("🔄 뉴스·공시 새로고침 (최근 6개월)", key="lc_refresh"):
+    if st.button("🔄 이번 주 뉴스·공시 수집", key="lc_refresh"):
         with st.spinner("수집 중..."):
-            lc_history = _collect_lc(days_back=180)
+            lc_history = _collect_lc(days=7)
             delist_news  = [x for x in lc_history.get("delist_news", [])  if "ETF" in x.get("title","") or "상장폐지" in x.get("title","")]
             newlist_news = [x for x in lc_history.get("newlist_news", []) if "ETF" in x.get("title","") or "상장" in x.get("title","")]
             dart_notices = lc_history.get("dart_notices", [])
@@ -214,15 +214,30 @@ with tab_news:
     st.markdown("#### 🆕 신규상장 뉴스")
     if newlist_news:
         for x in newlist_news[:15]:
-            url = x.get("link","")
-            title = _html.escape(x.get("title",""))
-            date_ = x.get("pub_date","")
+            url    = x.get("link","")
+            title  = _html.escape(x.get("title",""))
+            date_  = x.get("pub_date","")
+            etf_nm = x.get("etf_name","")
+            운용사  = x.get("운용사","")
+            mkt    = x.get("launch_marketing", {})
+            mkt_summary = mkt.get("summary","") if mkt else ""
+            mkt_acts    = mkt.get("activities",[]) if mkt else []
             link_html = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;font-weight:600;">{title}</a>' if url else f'<span style="font-weight:600;">{title}</span>'
+            badge = f'<span style="font-size:.65rem;background:rgba(5,177,105,0.15);color:#05b169;border:1px solid rgba(5,177,105,0.3);border-radius:100px;padding:1px 8px;margin-left:6px;">{etf_nm}</span>' if etf_nm else ""
+            org   = f'<span style="font-size:.65rem;color:#aaa;margin-left:6px;">{운용사}</span>' if 운용사 else ""
+            acts_html = ""
+            if mkt_acts:
+                acts_html = "<div style='margin-top:6px;'>" + "".join(
+                    f'<a href="{a["link"]}" target="_blank" style="display:block;font-size:.72rem;color:#4d9fff;margin:2px 0;text-decoration:none;">• {_html.escape(a["title"][:55])}</a>'
+                    for a in mkt_acts
+                ) + "</div>"
             st.markdown(
                 f'<div style="border:1px solid rgba(5,177,105,0.25);background:rgba(5,177,105,0.05);'
-                f'border-radius:10px;padding:8px 14px;margin:4px 0;">'
-                f'<div style="font-size:.7rem;color:#05b169;margin-bottom:3px;">📅 {date_}</div>'
+                f'border-radius:10px;padding:10px 14px;margin:5px 0;">'
+                f'<div style="font-size:.7rem;color:#05b169;margin-bottom:3px;">📅 {date_}{badge}{org}</div>'
                 f'{link_html}'
+                + (f'<div style="font-size:.76rem;color:#aaa;margin-top:6px;line-height:1.5;">📣 {_html.escape(mkt_summary)}</div>' if mkt_summary else "")
+                + acts_html +
                 f'</div>',
                 unsafe_allow_html=True,
             )

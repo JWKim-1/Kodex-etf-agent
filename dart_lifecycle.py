@@ -131,7 +131,7 @@ def _selenium_delist_notices() -> list:
         ("미래에셋(TIGER)", "https://investments.miraeasset.com/tigeretf/ko/customer/notice/list.do"),
         ("NH아문디(HANARO)", "https://www.hanaroetf.com/customer/notice"),
         ("KB자산운용(RISE)", "https://www.riseetf.co.kr/cust/notice"),
-        ("한국투자신탁(ACE)", "https://www.aceetf.co.kr/cs/notice?category=10"),
+        ("한국투자신탁(ACE)", "https://www.aceetf.co.kr/cs/notice"),
         ("삼성자산운용(KODEX)", "https://www.samsungfund.com/etf/lounge/notice.do"),
     ]
     results = []

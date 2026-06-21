@@ -490,29 +490,45 @@ _PROV_COLOR_CAL = {"KODEX":"#4d9fff","TIGER":"#ff8c42","ACE":"#05b169","RISE":"#
 # 전체 히스토리에서 기간 있는 이벤트 수집
 _cal_events = []
 for _wk in sorted(history.keys(), key=lambda w: _parse_week_label(w) or date.min):
-    for _sk in ["securities","bank","mass","competitor"]:
+    _wk_date = _parse_week_label(_wk)  # 수집 주차 월요일
+    for _sk in ["securities", "bank", "competitor"]:  # mass 제외 (경쟁사와 중복)
         _sess = (history[_wk].get(_sk) or {})
         for _ev in (_sess.get("events") or {}).get("events") or []:
-            _s = _parse_date(_ev.get("event_period",""))
+            _title = (_ev.get("title") or "")[:28]
+            _prov = _ev.get("provider","") or _sk
+            _color = _PROV_COLOR_CAL.get(_prov, _SESS_COLOR_CAL.get(_sk,"#888"))
             _dates = _DATE_PAT.findall(str(_ev.get("event_period","") or ""))
+
             if len(_dates) >= 2:
                 try:
                     _sd = _dt(int(_dates[0][0]),int(_dates[0][1]),int(_dates[0][2]))
                     _ed = _dt(int(_dates[1][0]),int(_dates[1][1]),int(_dates[1][2]))
-                except: continue
+                except: _sd = _ed = None
             elif len(_dates) == 1:
                 try:
                     _sd = _ed = _dt(int(_dates[0][0]),int(_dates[0][1]),int(_dates[0][2]))
-                except: continue
+                except: _sd = _ed = None
             else:
+                _sd = _ed = None
+
+            # 기간 없으면 수집 주차 기준으로 하루짜리 점으로 표시
+            if _sd is None and _wk_date:
+                _sd = _ed = _dt(_wk_date.year, _wk_date.month, _wk_date.day)
+                _point_only = True
+            else:
+                _point_only = False
+
+            if _sd is None:
                 continue
-            _prov = _ev.get("provider","") or _sk
+
             _cal_events.append({
                 "session": _sk, "provider": _prov,
-                "title": (_ev.get("title") or "")[:28],
+                "title": _title,
                 "start": _sd, "end": _ed,
-                "color": _PROV_COLOR_CAL.get(_prov, _SESS_COLOR_CAL.get(_sk,"#888")),
-                "label": f"[{_SESS_LBL_CAL.get(_sk,_sk)}] {(_ev.get('title') or '')[:25]}",
+                "color": _color,
+                "label": f"[{_SESS_LBL_CAL.get(_sk,_sk)}] {_title}",
+                "point_only": _point_only,
+                "mtype": _ev.get("marketing_type",""),
             })
 
 # 중복 제거 (제목+시작일+세션 기준)
@@ -569,16 +585,17 @@ if _cal_events:
     _today = date.today()
     _first_weekday, _days_in_month = _calendar.monthrange(_yr, _mo)  # 0=월 ~ 6=일
 
-    # 날짜별 이벤트 매핑 {day: [(color, title, session)]}
+    # 날짜별 이벤트 매핑 {day: [(color, title, session, point_only)]}
     _day_events: dict = {}
-    for ev in _cal_events:
+    for ev in _mo_events:
         _s = ev["start"].date() if hasattr(ev["start"], "date") else ev["start"]
         _e = ev["end"].date() if hasattr(ev["end"], "date") else ev["end"]
+        _pt = ev.get("point_only", False)
         for _d in range((_e - _s).days + 1):
             _cur = _s + _td(days=_d)
             if _cur.year == _yr and _cur.month == _mo:
                 _day_events.setdefault(_cur.day, []).append(
-                    (ev["color"], ev["title"][:14], ev["session"])
+                    (ev["color"], ev["title"][:14], ev["session"], _pt)
                 )
 
     _days_of_week = ["월", "화", "수", "목", "금", "토", "일"]
@@ -598,9 +615,13 @@ if _cal_events:
         _day_cls = 'cal-today' if _is_today else ''
         _today_dot = ' 🔵' if _is_today else ''
         _html += f'<td class="cal-td"><div class="cal-day {_day_cls}">{_day}{_today_dot}</div>'
-        for (_color, _title, _sess) in (_day_events.get(_day, []))[:3]:
-            _bg = _color + "33"
-            _html += f'<div class="cal-ev" style="background:{_bg};color:{_color};border-left:3px solid {_color};" title="{_title}">{_title}</div>'
+        for (_color, _title, _sess, _pt) in (_day_events.get(_day, []))[:3]:
+            if _pt:
+                # 기간 없는 감지: 작은 점 표시
+                _html += f'<div style="font-size:.55rem;color:{_color};padding:1px 3px;" title="{_title}">● {_title}</div>'
+            else:
+                _bg = _color + "33"
+                _html += f'<div class="cal-ev" style="background:{_bg};color:{_color};border-left:3px solid {_color};" title="{_title}">{_title}</div>'
         if len(_day_events.get(_day, [])) > 3:
             _html += f'<div style="font-size:.55rem;color:#888;">+{len(_day_events[_day])-3}개</div>'
         _html += '</td>'
@@ -639,11 +660,18 @@ if _cal_events:
                     _color = _mev["color"]
                     _s_str = _mev["start"].strftime("%m/%d")
                     _e_str = _mev["end"].strftime("%m/%d")
-                    _period = f"{_s_str}" if _mev["start"] == _mev["end"] else f"{_s_str} ~ {_e_str}"
+                    _pt = _mev.get("point_only", False)
+                    if _pt:
+                        _period = f"{_s_str} (수집일)"
+                        _mtype_tag = f' · {_mev.get("mtype","")}' if _mev.get("mtype") else " · 콘텐츠 감지"
+                    else:
+                        _period = f"{_s_str}" if _mev["start"] == _mev["end"] else f"{_s_str} ~ {_e_str}"
+                        _mtype_tag = f' · {_mev.get("mtype","")}' if _mev.get("mtype") else ""
                     _sess_lbl = _SESS_LBL_CAL.get(_mev["session"], _mev["session"])
+                    _opacity = "0d" if not _pt else "06"
                     st.markdown(
-                        f'<div style="border-left:3px solid {_color};padding:6px 12px;margin:4px 0;background:{_color}0d;border-radius:0 8px 8px 0;">'
-                        f'<span style="font-size:.65rem;color:{_color};font-weight:700;">[{_sess_lbl}] {_period}</span>'
+                        f'<div style="border-left:3px solid {_color}{"88" if _pt else ""};padding:6px 12px;margin:4px 0;background:{_color}{_opacity};border-radius:0 8px 8px 0;">'
+                        f'<span style="font-size:.65rem;color:{_color};font-weight:700;">[{_sess_lbl}] {_period}{_mtype_tag}</span>'
                         f'<div style="font-size:.85rem;font-weight:600;color:#e8eaed;margin-top:2px;">{_mev["title"]}</div>'
                         f'</div>',
                         unsafe_allow_html=True,

@@ -138,16 +138,16 @@ def _ev_card_html(ev: dict) -> str:
     etf_html    = f'<div class="ev-etf" style="color:{color};">🎯 {target_etf}</div>' if target_etf and target_etf != "null" else ""
     org_icon    = _org_icon.get(organizer, "🏛")
 
-    return f"""
-    <div class="ev-card" style="border-color:{color}33;background:{color}08;">
-      <span class="ev-card-type {cls}">{icon} {mtype}</span>
-      <span class="ev-org-badge" style="background:{color}18;color:{color};border:1px solid {color}44;">{org_icon} {organizer}</span>
-      <div class="ev-title">{title_html}</div>
-      {period_html}
-      {etf_html}
-      <div class="ev-summary">{_html.escape(str(summary)[:150])}</div>
-      <div class="ev-channel">📡 {channel}</div>
-    </div>"""
+    return (
+        f'<div class="ev-card" style="border-color:{color}33;background:{color}08;">'
+        f'<span class="ev-card-type {cls}">{icon} {mtype}</span>'
+        f'<span class="ev-org-badge" style="background:{color}18;color:{color};border:1px solid {color}44;">{org_icon} {organizer}</span>'
+        f'<div class="ev-title">{title_html}</div>'
+        + period_html + etf_html +
+        f'<div class="ev-summary">{_html.escape(str(summary)[:150])}</div>'
+        f'<div class="ev-channel">📡 {_html.escape(str(channel))}</div>'
+        f'</div>'
+    )
 
 
 # ── UI ───────────────────────────────────────────────────────────────────────

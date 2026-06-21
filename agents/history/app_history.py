@@ -520,9 +520,33 @@ st.markdown("### 📅 마케팅 이벤트 캘린더")
 st.caption("전체 수집 이력에서 기간 정보가 있는 이벤트를 달력으로 표시합니다.")
 
 if _cal_events:
-    # 월 선택
-    _all_months = sorted(set(f"{e['start'].year}-{e['start'].month:02d}" for e in _cal_events), reverse=True)
-    _sel_month = st.selectbox("월 선택", _all_months, index=0, key="cal_month")
+    # 이벤트 종료일 기준으로 월 목록 (미래 포함)
+    _all_months = sorted(set(
+        f"{e['start'].year}-{e['start'].month:02d}" for e in _cal_events
+    ) | set(
+        f"{e['end'].year}-{e['end'].month:02d}" for e in _cal_events
+    ))
+
+    # 이번 달 또는 가장 최근 달 기본값
+    _now_month = date.today().strftime("%Y-%m")
+    _default_mo_idx = _all_months.index(_now_month) if _now_month in _all_months else len(_all_months) - 1
+    if "cal_month_idx" not in st.session_state:
+        st.session_state["cal_month_idx"] = _default_mo_idx
+
+    # ← → 버튼
+    _bc1, _bc2, _bc3 = st.columns([1, 4, 1])
+    with _bc1:
+        if st.button("◀", key="cal_prev", use_container_width=True):
+            st.session_state["cal_month_idx"] = max(0, st.session_state["cal_month_idx"] - 1)
+    with _bc3:
+        if st.button("▶", key="cal_next", use_container_width=True):
+            st.session_state["cal_month_idx"] = min(len(_all_months)-1, st.session_state["cal_month_idx"] + 1)
+
+    _mo_idx = st.session_state["cal_month_idx"]
+    _sel_month = _all_months[_mo_idx]
+    with _bc2:
+        st.markdown(f'<div style="text-align:center;font-size:1.1rem;font-weight:700;padding:6px 0;">{_sel_month[:4]}년 {int(_sel_month[5:]):d}월</div>', unsafe_allow_html=True)
+
     _yr, _mo = int(_sel_month.split("-")[0]), int(_sel_month.split("-")[1])
     _mo_start = _dt(_yr, _mo, 1)
     _mo_end   = (_mo_start + _td(days=32)).replace(day=1) - _td(days=1)

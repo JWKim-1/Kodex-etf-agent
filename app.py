@@ -1507,7 +1507,7 @@ for code, res in did_results.items():
             for comp in res.competitors:
                 c_cur  = comp.current_fi   if metric=="financial" else comp.current_ind
                 c_avg  = comp.baseline_fi_avg  if metric=="financial" else comp.baseline_ind_avg
-                c_mabs = (comp.baseline_fi_mabs if metric == "financial" else comp.baseline_ind_mabs) or 1_000_000
+                c_mabs = (getattr(comp, 'baseline_fi_mabs', None) or getattr(comp, 'fi_mabs', None) or 1_000_000) if metric == "financial" else (getattr(comp, 'baseline_ind_mabs', None) or getattr(comp, 'ind_mabs', None) or 1_000_000)
                 c_raw_mabs = c_mabs - 1_000_000
                 comp_lines += (
                     f"     · {comp.name}: ({c_cur:,.0f} − {c_avg:,.0f}) ÷ (mean(절댓값) {c_raw_mabs:,.0f} + 100만 = {c_mabs:,.0f}) = {int(comp.change_pct*100):+d}%\n"

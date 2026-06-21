@@ -833,13 +833,16 @@ def detect_listing_changes(cache: dict = None) -> dict:
             name = row["종목명"].iloc[0] if not row.empty else code
             raw_removed.append((curr_week, code, name))
 
-    # 중복 제거: 같은 code가 여러 주에 걸쳐 raw_removed에 있으면 첫 disappear_week만 유지
-    seen_removed: set = set()
-    delistings = []
+    # 중복 제거: 같은 code의 여러 소멸 이벤트 중 "재등장 이후 마지막 소멸"을 최종 처리
+    # (KRX 빵꾸로 잠깐 사라진 뒤 진짜 상폐되는 경우를 정확히 잡기 위함)
+    # raw_removed는 시간순으로 쌓이므로, 같은 code에 대해 마지막 소멸만 남긴다
+    # 단, collection_gap(재등장)으로 분류된 이전 소멸은 건너뜀
+    code_to_last: dict = {}
     for disappear_week, code, name in raw_removed:
-        if code in seen_removed:
-            continue
-        seen_removed.add(code)
+        code_to_last[code] = (disappear_week, name)  # 덮어쓰기로 마지막만 유지
+
+    delistings = []
+    for code, (disappear_week, name) in code_to_last.items():
         reason = _classify_delisting(code, name, disappear_week, sorted_weeks, cache)
         entry = {
             "week":      disappear_week,

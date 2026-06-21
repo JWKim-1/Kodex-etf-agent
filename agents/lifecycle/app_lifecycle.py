@@ -141,9 +141,12 @@ def _cards(items, status_field, badge_color_map):
                 st.markdown(
                     f'<div class="lc-card" style="border-color:{color}33;background:{color}08;">'
                     f'<span class="lc-badge" style="background:{color}18;color:{color};border:1px solid {color}44;">{emoji} {label}</span>'
-                    f'<div class="lc-name"><a href="{krx_url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{x["종목명"]}</a></div>'
+                    + (f'<span class="lc-badge" style="background:rgba(5,177,105,0.15);color:#05b169;border:1px solid rgba(5,177,105,0.3);margin-left:4px;">🔍 LLM 상폐확인</span>' if x.get("llm_verified") is True else
+                       f'<span class="lc-badge" style="background:rgba(107,114,128,0.15);color:#9ca3af;border:1px solid rgba(107,114,128,0.3);margin-left:4px;">❓ LLM 미확인</span>' if x.get("llm_verified") is False else "")
+                    + f'<div class="lc-name"><a href="{krx_url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{x["종목명"]}</a></div>'
                     f'<div class="lc-code">{x["종목코드"]}</div>'
-                    f'</div>',
+                    + (f'<div class="lc-week" style="color:#aaa;">{x.get("llm_summary","")}</div>' if x.get("llm_summary") else "")
+                    + f'</div>',
                     unsafe_allow_html=True
                 )
         st.markdown("")

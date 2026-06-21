@@ -841,12 +841,79 @@ def detect_listing_changes(cache: dict = None) -> dict:
             continue
         seen_removed.add(code)
         reason = _classify_delisting(code, name, disappear_week, sorted_weeks, cache)
-        delistings.append({
+        entry = {
             "week":      disappear_week,
             "종목코드":  code,
             "종목명":    name,
             "last_seen": sorted_weeks[sorted_weeks.index(disappear_week) - 1],
             "reason":    reason,
-        })
+            "llm_verified": None,
+            "llm_summary":  "",
+        }
+        # 2주 연속 미등장(delisting_confirmed)이면 LLM으로 실제 상폐 여부 검증
+        if reason == "delisting_confirmed":
+            entry["llm_verified"], entry["llm_summary"] = _verify_delisting_llm(name, code)
+        delistings.append(entry)
 
     return {"new_listings": new_listings, "delistings": delistings}
+
+
+def _verify_delisting_llm(name: str, code: str) -> tuple:
+    """
+    상폐 의심 ETF를 LLM + 네이버 뉴스로 검증.
+    Returns: (verified: bool|None, summary: str)
+    - True: 실제 상폐 확인
+    - False: 수집 오류로 판단
+    - None: 확인 불가
+    """
+    import os as _os
+    naver_id  = _os.getenv("NAVER_CLIENT_ID", "")
+    naver_sec = _os.getenv("NAVER_CLIENT_SECRET", "")
+    ant_key   = _os.getenv("ANTHROPIC_API_KEY", "")
+
+    # 1단계: 네이버 뉴스에서 상폐 관련 뉴스 검색
+    news_texts = []
+    if naver_id:
+        try:
+            import requests as _req
+            r = _req.get("https://openapi.naver.com/v1/search/news.json",
+                params={"query": f"{name} 상장폐지", "display": 5, "sort": "date"},
+                headers={"X-Naver-Client-Id": naver_id, "X-Naver-Client-Secret": naver_sec},
+                timeout=8)
+            import re as _re
+            for item in r.json().get("items", []):
+                title = _re.sub(r"<[^>]+>", "", item.get("title", ""))
+                desc  = _re.sub(r"<[^>]+>", "", item.get("description", ""))
+                news_texts.append(f"{title}: {desc[:100]}")
+        except Exception:
+            pass
+
+    if not news_texts:
+        return None, "뉴스 검색 결과 없음 — 확인 불가"
+
+    if not ant_key:
+        # LLM 없이 키워드만으로 판단
+        combined = " ".join(news_texts).lower()
+        if "상장폐지" in combined or "상폐" in combined or "만기" in combined:
+            return True, f"키워드 감지: {news_texts[0][:80]}"
+        return False, "상폐 관련 뉴스 없음 — 수집 오류 가능성"
+
+    # 2단계: LLM으로 판단
+    try:
+        from llm_client import call_llm
+        prompt = f"""ETF '{name}'(코드:{code})이 KRX 데이터에서 2주 연속 사라졌습니다.
+아래 뉴스를 보고 실제 상장폐지가 맞는지 판단하세요.
+
+뉴스:
+{chr(10).join(news_texts)}
+
+JSON으로만 응답:
+{{"delisted": true/false/null, "reason": "만기청산|AUM미달|수집오류|불명확", "summary": "1줄 요약"}}
+- delisted: true=상폐확인, false=수집오류, null=불명확"""
+        import json as _json
+        raw = call_llm(prompt, anthropic_key=ant_key, max_tokens=200)
+        raw = raw.strip().lstrip("```json").rstrip("```").strip()
+        result = _json.loads(raw)
+        return result.get("delisted"), result.get("summary", "")
+    except Exception as e:
+        return None, f"LLM 검증 실패: {e}"

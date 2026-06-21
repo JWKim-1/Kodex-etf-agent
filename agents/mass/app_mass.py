@@ -227,9 +227,7 @@ elif anthropic_key:
             channel_context="ETF 운용사 전체 (KODEX/TIGER/ACE/RISE/HANARO/SOL) — 개인 투자자 대상 ETF 매수 유도 이벤트·프로모션·혜택 (운용사 구분 없이 모든 ETF 마케팅 포함)"
         )
     _mass_llm_failed = "실패" in llm_result.get("summary", "")
-    if _mass_llm_failed:
-        st.warning("LLM 호출 실패 — 키워드 기반으로 전환합니다.")
-    elif _days_old <= 14:
+    if not _mass_llm_failed and _days_old <= 14:
         save_raw_data(_mass_llm_arch_key, llm_result)
 
 if not anthropic_key or _mass_llm_failed:

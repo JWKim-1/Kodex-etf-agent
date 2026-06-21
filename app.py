@@ -562,7 +562,13 @@ def summarize_channel(r) -> str:
     if "videos"   in d: return f"영상 {len(d['videos'])}개 (ETF관련 {sum(1 for v in d['videos'] if v.get('is_etf_related'))}개)"
     if "articles" in d: return f"기사 {len(d['articles'])}건"
     if "events"   in d: return f"이벤트 {len(d['events'])}건"
-    if "trends"   in d: return " | ".join(f"{k}: {v['change_pct']:+.1f}%" for k,v in d["trends"].items())
+    if "trends"   in d:
+        parts = []
+        for k, v in d["trends"].items():
+            if isinstance(v, dict):
+                if "ratio" in v: parts.append(f"{k}: {v['ratio']:.0f}({v.get('change',0):+.0f})")
+                elif "etf_hits" in v: parts.append(f"인기검색어 ETF포함:{len(v.get('etf_hits',[]))}")
+        return " | ".join(parts) if parts else "트렌드 데이터 수집"
     if "news"     in d: return f"보도자료 {len(d['news'])}건"
     if "posts"    in d: return f"게시물 {len(d['posts'])}건"
     return "수집 완료"
@@ -1166,10 +1172,9 @@ with st.expander("🔗 비교군 매핑", expanded=True):
         row_etf = analyzer.loader.get_etf_row(current_df, code, code)
         etf_name = row_etf.name if row_etf else code
 
-        if code in COMPARISON_MAP:
-            comps = COMPARISON_MAP[code]["competitors"]
-        else:
-            comps = auto_map_competitors(etf_name, code, etf_universe)
+        from etf_mapping_loader import get_competitors as _get_comp_step3
+        _code_s = code.replace("*001","").strip()
+        comps = _get_comp_step3(_code_s) or auto_map_competitors(etf_name, _code_s, etf_universe)
 
         _pc = {"KODEX":"#4d9fff","TIGER":"#f4a261","ACE":"#e76f51","PLUS":"#2a9d8f","SOL":"#e9c46a","RISE":"#6b9fff","HANARO":"#a78bfa"}
         total_cards = 1 + len(comps)

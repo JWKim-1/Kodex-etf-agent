@@ -515,6 +515,16 @@ for _wk in sorted(history.keys(), key=lambda w: _parse_week_label(w) or date.min
                 "label": f"[{_SESS_LBL_CAL.get(_sk,_sk)}] {(_ev.get('title') or '')[:25]}",
             })
 
+# 중복 제거 (제목+시작일+세션 기준)
+_seen_keys = set()
+_cal_events_dedup = []
+for _ce in _cal_events:
+    _key = (_ce["title"], _ce["start"], _ce["session"])
+    if _key not in _seen_keys:
+        _seen_keys.add(_key)
+        _cal_events_dedup.append(_ce)
+_cal_events = _cal_events_dedup
+
 st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 st.markdown("### 📅 마케팅 이벤트 캘린더")
 st.caption("전체 수집 이력에서 기간 정보가 있는 이벤트를 달력으로 표시합니다.")

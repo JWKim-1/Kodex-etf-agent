@@ -1517,21 +1517,25 @@ class DataCollector:
         return self._fetch_youtube_rss("sol_youtube", CHANNEL_LABELS["sol_youtube"], channel_id)
 
     def _ch_tiger_event(self) -> ChannelResult:
-        """TIGER ETF 이벤트 — 사이트맵에서 이벤트 URL 추출 후 개별 페이지 스크래핑."""
+        """TIGER ETF 이벤트 — ID 스캔으로 진행중 이벤트 수집 (사이트맵 미반영 대응)."""
         ch, name = "tiger_event", CHANNEL_LABELS["tiger_event"]
         base = "https://investments.miraeasset.com"
         try:
+            # 사이트맵에서 최대 detailsKey 파악 후 그 이후 ID도 스캔
             sitemap = requests.get(f"{base}/tigeretf/sitemap.xml", headers=BROWSER_HEADERS, timeout=15)
             sitemap.raise_for_status()
-            # event/view.do?...detailsKey=XXX URL 추출 (중복 제거)
-            raw_urls = re.findall(r'https://investments\.miraeasset\.com/tigeretf/ko/customer/event/view\.do\?[^<\s]+', sitemap.text)
+            raw_keys = re.findall(r"detailsKey=(\d+)", sitemap.text)
+            max_key = max((int(k) for k in raw_keys), default=100)
+            # 최대 키부터 +20까지 스캔해서 진행중 이벤트 탐색
+            scan_keys = list(range(max(1, max_key - 5), max_key + 21))
             seen_keys: set = set()
             event_urls = []
-            for u in raw_urls:
-                key_m = re.search(r"detailsKey=(\d+)", u)
-                if key_m and key_m.group(1) not in seen_keys:
-                    seen_keys.add(key_m.group(1))
-                    event_urls.append(u.replace("&amp;", "&"))
+            for key in scan_keys:
+                if str(key) not in seen_keys:
+                    seen_keys.add(str(key))
+                    event_urls.append(
+                        f"{base}/tigeretf/ko/customer/event/view.do?listCnt=8&pageIndex=1&detailsKey={key}&q=&orderB="
+                    )
 
             events = []
             for url in event_urls[:15]:
@@ -1563,8 +1567,14 @@ class DataCollector:
                             if src and any(k in src.lower() for k in ["event","banner","thumb","visual","poster"]):
                                 img_url = src if src.startswith("http") else "https://investments.miraeasset.com" + src
                                 break
-                    # 종료/당첨자 발표 이벤트 제외 (당점자 오타 포함)
-                    if re.search(r"당[첨점]자\s*발표|이벤트\s*종료|\(종료\)", title):
+                    # 종료/당첨자 발표/빈 페이지 제외
+                    if re.search(r"당[첨점]자\s*발표|이벤트\s*종료|\(종료\)|Page Not Found|404", title):
+                        continue
+                    # 진행중인지 확인 (없으면 종료 이벤트)
+                    page_text = dr.text
+                    is_ongoing = "진행중" in page_text or "진행 중" in page_text
+                    is_ended = re.search(r"이벤트\s*종료|종료된\s*이벤트|당첨자\s*발표", page_text[:3000])
+                    if is_ended and not is_ongoing:
                         continue
                     if title and len(title) > 5:
                         events.append({"title": title, "url": url, "period": period, "image_url": img_url})

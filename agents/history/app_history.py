@@ -316,11 +316,20 @@ for tab, (sess_key, sess_label) in zip(tabs, SESSION_LABELS.items()):
         if sess_evs and sess_key != "competitor":
             if summary:
                 st.caption(summary)
-            cards_html = '<div class="ev-board">'
-            for ev in sess_evs:
-                cards_html += _ev_card_html(ev)
-            cards_html += "</div>"
-            st.markdown(cards_html, unsafe_allow_html=True)
+            # 기간 있는 것 카드 / 없는 것 기타
+            _main_evs = [e for e in sess_evs if e.get("event_period") and e["event_period"] not in ("null","None","")]
+            _other_evs = [e for e in sess_evs if e not in _main_evs]
+            if _main_evs:
+                cards_html = '<div class="ev-board">'
+                for ev in _main_evs:
+                    cards_html += _ev_card_html(ev)
+                cards_html += "</div>"
+                st.markdown(cards_html, unsafe_allow_html=True)
+            if _other_evs:
+                with st.expander(f"기타 감지 항목 ({len(_other_evs)}건)", expanded=False):
+                    for ev in _other_evs:
+                        url = ev.get("url",""); title = (ev.get("title") or "")[:60]
+                        st.markdown(f"• {'['+title+']('+url+')' if url and url.startswith('http') else title}")
 
         # 수집 원본 — 채널 카드
         raw = sess.get("raw") or {}

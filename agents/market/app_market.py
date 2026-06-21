@@ -466,18 +466,38 @@ else:
                                       xanchor=xanc, yanchor=yanc, opacity=0.7)
 
             # 비KODEX 점 (배경)
+            # 비KODEX 점 (운용사별 색상으로 구분)
+            _PROV_C = {"TIGER":"#ff8c42","ACE":"#05b169","RISE":"#a78bfa",
+                       "HANARO":"#00c6ff","SOL":"#f43f5e","PLUS":"#fb923c"}
             _bg = _mx[~_mx["is_kodex"]]
-            fig_mx.add_trace(go.Scatter(
-                x=_bg["순매수"], y=_bg["수익률_pct"],
-                mode="markers",
-                marker=dict(size=5, color="rgba(150,150,150,0.25)", line=dict(width=0)),
-                hovertemplate="<b>%{customdata[0]}</b><br>수익률: %{y:.2f}%<br>순매수: %{x:,.0f}만원<extra></extra>",
-                customdata=_bg[["종목명"]].values,
-                name="기타 ETF",
-                showlegend=True,
-            ))
+            for _prov, _pc_color in _PROV_C.items():
+                _ps = _bg[_bg["종목명"].str.contains(_prov, case=False, na=False)]
+                if _ps.empty: continue
+                fig_mx.add_trace(go.Scatter(
+                    x=_ps["순매수"], y=_ps["수익률_pct"],
+                    mode="markers+text",
+                    marker=dict(size=9, color=_pc_color, opacity=0.6,
+                                line=dict(color="rgba(255,255,255,0.3)", width=1)),
+                    text=_ps["종목명"].str.replace(f"{_prov} ","",regex=False).str[:8],
+                    textposition="bottom center",
+                    textfont=dict(size=8, color=_pc_color),
+                    hovertemplate=f"<b>%{{customdata[0]}}</b><br>수익률: %{{y:.2f}}%<br>순매수: %{{x:,.0f}}만원<extra></extra>",
+                    customdata=_ps[["종목명"]].values,
+                    name=_prov, showlegend=True,
+                ))
+            # 운용사 없는 기타
+            _other = _bg[~_bg["종목명"].str.contains("|".join(_PROV_C.keys()), case=False, na=False)]
+            if not _other.empty:
+                fig_mx.add_trace(go.Scatter(
+                    x=_other["순매수"], y=_other["수익률_pct"],
+                    mode="markers",
+                    marker=dict(size=7, color="rgba(180,180,180,0.5)", line=dict(width=0)),
+                    hovertemplate="<b>%{customdata[0]}</b><br>수익률: %{y:.2f}%<extra></extra>",
+                    customdata=_other[["종목명"]].values,
+                    name="기타", showlegend=True,
+                ))
 
-            # KODEX 점 (전략별 색상)
+            # KODEX 점 (전략별 색상, 크고 선명하게)
             _kx = _mx[_mx["is_kodex"]]
             for strat, color in _Q_COLOR.items():
                 _sub = _kx[_kx["전략"] == strat]
@@ -486,10 +506,10 @@ else:
                 fig_mx.add_trace(go.Scatter(
                     x=_sub["순매수"], y=_sub["수익률_pct"],
                     mode="markers+text",
-                    marker=dict(size=11, color=color,
-                                line=dict(color="rgba(255,255,255,0.5)", width=1.2),
-                                symbol="circle"),
-                    text=_sub["종목명"].str.replace("KODEX ", "", regex=False).str[:10],
+                    marker=dict(size=14, color=color,
+                                line=dict(color="white", width=2),
+                                symbol="star"),
+                    text=_sub["종목명"].str.replace("KODEX ", "", regex=False).str[:12],
                     textposition="top center",
                     textfont=dict(size=9, color=color),
                     hovertemplate=(

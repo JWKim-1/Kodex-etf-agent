@@ -508,17 +508,15 @@ def did_pct(v: float) -> str:
     return f"Z={v:+.2f}"
 
 def score_label(res) -> str:
-    """마케팅 점수 표시. 2단계 미적용 시 산출중 표시."""
-    score = getattr(res, 'marketing_score', None)
-    zscore = getattr(res, 'zscore', None)
-    if score is not None and score != 50.0:
+    """마케팅 점수 표시."""
+    score  = float(getattr(res, 'marketing_score', None) or 0.0)
+    zscore = float(getattr(res, 'zscore', None) or 0.0)
+    # 점수가 유효하게 산출된 경우 (50점 고착이 아닌 경우)
+    if zscore != 0.0 or score not in (0.0, 50.0):
         return f"{score:.0f}점"
-    if zscore is not None and zscore != 0.0:
-        return f"{score:.0f}점" if score is not None else f"Z={zscore:+.2f}"
-    # Z-score 미산출 시 — raw_did_value만 표시 (did_value는 Z로 덮어쓰여 있을 수 있음)
     raw = getattr(res, 'raw_did_value', None)
-    if raw is not None:
-        return f"산출중 ({raw*100:+.0f}%)"
+    if raw is not None and raw != 0.0:
+        return f"산출중 ({float(raw)*100:+.0f}%)"
     return "산출중"
 
 def _parse_sheet_dates(sheet_name: str):
@@ -1174,8 +1172,9 @@ with st.expander("🔗 비교군 매핑", expanded=True):
         total_cards = 1 + len(comps)
         card_w = f"flex:1; min-width:0; max-width:calc(100%/{total_cards});"
 
-        def _card(provider, name, code_str, color, label=""):
+        def _card(provider, name, code_str, color, corr=None):
             initial = provider[0] if provider else "?"
+            corr_line = f'<div style="font-size:.62rem;color:#888;margin-top:3px;">r={corr:.3f}</div>' if corr is not None else ""
             return (
                 f'<div style="{card_w} border:2px solid {color}; border-radius:24px; '
                 f'padding:16px 14px; text-align:center; background:#16181c;">'
@@ -1183,6 +1182,7 @@ with st.expander("🔗 비교군 매핑", expanded=True):
                 f'<div style="font-size:0.7rem;color:{color};font-weight:700;margin-bottom:3px;letter-spacing:.05em;">{provider}</div>'
                 f'<div style="font-size:1rem;font-weight:700;color:#e8eaed;line-height:1.2;">{name}</div>'
                 f'<div style="font-size:0.68rem;color:#5b616e;margin-top:4px;">{code_str}</div>'
+                + corr_line +
                 f'</div>'
             )
 
@@ -1192,8 +1192,7 @@ with st.expander("🔗 비교군 매핑", expanded=True):
             for comp in comps:
                 c = _pc.get(comp['provider'], "#adb5bd")
                 short_name = comp["name"].replace("TIGER ","").replace("PLUS ","").replace("ACE ","").replace("SOL ","").replace("RISE ","").replace("HANARO ","")
-                corr_html = f'<div style="font-size:.62rem;color:#888;margin-top:3px;">r={comp["corr"]:.3f}</div>' if comp.get("corr") is not None else ""
-                cards_html += _card(comp['provider'], short_name, comp["code"], c) .replace('</div>', corr_html + '</div>', 1) if corr_html else _card(comp['provider'], short_name, comp["code"], c)
+                cards_html += _card(comp['provider'], short_name, comp["code"], c, corr=comp.get("corr"))
             cards_html += '</div>'
             st.markdown(cards_html, unsafe_allow_html=True)
             if len(comps) == 1:
@@ -1296,8 +1295,8 @@ if did_results:
 
     # 마케팅 점수 바 차트
     etf_names  = [r.kodex_name for r in did_results.values()]
-    score_vals = [getattr(r, 'marketing_score', 50.0) for r in did_results.values()]
-    zscore_vals= [getattr(r, 'zscore', 0.0) for r in did_results.values()]
+    score_vals = [float(getattr(r, 'marketing_score', None) or 50.0) for r in did_results.values()]
+    zscore_vals= [float(getattr(r, 'zscore', None) or 0.0) for r in did_results.values()]
     bar_colors = [color_map.get(r.judgement_emoji, "#6c757d") for r in did_results.values()]
 
     # ── 마케팅 점수 (0~100) 가로 막대 ──

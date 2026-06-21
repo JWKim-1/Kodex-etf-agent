@@ -366,8 +366,9 @@ with st.expander("🔗 비교군 매핑", expanded=True):
         total_cards = 1 + len(comps)
         card_w = f"flex:1; min-width:0; max-width:calc(100%/{total_cards});"
 
-        def _card(provider, name, code_str, color, label=""):
+        def _card(provider, name, code_str, color, corr=None):
             initial = provider[0] if provider else "?"
+            corr_line = f'<div style="font-size:.62rem;color:#888;margin-top:3px;">r={corr:.3f}</div>' if corr is not None else ""
             return (
                 f'<div style="{card_w} border:2px solid {color}; border-radius:24px; '
                 f'padding:16px 14px; text-align:center; background:#16181c;">'
@@ -375,7 +376,7 @@ with st.expander("🔗 비교군 매핑", expanded=True):
                 f'<div style="font-size:0.7rem;color:{color};font-weight:700;margin-bottom:3px;letter-spacing:.05em;">{provider}</div>'
                 f'<div style="font-size:1rem;font-weight:700;color:#e8eaed;line-height:1.2;">{name}</div>'
                 f'<div style="font-size:0.68rem;color:#5b616e;margin-top:4px;">{code_str}</div>'
-                f'</div>'
+                + corr_line + f'</div>'
             )
 
         cards_html = '<div style="display:flex; gap:12px; margin:10px 0;">'
@@ -384,7 +385,7 @@ with st.expander("🔗 비교군 매핑", expanded=True):
             for comp in comps:
                 c = _pc.get(comp['provider'], "#adb5bd")
                 short_name = comp["name"].replace("TIGER ","").replace("PLUS ","").replace("ACE ","").replace("SOL ","").replace("RISE ","").replace("HANARO ","")
-                cards_html += _card(comp['provider'], short_name, comp["code"], c)
+                cards_html += _card(comp['provider'], short_name, comp["code"], c, corr=comp.get("corr"))
             cards_html += '</div>'
             st.markdown(cards_html, unsafe_allow_html=True)
             if len(comps) == 1:

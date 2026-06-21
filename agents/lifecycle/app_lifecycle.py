@@ -110,14 +110,22 @@ lc_history = _load_lc_history()
 delist_news   = [x for x in lc_history.get("delist_news", [])   if "ETF" in x.get("title","") or "상장폐지" in x.get("title","")]
 newlist_news  = [x for x in lc_history.get("newlist_news", [])  if "ETF" in x.get("title","") or "상장" in x.get("title","")]
 dart_notices  = lc_history.get("dart_notices", [])
+# 운용사 사이트 상폐 공지 (Selenium 수집)
+etf_site_delist = []
+for _wk_data in lc_history.get("weeks", {}).values():
+    etf_site_delist.extend(_wk_data.get("etf_site_delist", []))
+# 중복 제거
+_seen_titles = set()
+etf_site_delist = [x for x in etf_site_delist if x.get("title","")[:40] not in _seen_titles and not _seen_titles.add(x.get("title","")[:40])]
 lc_updated    = lc_history.get("collected_at", "미수집")
 
+_news_total = len(delist_news) + len(dart_notices) + len(etf_site_delist)
 # ── 탭: 신규상장 / 상폐 / 만기청산 / 뉴스 (수집갭 제거) ──────────────────────
 tab_new, tab_del, tab_mat, tab_news = st.tabs([
     f"🆕 신규상장 ({len(new_confirmed)+len(new_pending)})",
     f"⛔ 상폐 ({len(delist_conf)+len(delist_pend)})",
     f"⏳ 만기청산 ({len(maturity)})",
-    f"📰 뉴스·공시 ({len(delist_news)+len(dart_notices)})",
+    f"📰 뉴스·공시 ({_news_total})",
 ])
 
 def _cards(items, status_field, badge_color_map):
@@ -254,6 +262,24 @@ with tab_news:
             )
     else:
         st.info("신규상장 뉴스 없음")
+
+    if etf_site_delist:
+        st.markdown("#### 🏢 운용사 공지 상폐 안내 (Selenium 수집)")
+        for x in etf_site_delist[:20]:
+            corp = x.get("corp_name","")
+            title = _html.escape(x.get("title","")[:70])
+            date_ = x.get("date","")
+            url = x.get("url","")
+            link_html = f'<a href="{url}" target="_blank" style="color:#f43f5e;text-decoration:none;">{title}</a>' if url else title
+            st.markdown(
+                f'<div style="border:1px solid rgba(244,63,94,0.25);background:rgba(244,63,94,0.05);'
+                f'border-radius:8px;padding:8px 14px;margin:3px 0;">'
+                f'<span style="font-size:.65rem;color:#f43f5e;margin-right:8px;">{date_}</span>'
+                f'<span style="font-size:.65rem;color:#aaa;">{_html.escape(corp)}</span><br>'
+                f'{link_html}'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
 
     if dart_notices:
         st.markdown("#### 📋 DART 공시 (만기·청산)")

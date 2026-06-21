@@ -123,6 +123,59 @@ def _dart_notices(days: int = 7) -> list:
     return results
 
 
+# ── ETF 운용사 사이트 상폐 공지 Selenium 수집 ───────────────────────────────
+def _selenium_delist_notices() -> list:
+    """TIGER/HANARO 등 운용사 공지 페이지에서 상폐 공지 Selenium 수집."""
+    DELIST_KW = ["상장폐지","상폐","만기","만기상환","청산","해지상환","존속기한","사전안내"]
+    ETF_SITES = [
+        ("미래에셋(TIGER)", "https://investments.miraeasset.com/tigeretf/ko/customer/notice/list.do"),
+        ("NH아문디(HANARO)", "https://www.hanaroetf.com/customer/notice"),
+        ("KB자산운용(RISE)", "https://www.riseetf.co.kr/cust/notice"),
+        ("한국투자신탁(ACE)", "https://www.aceetf.co.kr/cs/notice?category=10"),
+        ("삼성자산운용(KODEX)", "https://www.samsungfund.com/etf/lounge/notice.do"),
+    ]
+    results = []
+    try:
+        import sys as _sys; _sys.path.insert(0, str(_ROOT))
+        from collector import _selenium_driver
+        import time as _time
+        driver = _selenium_driver()
+        try:
+            for corp_name, url in ETF_SITES:
+                try:
+                    driver.get(url); _time.sleep(3)
+                    text = driver.find_element("tag name","body").text
+                    lines = [l.strip() for l in text.split("\n") if l.strip()]
+                    for i, line in enumerate(lines):
+                        if any(k in line for k in DELIST_KW) and len(line) > 8:
+                            # 다음 줄에 날짜 있으면 같이 수집
+                            date_str = ""
+                            if i+1 < len(lines):
+                                dm = re.search(r"20\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2}", lines[i+1])
+                                if dm: date_str = dm.group()
+                            results.append({
+                                "title": line[:80],
+                                "corp_name": corp_name,
+                                "date": date_str,
+                                "url": url,
+                                "source": "운용사공지",
+                            })
+                except Exception as e:
+                    logger.warning(f"Selenium {corp_name}: {e}")
+        finally:
+            driver.quit()
+    except Exception as e:
+        logger.warning(f"Selenium 상폐 수집 실패: {e}")
+    # 중복 제거
+    seen = set()
+    dedup = []
+    for r in results:
+        key = r["title"][:40]
+        if key not in seen:
+            seen.add(key); dedup.append(r)
+    return dedup
+
+
 # ── LLM 판별 ────────────────────────────────────────────────────────────────
 def _llm_classify(news_items: list, task: str) -> list:
     """
@@ -249,11 +302,13 @@ def collect_lifecycle(days: int = 7) -> dict:
 
     logger.info(f"[lifecycle] {week} 수집 시작...")
 
-    # 1. 뉴스 수집
+    # 1. 뉴스 + 운용사 공지 수집
     delist_raw  = _naver_news("ETF 상장폐지", days)
     newlist_raw = _naver_news("ETF 신규상장", days)
     dart        = _dart_notices(days)
-    logger.info(f"  뉴스: 상폐후보 {len(delist_raw)}건 / 신규후보 {len(newlist_raw)}건 / DART {len(dart)}건")
+    # 1-1. 운용사 사이트 상폐 공지 (Selenium)
+    selenium_delist = _selenium_delist_notices()
+    logger.info(f"  뉴스: 상폐후보 {len(delist_raw)}건 / 신규후보 {len(newlist_raw)}건 / DART {len(dart)}건 / 운용사공지 {len(selenium_delist)}건")
 
     # 2. LLM 판별
     delistings  = _llm_classify(delist_raw,  "delist")
@@ -275,6 +330,7 @@ def collect_lifecycle(days: int = 7) -> dict:
         "delistings":   delistings,
         "new_listings": new_listings,
         "dart_notices": dart,
+        "etf_site_delist": selenium_delist,
     }
     # 전체 집계 (UI용 플랫 리스트)
     history["delist_news"]  = [x for w in history["weeks"].values() for x in w.get("delistings", [])]

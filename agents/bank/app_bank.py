@@ -186,6 +186,8 @@ def _krx_label(w: str) -> str:
 
 labeled_weeks = {_krx_label(s): s for s in sheet_names}  # 표시라벨 → 실제키
 label_list = list(labeled_weeks.keys())
+if "bank_week" in st.session_state and st.session_state["bank_week"] in label_list:
+    default_idx = label_list.index(st.session_state["bank_week"])
 selected_label = st.selectbox("분석할 주차", label_list,
                                index=default_idx, key="bank_week")
 selected = labeled_weeks[selected_label]  # 실제 캐시 키

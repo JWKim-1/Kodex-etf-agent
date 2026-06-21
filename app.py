@@ -767,7 +767,10 @@ _default_idx = len(labeled) - 1
 if not _is_friday and len(labeled) >= 2:
     _default_idx = len(labeled) - 2
     st.caption("💡 금요일 장 마감 후 이번 주 데이터가 완성됩니다.")
-selected_label = st.selectbox("분석할 주차 시트 선택", labeled, index=_default_idx)
+# 마지막 선택 주차 유지
+if "sec_selected_label" in st.session_state and st.session_state["sec_selected_label"] in labeled:
+    _default_idx = labeled.index(st.session_state["sec_selected_label"])
+selected_label = st.selectbox("분석할 주차 시트 선택", labeled, index=_default_idx, key="sec_selected_label")
 current_sheet = sheet_names[labeled.index(selected_label)]
 
 # 과거 주차 선택 시 신뢰도 경고

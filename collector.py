@@ -64,6 +64,8 @@ CHANNEL_LABELS = {
     "kiwoom_sec_kakao":    "키움증권 카카오채널",
     "kis_sec_kakao":       "한국투자증권 카카오채널",
     "shinhan_sec_kakao":   "신한투자증권 카카오채널",
+    "shinhan_sec_event":   "신한투자증권 이벤트",
+    "kb_sec_event":        "KB증권 이벤트",
     # ── ETF 운용사 채널 (개인·경쟁사 모드 공용) ─────────────────────────
     "kodex_youtube":    "KODEX ETF 유튜브 (삼성자산운용)",
     "tiger_youtube":    "TIGER ETF 유튜브 (미래에셋자산운용)",
@@ -267,6 +269,8 @@ class DataCollector:
             ("kiwoom_sec_kakao",   lambda: self._ch_kakao_etf("_FZeAd",   "kiwoom_sec_kakao")),
             ("kis_sec_kakao",      lambda: self._ch_kakao_etf("_YCAes",   "kis_sec_kakao")),
             ("shinhan_sec_kakao",  lambda: self._ch_kakao_etf("_xdnLFd",  "shinhan_sec_kakao")),
+            ("shinhan_sec_event",  self._ch_shinhan_sec_event),
+            ("kb_sec_event",       self._ch_kb_sec_event),
         ]
         results: Dict[str, ChannelResult] = {}
         for idx, (key, func) in enumerate(channels):
@@ -1405,6 +1409,24 @@ class DataCollector:
 
     # ── 신한투자증권 채널 ────────────────────────────────────────────────────
 
+    def _ch_shinhan_sec_event(self) -> ChannelResult:
+        """신한투자증권 이벤트 — Selenium."""
+        return self._selenium_event_collect(
+            "shinhan_sec_event", CHANNEL_LABELS["shinhan_sec_event"],
+            "https://m.shinhansec.com/mweb/anev/evnt/aevnt0001",
+            title_kw=["이벤트","ETF","펀드","연금","ISA","수수료","혜택","적립"],
+            skip_kw=["전체","이벤트구분","검색","더보기"],
+        )
+
+    def _ch_kb_sec_event(self) -> ChannelResult:
+        """KB증권 이벤트 — Selenium."""
+        return self._selenium_event_collect(
+            "kb_sec_event", CHANNEL_LABELS["kb_sec_event"],
+            "https://m.kbsec.com/go.able?linkcd=s060200020000",
+            title_kw=["이벤트","ETF","ISA","연금","IRP","수수료","혜택","펀드"],
+            skip_kw=["전체","이벤트구분","당첨자","진행중","종료","검색"],
+        )
+
     def _ch_shinhan_youtube(self) -> ChannelResult:
         return self._fetch_youtube_rss(
             "shinhan_youtube", CHANNEL_LABELS["shinhan_youtube"],
@@ -1518,96 +1540,77 @@ class DataCollector:
                                  error_label="SOL YouTube 채널 ID 추출 실패 — 일시적 YouTube 차단")
         return self._fetch_youtube_rss("sol_youtube", CHANNEL_LABELS["sol_youtube"], channel_id)
 
-    def _ch_tiger_event(self) -> ChannelResult:
-        """TIGER ETF 이벤트 — ID 스캔으로 진행중 이벤트 수집 (사이트맵 미반영 대응)."""
-        ch, name = "tiger_event", CHANNEL_LABELS["tiger_event"]
-        base = "https://investments.miraeasset.com"
+    def _selenium_event_collect(self, ch: str, name: str, url: str,
+                                 title_kw=None, skip_kw=None,
+                                 wait_sec: int = 4) -> ChannelResult:
+        """Selenium으로 SPA 이벤트 페이지 수집 공통 헬퍼."""
+        if title_kw is None:
+            title_kw = ["이벤트", "EVENT", "프로모션", "매수", "경품", "혜택", "인증"]
+        if skip_kw is None:
+            skip_kw  = ["종료된 이벤트", "당첨자 발표", "당첨자발표"]
         try:
-            # 사이트맵에서 최대 detailsKey 파악 후 그 이후 ID도 스캔
-            sitemap = requests.get(f"{base}/tigeretf/sitemap.xml", headers=BROWSER_HEADERS, timeout=15)
-            sitemap.raise_for_status()
-            raw_keys = re.findall(r"detailsKey=(\d+)", sitemap.text)
-            max_key = max((int(k) for k in raw_keys), default=100)
-            # 최대 키부터 +20까지 스캔해서 진행중 이벤트 탐색
-            scan_keys = list(range(max(1, max_key - 5), max_key + 21))
-            seen_keys: set = set()
-            event_urls = []
-            for key in scan_keys:
-                if str(key) not in seen_keys:
-                    seen_keys.add(str(key))
-                    event_urls.append(
-                        f"{base}/tigeretf/ko/customer/event/view.do?listCnt=8&pageIndex=1&detailsKey={key}&q=&orderB="
-                    )
-
-            events = []
-            for url in event_urls[:15]:
-                try:
-                    dr = requests.get(url, headers=BROWSER_HEADERS, timeout=10)
-                    dsoup = BeautifulSoup(dr.text, "lxml")
-                    # #contents 첫 번째 의미있는 텍스트 블록에서 제목 추출
-                    title = ""
-                    cont = dsoup.select_one("#contents")
-                    if cont:
-                        lines = [ln.strip() for ln in cont.get_text("\n").split("\n") if ln.strip()]
-                        # "이벤트 종료" / "이벤트 진행중" 같은 상태 텍스트 스킵하고 첫 실제 제목
-                        for ln in lines:
-                            if len(ln) > 8 and not re.match(r"^(이벤트|공지사항|검색|당첨자|종료|진행중|조회|더보기)$", ln):
-                                title = ln
-                                break
-                    # 기간
-                    period_m = re.search(r"\d{4}[.\-]\d{2}[.\-]\d{2}\s*[~\-]\s*\d{4}[.\-]\d{2}[.\-]\d{2}", dr.text)
-                    period = period_m.group() if period_m else ""
-                    # OG 이미지
-                    img_url = ""
-                    for attr in [{"property":"og:image"}, {"name":"og:image"}]:
-                        tag = dsoup.find("meta", attrs=attr)
-                        if tag and tag.get("content","").startswith("http"):
-                            img_url = tag["content"]; break
-                    if not img_url:
-                        for img in dsoup.find_all("img"):
-                            src = img.get("src","") or img.get("data-src","")
-                            if src and any(k in src.lower() for k in ["event","banner","thumb","visual","poster"]):
-                                img_url = src if src.startswith("http") else "https://investments.miraeasset.com" + src
-                                break
-                    # 종료/당첨자 발표/빈 페이지 제외
-                    if re.search(r"당[첨점]자\s*발표|이벤트\s*종료|\(종료\)|Page Not Found|404", title):
-                        continue
-                    # 진행중인지 확인 (없으면 종료 이벤트)
-                    page_text = dr.text
-                    is_ongoing = "진행중" in page_text or "진행 중" in page_text
-                    is_ended = re.search(r"이벤트\s*종료|종료된\s*이벤트|당첨자\s*발표", page_text[:3000])
-                    if is_ended and not is_ongoing:
-                        continue
-                    if title and len(title) > 5:
-                        events.append({"title": title, "url": url, "period": period, "image_url": img_url})
-                except Exception:
-                    continue
-
-            if not events:
-                return ChannelResult(ch, name, True,
-                    data={"events": [], "event_details": [], "raw_text": ""},
-                    error_label="이번 주 진행 중인 TIGER 이벤트 없음")
-            raw_text = " ".join(f"{e['title']} {e.get('period','')}" for e in events)
-            return ChannelResult(ch, name, True, data={
-                "events": [e["title"] for e in events],
-                "event_details": events,
-                "raw_text": raw_text,
-                "url": f"{base}/tigeretf/ko/customer/event/list.do",
-            })
-        except requests.RequestException as e:
-            code = getattr(getattr(e, "response", None), "status_code", 0)
-            et = "ACCESS_BLOCKED" if code in (403, 429) else "CONNECTION_ERROR"
-            return ChannelResult(ch, name, False, error=str(e), error_type=et)
+            driver = _selenium_driver()
+            driver.get(url)
+            import time as _time; _time.sleep(wait_sec)
+            body_text = driver.find_element("tag name", "body").text
+            driver.quit()
         except Exception as e:
             return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
 
+        lines = [l.strip() for l in body_text.split("\n") if l.strip()]
+        events, seen = [], set()
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            # 이벤트 제목 후보: 키워드 포함, 길이 적당
+            if (any(k in line for k in title_kw) and
+                    len(line) > 8 and len(line) < 120 and
+                    not any(sk in line for sk in skip_kw) and
+                    line not in seen):
+                seen.add(line)
+                # 다음 줄에 날짜 패턴 있으면 기간으로 사용
+                period = ""
+                if i + 1 < len(lines):
+                    nxt = lines[i+1]
+                    if re.search(r"20\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2}", nxt):
+                        period = nxt; i += 1
+                events.append({"title": line[:80], "url": url, "period": period, "image_url": ""})
+            i += 1
+
+        if not events:
+            return ChannelResult(ch, name, True,
+                data={"events":[], "event_details":[], "raw_text":""},
+                error_label=f"이번 주 {name} 이벤트 없음")
+        raw_text = " / ".join(e["title"] for e in events[:5])
+        return ChannelResult(ch, name, True, data={
+            "events": [e["title"] for e in events],
+            "event_details": events,
+            "raw_text": raw_text, "url": url,
+        })
+
+    def _ch_tiger_event(self) -> ChannelResult:
+        """TIGER ETF 이벤트 — Selenium으로 SPA 렌더링."""
+        return self._selenium_event_collect(
+            "tiger_event", CHANNEL_LABELS["tiger_event"],
+            "https://investments.miraeasset.com/tigeretf/ko/customer/event/list.do",
+            skip_kw=["종료된 이벤트", "당첨자 발표", "당첨자발표", "TIGER ETF 소개",
+                     "게시판 검색", "투자전 설명", "증권거래비용"],
+        )
+
     def _ch_ace_event(self) -> ChannelResult:
-        """ACE ETF 이벤트 — 네이버 블로그 RSS ([EVENT] 태그 게시물)."""
-        ch, name = "ace_event", CHANNEL_LABELS["ace_event"]
-        rss_url = "https://rss.blog.naver.com/aceetf.xml"
+        """ACE ETF 이벤트 — Selenium으로 SPA 렌더링 + 블로그 RSS 보완."""
+        # 1차: 공식 이벤트 페이지 (Selenium)
+        result = self._selenium_event_collect(
+            "ace_event", CHANNEL_LABELS["ace_event"],
+            "https://www.aceetf.co.kr/cs/notice?category=60&search=&page=1",
+            title_kw=["EVENT", "이벤트", "프로모션", "매수", "경품", "혜택"],
+            skip_kw=["당첨자 발표", "당첨자발표", "Contact Us", "운영·관리방침"],
+        )
+        if result.success and result.data and result.data.get("events"):
+            return result
+        # 2차 폴백: 네이버 블로그 RSS
         try:
-            r = requests.get(rss_url, headers=BROWSER_HEADERS, timeout=15)
-            r.raise_for_status()
+            r = requests.get("https://rss.blog.naver.com/aceetf.xml", headers=BROWSER_HEADERS, timeout=15)
             soup = BeautifulSoup(r.text, "xml")
             events = []
             for item in soup.find_all("item")[:30]:
@@ -1615,29 +1618,18 @@ class DataCollector:
                 link  = item.find("link").get_text(strip=True) if item.find("link") else ""
                 pub_str = item.find("pubDate").get_text(strip=True) if item.find("pubDate") else ""
                 pub_dt = self._parse_pub_date(pub_str)
-                if pub_dt and not self._in_range(pub_dt):
-                    continue
-                is_event = bool(re.search(r"\[EVENT\]|이벤트|EVENT|프로모션|매수.*인증|경품|혜택", title, re.I))
-                if is_event:
-                    img_url = self._fetch_og_image(link, "https://blog.naver.com") if link else ""
-                    events.append({"title": title, "url": link, "pub_date": pub_str, "image_url": img_url})
-            if not events:
-                return ChannelResult(ch, name, True,
-                    data={"events": [], "event_details": [], "raw_text": ""},
-                    error_label="이번 주 이벤트 게시물 없음")
-            raw_text = " ".join(e["title"] for e in events)
-            return ChannelResult(ch, name, True, data={
-                "events": [e["title"] for e in events],
-                "event_details": events,
-                "raw_text": raw_text,
-                "url": rss_url,
-            })
-        except requests.RequestException as e:
-            code = getattr(getattr(e, "response", None), "status_code", 0)
-            et = "ACCESS_BLOCKED" if code in (403, 429) else "CONNECTION_ERROR"
-            return ChannelResult(ch, name, False, error=str(e), error_type=et)
-        except Exception as e:
-            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
+                if pub_dt and not self._in_range(pub_dt): continue
+                if re.search(r"\[EVENT\]|이벤트|프로모션|매수.*인증|경품|혜택", title, re.I):
+                    events.append({"title": title, "url": link, "image_url": ""})
+            if events:
+                return ChannelResult("ace_event", CHANNEL_LABELS["ace_event"], True, data={
+                    "events": [e["title"] for e in events],
+                    "event_details": events, "raw_text": " ".join(e["title"] for e in events),
+                    "url": "https://rss.blog.naver.com/aceetf.xml",
+                })
+        except Exception:
+            pass
+        return result
 
     def _ch_rise_notice(self) -> ChannelResult:
         """RISE ETF 공지사항 — KB자산운용."""
@@ -1732,61 +1724,13 @@ class DataCollector:
             return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
 
     def _ch_hanaro_event(self) -> ChannelResult:
-        """HANARO ETF 이벤트 — 구글/네이버 뉴스 검색 (공지 페이지 JS 렌더링 불가)."""
-        ch, name = "hanaro_event", CHANNEL_LABELS["hanaro_event"]
-        keywords = ["HANARO ETF 이벤트", "HANARO ETF 프로모션", "NH아문디 HANARO 이벤트", "하나로ETF 이벤트"]
-        events = []
-        seen: set = set()
-
-        # 네이버 뉴스 스크래핑
-        for kw in keywords:
-            try:
-                url = f"https://search.naver.com/search.naver?where=news&query={requests.utils.quote(kw)}&sort=1"
-                r = requests.get(url, headers=BROWSER_HEADERS, timeout=10)
-                soup = BeautifulSoup(r.text, "lxml")
-                for item in soup.select(".news_area, .list_news .bx")[:5]:
-                    title_tag = item.select_one(".news_tit, a.title")
-                    if not title_tag:
-                        continue
-                    title = title_tag.get_text(strip=True)
-                    link  = title_tag.get("href", "") if title_tag.name == "a" else ""
-                    if title not in seen and re.search(r"이벤트|프로모션|HANARO|하나로", title, re.I):
-                        seen.add(title)
-                        events.append({"title": title, "url": link})
-            except Exception:
-                pass
-
-        # 구글 뉴스 RSS 보완
-        for kw in keywords[:2]:
-            try:
-                r = requests.get(
-                    f"https://news.google.com/rss/search?q={requests.utils.quote(kw)}&hl=ko&gl=KR&ceid=KR:ko",
-                    headers=BROWSER_HEADERS, timeout=10,
-                )
-                soup = BeautifulSoup(r.text, "xml")
-                for item in soup.find_all("item")[:5]:
-                    title = item.find("title").get_text(strip=True) if item.find("title") else ""
-                    link  = item.find("link").get_text(strip=True) if item.find("link") else ""
-                    pub_str = item.find("pubDate").get_text(strip=True) if item.find("pubDate") else ""
-                    pub_dt = self._parse_pub_date(pub_str)
-                    if pub_dt and not self._in_range(pub_dt):
-                        continue
-                    if title and title not in seen:
-                        seen.add(title)
-                        events.append({"title": title, "url": link, "pub_date": pub_str})
-            except Exception:
-                pass
-
-        if not events:
-            return ChannelResult(ch, name, True,
-                data={"events": [], "event_details": [], "raw_text": ""},
-                error_label="이번 주 이벤트 뉴스 없음")
-        raw_text = " ".join(e["title"] for e in events)
-        return ChannelResult(ch, name, True, data={
-            "events": [e["title"] for e in events],
-            "event_details": events,
-            "raw_text": raw_text,
-        })
+        """HANARO ETF 이벤트/공지 — Selenium으로 SPA 렌더링."""
+        return self._selenium_event_collect(
+            "hanaro_event", CHANNEL_LABELS["hanaro_event"],
+            "https://www.hanaroetf.com/customer/notice",
+            title_kw=["이벤트", "EVENT", "프로모션", "매수", "상폐", "공지", "리밸런싱", "분배"],
+            skip_kw=["About HANARO", "HANARO ETF 자료실"],
+        )
 
     def _ch_sol_event(self) -> ChannelResult:
         """SOL ETF 공지/이벤트 — JSON API 직접 호출."""

@@ -234,7 +234,6 @@ class DataCollector:
             # 삼성증권
             ("samsung_youtube",    self._ch_samsung_youtube),
             ("samsung_blog",       self._ch_samsung_blog),
-            ("kodex_blog",         self._ch_kodex_blog),
             # 미래에셋증권
             ("mirae_youtube",      self._ch_mirae_youtube),
             ("mirae_blog",         self._ch_mirae_blog),
@@ -293,6 +292,7 @@ class DataCollector:
             ("hanaro_event",   self._ch_hanaro_event),
             ("sol_event",      self._ch_sol_event),
             ("sol_blog",       self._ch_sol_blog),
+            ("kodex_blog",     self._ch_kodex_blog),
             ("etf_am_news",    self._ch_etf_am_news),
             # 카카오 채널
             ("kodex_kakao",    lambda: self._ch_kakao_etf("_UxctLxb", "kodex_kakao")),

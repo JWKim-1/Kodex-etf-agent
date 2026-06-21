@@ -205,6 +205,44 @@ with tab1:
                     yaxis=dict(autorange="reversed", showgrid=False))
                 st.plotly_chart(fig2, use_container_width=True)
 
+        # 시장요인 인사이트 (LLM)
+        if not df_ret.empty:
+            st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+            st.markdown("#### 💡 시장요인 인사이트")
+            _insight_key = f"market_insight_{selected_week}"
+            _cached_insight = _load_report_cache().get(_insight_key)
+            if _cached_insight and not refresh:
+                st.markdown(f'<div class="insight-box">{_cached_insight}</div>', unsafe_allow_html=True)
+            else:
+                if st.button("🤖 AI 시장요인 분석", key="btn_market_insight"):
+                    _top5_ret = df_ret.nlargest(5, "수익률_pct")[["종목명","수익률_pct"]].values.tolist()
+                    _top5_vol = df_vol.nlargest(5, "거래대금_억")[["종목명","거래대금_억"]].values.tolist() if not df_vol.empty else []
+                    _ret_lines = "\n".join(f"  {n}: {v:+.2f}%" for n, v in _top5_ret)
+                    _vol_lines = "\n".join(f"  {n}: {v:.0f}억" for n, v in _top5_vol)
+                    _prompt = f"""삼성자산운용 KODEX ETF 마케팅 담당자를 위한 {selected_week} 주간 시장 동향 분석입니다.
+
+수익률 Top5:
+{_ret_lines}
+
+거래대금 Top5:
+{_vol_lines}
+
+위 ETF들이 이번 주 상위권에 오른 시장 요인을 2~3문장으로 설명하세요.
+(금리, 섹터 이슈, 글로벌 이벤트, 정책 등 구체적으로)
+마케팅 담당자 관점에서 시사점도 1문장 추가해주세요."""
+                    api_key = os.getenv("ANTHROPIC_API_KEY","")
+                    if api_key:
+                        from llm_client import call_llm
+                        with st.spinner("분석 중..."):
+                            try:
+                                _insight = call_llm(_prompt, anthropic_key=api_key, max_tokens=300)
+                                _save_report_cache(_insight_key, _insight)
+                                st.markdown(f'<div class="insight-box">{_insight}</div>', unsafe_allow_html=True)
+                            except Exception as e:
+                                st.error(f"실패: {e}")
+                    else:
+                        st.info("API 키 없음")
+
         # 전략 매트릭스
         if not krx_df.empty and not df_ret.empty:
             st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)

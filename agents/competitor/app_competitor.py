@@ -613,4 +613,5 @@ with _main_tab1:
 
 
 with _main_tab2:
-    exec(open(os.path.join(_ROOT, "agents/history/app_history.py"), encoding="utf-8").read())
+    _hist_file = os.path.join(_ROOT, "agents", "history", "app_history.py")
+    exec(open(_hist_file, encoding="utf-8").read())

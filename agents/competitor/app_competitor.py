@@ -483,7 +483,25 @@ with _main_tab1:
     _type_icon = {"이벤트":"🎁","프로모션":"💰","추천콘텐츠":"📺","수수료혜택":"🎯"}
     _prov_icon = {"KODEX":"🔵","TIGER":"🟠","ACE":"🟢","RISE":"🟣","HANARO":"🔵","SOL":"🔴"}
 
+    # 카카오 채널 썸네일 풀 (운용사별)
+    _kakao_thumb_pool = {}
+    for _ch_key, _cr in collection_results.items():
+        if not _cr.success or not _cr.data: continue
+        _prov_k = next((p for p in ["TIGER","ACE","RISE","HANARO","SOL","PLUS","KODEX"]
+                        if p in _cr.channel_name.upper()), "")
+        for _a in _cr.data.get("articles", []):
+            _th = _a.get("thumbnail","")
+            if _th and _th.startswith("http") and "kakaocdn" in _th and _prov_k:
+                _kakao_thumb_pool.setdefault(_prov_k, []).append(_th)
+
+    # 이벤트 타입 우선순위 정렬 함수
+    def _ev_priority(ev):
+        mt = ev.get("marketing_type","")
+        has_period = bool(ev.get("event_period") and ev["event_period"] not in ("null","None",""))
+        return (0 if mt in ("이벤트","프로모션","수수료혜택") else 1, 0 if has_period else 1)
+
     for prov, prov_events in by_provider.items():
+        prov_events = sorted(prov_events, key=_ev_priority)
         pinfo = COMP_PROVIDERS.get(prov, {"color":"#aaa","bg":"rgba(255,255,255,0.05)"})
         icon  = _prov_icon.get(prov, "⬜")
         st.markdown(
@@ -507,6 +525,9 @@ with _main_tab1:
             url     = ev.get("url","")
             target  = ev.get("target_etf") or ""
             img_url = ev.get("image_url","")
+            # 썸네일 없으면 카카오 풀에서 가져오기
+            if not img_url and prov in _kakao_thumb_pool:
+                img_url = _kakao_thumb_pool[prov][0]
             title_html  = (f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>'
                            if url and url.startswith("http") else title)
             period_html = f'<div class="ev-period">📅 {period}</div>' if period and period not in ("","null") else ""

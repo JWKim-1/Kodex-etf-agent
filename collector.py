@@ -46,6 +46,7 @@ CHANNEL_LABELS = {
     "toss_youtube":        "토스증권 유튜브",
     # ── 한국투자증권 ─────────────────────────────────
     "kis_youtube":         "한국투자증권 유튜브",
+    "kis_event":           "한국투자증권 이벤트 페이지",
     # ── 신한투자증권 ─────────────────────────────────
     "shinhan_youtube":     "신한투자증권 유튜브",
     # ── KB증권 ───────────────────────────────────────
@@ -246,6 +247,7 @@ class DataCollector:
             ("toss_youtube",       self._ch_toss_youtube),
             # 한국투자증권
             ("kis_youtube",        self._ch_kis_youtube),
+            ("kis_event",          self._ch_kis_event),
             # 신한투자증권
             ("shinhan_youtube",    self._ch_shinhan_youtube),
             # KB증권
@@ -1324,6 +1326,39 @@ class DataCollector:
             "kis_youtube", CHANNEL_LABELS["kis_youtube"],
             "UCU6f21g_qaJk6rkX-IF6X2g"
         )
+
+    def _ch_kis_event(self) -> ChannelResult:
+        """한국투자증권 진행중 이벤트 페이지."""
+        ch, name = "kis_event", CHANNEL_LABELS["kis_event"]
+        ETF_KW = ["ETF","펀드","KODEX","TIGER","ACE","연금","ISA","수수료","이벤트"]
+        try:
+            r = requests.get(
+                "https://www.truefriend.com/main/customer/notice/Event.jsp?gubun=i&CUSTGUBUN=02",
+                headers=BROWSER_HEADERS, timeout=12)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "lxml")
+            articles, raw_texts = [], []
+            seen = set()
+            for a in soup.find_all("a", href=True):
+                title = a.get_text(" ", strip=True)
+                if len(title) < 8 or title in seen:
+                    continue
+                if not any(k in title for k in ETF_KW):
+                    continue
+                seen.add(title)
+                href = a.get("href","")
+                full_url = href if href.startswith("http") else f"https://www.truefriend.com{href}"
+                clean = re.sub(r"\s+", " ", title).strip()[:80]
+                articles.append({"title": clean, "url": full_url, "thumbnail": "", "description": ""})
+                raw_texts.append(clean)
+            if not articles:
+                return ChannelResult(ch, name, True,
+                    data={"articles":[],"raw_text":""},
+                    error_label="이번 주 한투 ETF 이벤트 없음")
+            return ChannelResult(ch, name, True,
+                data={"articles": articles, "raw_text": " / ".join(raw_texts[:5])[:400]})
+        except Exception as e:
+            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
 
     # ── 신한투자증권 채널 ────────────────────────────────────────────────────
 

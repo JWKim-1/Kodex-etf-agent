@@ -277,7 +277,8 @@ for tab, (sess_key, sess_label) in zip(tabs, SESSION_LABELS.items()):
                     _comp_evs = _fb.get("events",[])
 
                 # 기간 있는 것 / 없는 것 분리
-                _main = [e for e in _comp_evs if e.get("event_period") and e["event_period"] not in ("null","None","")]
+                _CARD_MT2 = {"이벤트","프로모션","수수료혜택"}
+                _main = [e for e in _comp_evs if e.get("marketing_type","") in _CARD_MT2]
                 _other = [e for e in _comp_evs if e not in _main]
 
                 _PROV_COLOR = {"KODEX":"#4d9fff","TIGER":"#ff8c42","ACE":"#05b169",
@@ -316,8 +317,9 @@ for tab, (sess_key, sess_label) in zip(tabs, SESSION_LABELS.items()):
         if sess_evs and sess_key != "competitor":
             if summary:
                 st.caption(summary)
-            # 기간 있는 것 카드 / 없는 것 기타
-            _main_evs = [e for e in sess_evs if e.get("event_period") and e["event_period"] not in ("null","None","")]
+            # 이벤트/프로모션/수수료혜택 → 카드, 나머지 → 기타
+            _CARD_TYPES = {"이벤트","프로모션","수수료혜택"}
+            _main_evs = [e for e in sess_evs if e.get("marketing_type","") in _CARD_TYPES]
             _other_evs = [e for e in sess_evs if e not in _main_evs]
             if _main_evs:
                 cards_html = '<div class="ev-board">'

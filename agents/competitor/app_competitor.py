@@ -377,7 +377,7 @@ with _main_tab1:
             for v in d.get("videos",[]):       items.append({"title":v.get("title",""),  "url":v.get("url",""),  "image_url":""})
             for p in d.get("posts",[]):        items.append({"title":p.get("title",""),  "url":p.get("link",""), "image_url":""})
             for a in d.get("articles",[]):     items.append({"title":a.get("title",""),  "url":a.get("link",""), "image_url":""})
-            for ev in d.get("event_details",[]): items.append({"title":ev.get("title",""),"url":ev.get("url",""),"image_url":ev.get("image_url","")})
+            for ev in d.get("event_details",[]): items.append({"title":ev.get("title",""),"url":ev.get("url",""),"image_url":ev.get("image_url",""),"period":ev.get("period","")})
             for item in items:
                 t = item["title"]
                 if not any(kw in t for kw in ["이벤트","프로모션","혜택","ETF","투자","매수","출시","신규"]): continue
@@ -393,7 +393,7 @@ with _main_tab1:
                     "image_url": item.get("image_url",""),
                     "marketing_type": ev_type,
                     "event_summary": f"{r.channel_name} 마케팅 콘텐츠 감지",
-                    "event_period": None,
+                    "event_period": item.get("period","") or None,
                     "target_etf": None,
                 })
         if events:
@@ -510,8 +510,9 @@ with _main_tab1:
             unsafe_allow_html=True
         )
 
-        # 기간 있는 이벤트 = 카드 / 없는 것 = 기타 탭
-        main_evs  = [e for e in prov_events if e.get("event_period") and e["event_period"] not in ("null","None","")]
+        # 이벤트/프로모션/수수료혜택 → 카드, 나머지 → 기타
+        _CARD_MT = {"이벤트","프로모션","수수료혜택"}
+        main_evs  = [e for e in prov_events if e.get("marketing_type","") in _CARD_MT]
         other_evs = [e for e in prov_events if e not in main_evs]
 
         def _ev_card(ev):

@@ -255,6 +255,8 @@ class ETFDiDResult:
     no_competitors: bool = False
     notes: List[str] = field(default_factory=list)
     calculation_log: List[str] = field(default_factory=list)
+    zscore: Optional[float] = None
+    marketing_score: float = 50.0
 
 
 # ── Excel 로더 ────────────────────────────────────────────────────────────────

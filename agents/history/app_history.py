@@ -559,13 +559,24 @@ if _cal_events:
         for i, ev in enumerate(_mo_events):
             _s = max(ev["start"], _mo_start)
             _e = min(ev["end"], _mo_end)
-            fig_cal.add_trace(_go.Bar(
-                x=[(_e - _s).days + 1],
-                y=[ev["label"]],
-                orientation="h",
-                base=_s.strftime("%Y-%m-%d"),
-                marker=dict(color=ev["color"], opacity=0.8,
-                            line=dict(color="rgba(255,255,255,0.3)", width=1)),
+            # Scatter로 수평 바 그리기 (날짜 타입 일관성 보장)
+            fig_cal.add_trace(_go.Scatter(
+                x=[_s, _e, _e, _s, _s],
+                y=[ev["label"], ev["label"],
+                   ev["label"], ev["label"], ev["label"]],
+                mode="lines",
+                fill="toself",
+                fillcolor=ev["color"] + "cc",
+                line=dict(color=ev["color"], width=1),
+                hoverinfo="skip",
+                showlegend=False,
+            ))
+            # 중앙에 텍스트 hover
+            _mid = _s + (_e - _s) / 2
+            fig_cal.add_trace(_go.Scatter(
+                x=[_mid], y=[ev["label"]],
+                mode="markers",
+                marker=dict(size=1, color="rgba(0,0,0,0)"),
                 hovertemplate=(
                     f"<b>{ev['title']}</b><br>"
                     f"{ev['start'].strftime('%Y.%m.%d')} ~ {ev['end'].strftime('%Y.%m.%d')}<br>"

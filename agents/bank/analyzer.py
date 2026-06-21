@@ -562,43 +562,72 @@ class MarketingAnalyzer:
             f"개인 4주평균={baseline.ind_avg:,.0f} ({baseline.weeks_used}주 사용)"
         )
 
-        # ── Step B-0: 베이스라인 부족 시 시장상대강도 모드 ──────────────────
-        # 신규상장 등 8주 미만이면 절대값 DiD 대신 전체 KODEX ETF 대비 은행 순매수 비중으로 측정
-        MIN_BASELINE = 4  # 4주 미만이면 시장상대강도 모드
+        # ── Step B-0: 베이스라인 부족 시 AUM 상대강도 DiD ──────────────────
+        # 신규상장 등 4주 미만: 순매수/AUM 비율로 KODEX vs 경쟁사 DiD
+        MIN_BASELINE = 4
         if baseline.weeks_used < MIN_BASELINE:
             _bank_col = "은행" if "은행" in current_df.columns else None
             _code_col = "종목코드" if "종목코드" in current_df.columns else "단축코드"
-            if _bank_col:
-                _kodex_rows = current_df[current_df["종목명"].str.contains("KODEX", na=False)]
-                _total_bank = _kodex_rows[_bank_col].fillna(0).abs().sum()
-                _my_bank = abs(current_kodex.financial_investment)
-                _mkt_share = _my_bank / _total_bank if _total_bank > 0 else 0.0
-                # 전체 KODEX ETF 평균 비중
-                _n = max(len(_kodex_rows), 1)
-                _avg_share = 1.0 / _n  # 균등 분배 기준
-                # 상대강도: 평균 대비 비중 (1=평균, >1=상위)
-                _rel_strength = _mkt_share / _avg_share if _avg_share > 0 else 1.0
-                # 0~100점 변환: 상대강도 1.0 → 50점, 2.0 → 75점, 0 → 25점
-                _score_rs = round(min(max(50 * _rel_strength, 0), 100), 1)
-                _did_rs = round(_mkt_share * 100, 4)  # 비중(%) 자체를 raw값으로
-                log.append(
-                    f"[시장상대강도 모드] 베이스라인 {baseline.weeks_used}주 < {MIN_BASELINE}주 → 절대값 DiD 불가  "
-                    f"은행비중={_mkt_share*100:.3f}% (평균대비 {_rel_strength:.2f}배) 점수={_score_rs:.1f}"
-                )
-                judgement_rs, emoji_rs = self._judge_score(_score_rs)
-                return ETFDiDResult(
-                    kodex_code=kodex_code, kodex_name=kodex_name,
-                    did_value=_did_rs, raw_did_value=_did_rs,
-                    zscore=None, marketing_score=_score_rs,
-                    judgement=judgement_rs + " (상대강도)", judgement_emoji=emoji_rs,
-                    competitors=[], no_competitors=False,
-                    notes=[f"신규상장/데이터부족 — 시장상대강도 모드 (베이스라인 {baseline.weeks_used}주)"],
-                    calculation_log=log,
-                    baseline=baseline,
-                )
-            else:
-                log.append(f"[경고] 베이스라인 {baseline.weeks_used}주 부족, 은행 컬럼 없음 → 스킵")
+            if not _bank_col:
+                log.append(f"[경고] 베이스라인 {baseline.weeks_used}주 부족 + 은행컬럼 없음 → 스킵")
                 return None
+
+            def _get_aum_naver(code: str) -> float:
+                """네이버 금융에서 시가총액(억원) 조회."""
+                try:
+                    import requests as _req
+                    from bs4 import BeautifulSoup as _BS
+                    r = _req.get(f"https://finance.naver.com/item/main.naver?code={code}",
+                                 headers={"User-Agent": "Mozilla/5.0"}, timeout=6)
+                    soup = _BS(r.text, "lxml")
+                    em = soup.find("em", id="_market_sum")
+                    if em:
+                        txt = em.text.strip().replace(",","").replace("조","0000").replace("억","")
+                        return float(txt) if txt else 0.0
+                except Exception:
+                    pass
+                return 0.0
+
+            # KODEX AUM
+            _kodex_bank = current_kodex.financial_investment
+            _kodex_aum  = _get_aum_naver(kodex_code.replace("*001",""))
+            _kodex_ratio = _kodex_bank / (_kodex_aum * 1e8 / 1000) if _kodex_aum > 0 else 0.0  # AUM→천원 환산
+
+            # 비교군 AUM DiD
+            _code_short = kodex_code.replace("*001","").strip()
+            _comp_defs  = _get_comp(_code_short) or auto_map_competitors(kodex_name, _code_short, etf_universe)
+            _comp_ratios = []
+            for _c in _comp_defs[:2]:
+                _cdata = self.loader.get_etf_row(current_df, _c["code"], _c["name"])
+                if _cdata is None: continue
+                _caum = _get_aum_naver(_c["code"].replace("*001",""))
+                if _caum > 0:
+                    _comp_ratios.append(_cdata.financial_investment / (_caum * 1e8 / 1000))
+
+            _comp_avg = float(np.mean(_comp_ratios)) if _comp_ratios else 0.0
+            _did_aum  = round(_kodex_ratio - _comp_avg, 6)
+
+            # 점수: DiD_AUM > 0이면 유입 우위
+            # 0 기준으로 sigmoid (DiD_AUM을 표준화 없이 sigmoid — 스케일이 작으므로 계수 크게)
+            _z_approx = _did_aum * 1000  # 비율 단위가 매우 작아서 확대
+            _score_aum = round(100 / (1 + np.exp(-_z_approx * 1.5)), 1)
+
+            log.append(
+                f"[AUM상대강도 모드] 베이스라인 {baseline.weeks_used}주 < {MIN_BASELINE}주  "
+                f"KODEX 은행/AUM={_kodex_ratio:.6f}  경쟁사평균={_comp_avg:.6f}  "
+                f"DiD_AUM={_did_aum:+.6f}  점수={_score_aum:.1f}"
+            )
+            judgement_aum, emoji_aum = self._judge_score(_score_aum)
+            return ETFDiDResult(
+                kodex_code=kodex_code, kodex_name=kodex_name,
+                did_value=_did_aum, raw_did_value=_did_aum,
+                zscore=None, marketing_score=_score_aum,
+                judgement=judgement_aum + " (AUM상대강도)", judgement_emoji=emoji_aum,
+                competitors=[], no_competitors=not bool(_comp_ratios),
+                notes=[f"신규상장/데이터부족 — AUM상대강도 DiD (베이스라인 {baseline.weeks_used}주)"],
+                calculation_log=log,
+                baseline=baseline,
+            )
 
         # ── Step B-1: 비교군 정의 ──
         # 우선순위: ① etf_mapping.json (사전 매핑) ② 실시간 auto_map ③ 시장평균 fallback

@@ -83,6 +83,8 @@ CHANNEL_LABELS = {
     "plus_kakao":       "PLUS ETF 카카오채널 (한화자산운용)",
     "sol_kakao":        "SOL ETF 카카오채널 (신한자산운용)",
     "sol_blog":         "SOL ETF 블로그 (네이버)",
+    "rise_blog":        "RISE ETF 블로그 (네이버)",
+    "plus_insight":     "PLUS ETF 인사이트 (plusetf.co.kr)",
     "etf_am_news":      "ETF 운용사 뉴스 (네이버/구글)",
 }
 
@@ -292,6 +294,8 @@ class DataCollector:
             ("hanaro_event",   self._ch_hanaro_event),
             ("sol_event",      self._ch_sol_event),
             ("sol_blog",       self._ch_sol_blog),
+            ("rise_blog",      self._ch_rise_blog),
+            ("plus_insight",   self._ch_plus_insight),
             ("kodex_blog",     self._ch_kodex_blog),
             ("etf_am_news",    self._ch_etf_am_news),
             # 카카오 채널
@@ -1722,6 +1726,47 @@ class DataCollector:
             code = getattr(getattr(e, "response", None), "status_code", 0)
             et = "ACCESS_BLOCKED" if code in (403, 429) else "CONNECTION_ERROR"
             return ChannelResult(ch, name, False, error=str(e), error_type=et)
+        except Exception as e:
+            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
+
+    def _ch_rise_blog(self) -> ChannelResult:
+        """RISE ETF 블로그 — KB자산운용 네이버 블로그 RSS."""
+        ch, name = "rise_blog", CHANNEL_LABELS["rise_blog"]
+        return self._ch_naver_blog_base(ch, name, "https://rss.blog.naver.com/riseetf.xml")
+
+    def _ch_plus_insight(self) -> ChannelResult:
+        """PLUS ETF 인사이트 — 한화자산운용 공식 사이트."""
+        ch, name = "plus_insight", CHANNEL_LABELS["plus_insight"]
+        try:
+            r = requests.get("https://www.plusetf.co.kr/insight", headers=BROWSER_HEADERS, timeout=10)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "lxml")
+            articles, raw_texts = [], []
+            for a in soup.find_all("a", href=True):
+                href = a.get("href", "")
+                title = a.get_text(strip=True)
+                if "/insight/" not in href or len(title) < 10:
+                    continue
+                # 제목에서 날짜 추출 (예: "위클리 뷰...2026.06.17상세보기")
+                date_m = re.search(r"(\d{4})\.(\d{2})\.(\d{2})", title)
+                if date_m:
+                    try:
+                        pub_dt = datetime(int(date_m.group(1)), int(date_m.group(2)), int(date_m.group(3)))
+                        if not self._in_range(pub_dt):
+                            continue
+                        clean_title = re.sub(r"\d{4}\.\d{2}\.\d{2}상세보기?", "", title).strip()
+                        full_url = f"https://www.plusetf.co.kr{href}" if href.startswith("/") else href
+                        articles.append({"title": clean_title[:80], "url": full_url, "thumbnail": "", "description": ""})
+                        raw_texts.append(clean_title)
+                    except Exception:
+                        continue
+
+            if not articles:
+                return ChannelResult(ch, name, True,
+                    data={"articles": [], "raw_text": ""},
+                    error_label="이번 주 PLUS ETF 인사이트 없음")
+            return ChannelResult(ch, name, True,
+                data={"articles": articles, "raw_text": " / ".join(raw_texts[:5])[:400]})
         except Exception as e:
             return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
 

@@ -508,9 +508,9 @@ class MarketingAnalyzer:
                         if did_std == 0.0 and result.raw_did_value == 0.0:
                             continue
                         raw_did = result.raw_did_value
-                        # σ 하한선: 최소 abs(평균)의 20% 또는 0.05 — did_std+0.01은 너무 작아 극단값 유발
-                        _sigma_floor = max(abs(did_avg) * 0.2, 0.05)
-                        z_score = (raw_did - did_avg) / max(did_std, _sigma_floor)
+                        # 라플라스 보정: 기본 0.01, std가 0.05 미만으로 극단적으로 작으면 0.05로 폴백
+                        _laplace = 0.01 if did_std >= 0.05 else 0.05
+                        z_score = (raw_did - did_avg) / (did_std + _laplace)
                         z_score = round(z_score, 4)
                         score = round(100 / (1 + _np.exp(-z_score * 1.5)), 1)
                         log2_lines = [

@@ -54,9 +54,7 @@ CHANNEL_LABELS = {
     "news":                "네이버/구글 뉴스",
     "instagram":           "삼성증권 인스타그램",
     "kakao":               "삼성자산운용 카카오채널",
-    "samsung_pop_event":   "삼성증권 홈페이지 이벤트",
-    "google_trends":       "구글 트렌드",
-    "pension_pdf":         "삼성증권 퇴직연금 가이드",
+    "google_trends":       "구글 트렌드 + 네이버 데이터랩",
     # ── ETF 운용사 채널 (개인·경쟁사 모드 공용) ─────────────────────────
     "kodex_youtube":    "KODEX ETF 유튜브 (삼성자산운용)",
     "tiger_youtube":    "TIGER ETF 유튜브 (미래에셋자산운용)",
@@ -248,9 +246,7 @@ class DataCollector:
             # 추가 채널
             ("instagram",          self._ch_instagram),
             ("kakao",              self._ch_kakao),
-            ("samsung_pop_event",  self._ch_samsung_pop_event),
             ("google_trends",      self._ch_google_trends),
-            ("pension_pdf",        self._ch_pension_pdf),
         ]
         results: Dict[str, ChannelResult] = {}
         for idx, (key, func) in enumerate(channels):

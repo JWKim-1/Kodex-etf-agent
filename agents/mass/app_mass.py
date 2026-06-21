@@ -479,8 +479,8 @@ for col, (code, res) in zip(summary_cols, did_results.items()):
 st.markdown("")
 
 etf_names_did = [r.kodex_name for r in did_results.values()]
-score_vals    = [getattr(r, 'marketing_score', 50.0) for r in did_results.values()]
-zscore_vals   = [getattr(r, 'zscore', 0.0) for r in did_results.values()]
+score_vals    = [float(getattr(r, 'marketing_score', None) or 50.0) for r in did_results.values()]
+zscore_vals   = [float(getattr(r, 'zscore', None) or 0.0) for r in did_results.values()]
 bar_colors    = [color_map.get(r.judgement_emoji, "#6c757d") for r in did_results.values()]
 short_names   = [n.replace("KODEX ", "") for n in etf_names_did]
 

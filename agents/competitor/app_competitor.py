@@ -171,7 +171,10 @@ for r in collection_results.values():
     icon = "✅" if r.success else "❌"
     ch_pills += f'<span class="ch-pill {"ch-ok" if r.success else "ch-fail"}">{icon} {r.channel_name}</span>'
 st.markdown(f'<div style="margin:8px 0;">{ch_pills}</div>', unsafe_allow_html=True)
-st.caption(f"수집 결과: 성공 {ok_cnt}개 / 실패 {fail_cnt}개")
+if fail_cnt > 0:
+    st.caption(f"수집 결과: 성공 {ok_cnt}개 / 미수집 {fail_cnt}개 (YouTube 쿼터 초과 시 RSS 폴백, 이번 주 게시물 없는 채널 포함)")
+else:
+    st.caption(f"수집 결과: 전체 {ok_cnt}개 채널 수집 완료")
 
 with st.expander("📡 채널별 상세", expanded=False):
     for r in collection_results.values():

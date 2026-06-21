@@ -310,7 +310,7 @@ if st.session_state.selected_mode is None:
         <div class="collect-banner-icon">🔄</div>
         <div class="collect-banner-text">
             <div class="collect-banner-title">이번 주 전체 채널 수집</div>
-            <div class="collect-banner-desc">증권 · 은행 · 개인(KODEX) · 경쟁사(ETF AM) — 4개 세션 수집 + LLM 분석 + 자동 저장까지 한 번에</div>
+            <div class="collect-banner-desc">증권 · 은행 · 개인(KODEX직접) · 경쟁사(ETF운용사) — 4개 세션 수집 + LLM 분석 + 자동 저장까지 한 번에</div>
         </div>
     </div>
     """, unsafe_allow_html=True)

@@ -88,7 +88,7 @@ CHANNEL_LABELS = {
     "sol_blog":         "SOL ETF 블로그 (네이버)",
     "rise_blog":        "RISE ETF 블로그 (네이버)",
     "plus_insight":     "PLUS ETF 인사이트 (plusetf.co.kr)",
-    "etf_am_news":      "ETF 운용사 뉴스 (네이버/구글)",
+    "etf_am_news":      "ETF 운용사 뉴스·이벤트 (네이버/구글)",
 }
 
 # 삼성자산운용 이벤트 페이지 → 대고객 디지털 마케팅 채널로 이동 (증권 채널 아님)

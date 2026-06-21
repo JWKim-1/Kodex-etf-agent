@@ -179,7 +179,10 @@ else:
 
     ok = sum(1 for r in collection_results.values() if r.success)
     fail = len(collection_results) - ok
-    st.caption(f"수집 완료 — 성공 {ok}개 / 실패 {fail}개")
+    if fail > 0:
+        st.caption(f"수집 완료 — 성공 {ok}개 / 미수집 {fail}개 (이번 주 게시물 없거나 YouTube 쿼터 초과 포함)")
+    else:
+        st.caption(f"수집 완료 — 전체 {ok}개 채널 완료")
 
     if _days_old <= 14:
         save_channel_results(f"mass_{current_sheet}", collection_results)

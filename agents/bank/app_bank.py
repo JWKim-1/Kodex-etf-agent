@@ -195,10 +195,14 @@ def _krx_label(w: str) -> str:
 
 labeled_weeks = {_krx_label(s): s for s in sheet_names}  # 표시라벨 → 실제키
 label_list = list(labeled_weeks.keys())
-if "bank_week" not in st.session_state or st.session_state["bank_week"] not in label_list:
-    st.session_state["bank_week"] = label_list[default_idx]
-selected_label = st.selectbox("분석할 주차", label_list, key="bank_week")
-selected = labeled_weeks[selected_label]  # 실제 캐시 키
+_saved_bank = st.session_state.get("bank_sheet_key")
+if _saved_bank and _saved_bank in sheet_names:
+    _bk_label = _krx_label(_saved_bank)
+    if _bk_label in label_list:
+        default_idx = label_list.index(_bk_label)
+selected_label = st.selectbox("분석할 주차", label_list, index=default_idx, key="bank_week")
+selected = labeled_weeks[selected_label]
+st.session_state["bank_sheet_key"] = selected  # 실제 캐시 키
 
 with st.expander("📋 미리보기", expanded=False):
     df_prev = all_sheets[selected]

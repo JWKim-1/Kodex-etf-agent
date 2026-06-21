@@ -786,10 +786,13 @@ _default_idx = len(labeled) - 1
 if not _is_friday and len(labeled) >= 2:
     _default_idx = len(labeled) - 2
     st.caption("💡 금요일 장 마감 후 이번 주 데이터가 완성됩니다.")
-if "sec_selected_label" not in st.session_state or st.session_state["sec_selected_label"] not in labeled:
-    st.session_state["sec_selected_label"] = labeled[_default_idx]
-selected_label = st.selectbox("분석할 주차 시트 선택", labeled, key="sec_selected_label")
+# sheet 키(예: "6.15-6.19")로 저장 → 레이블이 날짜마다 바뀌어도 유지
+_saved_sheet = st.session_state.get("sec_sheet_key")
+if _saved_sheet and _saved_sheet in sheet_names:
+    _default_idx = sheet_names.index(_saved_sheet)
+selected_label = st.selectbox("분석할 주차 시트 선택", labeled, index=_default_idx, key="sec_selected_label")
 current_sheet = sheet_names[labeled.index(selected_label)]
+st.session_state["sec_sheet_key"] = current_sheet
 
 # 과거 주차 선택 시 신뢰도 경고
 _sel_start, _ = _parse_sheet_dates(current_sheet)

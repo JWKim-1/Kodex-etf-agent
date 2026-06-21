@@ -554,63 +554,58 @@ if _cal_events:
     # 해당 월 이벤트 필터
     _mo_events = [e for e in _cal_events if e["end"] >= _mo_start and e["start"] <= _mo_end]
 
-    if _mo_events:
-        fig_cal = _go.Figure()
-        for i, ev in enumerate(_mo_events):
-            _s = max(ev["start"], _mo_start)
-            _e = min(ev["end"], _mo_end)
-            # Scatter로 수평 바 그리기 (날짜 타입 일관성 보장)
-            fig_cal.add_trace(_go.Scatter(
-                x=[_s, _e, _e, _s, _s],
-                y=[ev["label"], ev["label"],
-                   ev["label"], ev["label"], ev["label"]],
-                mode="lines",
-                fill="toself",
-                fillcolor=ev["color"] + "cc",
-                line=dict(color=ev["color"], width=1),
-                hoverinfo="skip",
-                showlegend=False,
-            ))
-            # 중앙에 텍스트 hover
-            _mid = _s + (_e - _s) / 2
-            fig_cal.add_trace(_go.Scatter(
-                x=[_mid], y=[ev["label"]],
-                mode="markers",
-                marker=dict(size=1, color="rgba(0,0,0,0)"),
-                hovertemplate=(
-                    f"<b>{ev['title']}</b><br>"
-                    f"{ev['start'].strftime('%Y.%m.%d')} ~ {ev['end'].strftime('%Y.%m.%d')}<br>"
-                    f"채널: {_SESS_LBL_CAL.get(ev['session'],ev['session'])}"
-                    "<extra></extra>"
-                ),
-                showlegend=False,
-            ))
-        # 오늘 날짜 선 (shape으로 대체 - add_vline은 날짜 타입 충돌)
-        if _mo_start.date() <= date.today() <= _mo_end.date():
-            fig_cal.add_shape(type="line",
-                x0=date.today().strftime("%Y-%m-%d"), x1=date.today().strftime("%Y-%m-%d"),
-                y0=0, y1=1, yref="paper",
-                line=dict(color="rgba(255,255,255,0.4)", width=1.5, dash="dot"))
-            fig_cal.add_annotation(x=date.today().strftime("%Y-%m-%d"), y=1,
-                yref="paper", text="오늘", showarrow=False,
-                font=dict(color="#aaa", size=10), yanchor="bottom")
+    # HTML 달력 그리드 생성
+    import calendar as _calendar
+    _today = date.today()
+    _first_weekday, _days_in_month = _calendar.monthrange(_yr, _mo)  # 0=월 ~ 6=일
 
-        fig_cal.update_layout(
-            height=max(250, len(_mo_events) * 32 + 80),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(20,20,30,0.5)",
-            font=dict(color="#e8eaed", size=11),
-            xaxis=dict(type="date",
-                       range=[_mo_start.strftime("%Y-%m-%d"), (_mo_end + _td(days=1)).strftime("%Y-%m-%d")],
-                       gridcolor="rgba(255,255,255,0.06)",
-                       tickformat="%m/%d", dtick="D3", title=""),
-            yaxis=dict(autorange="reversed", showgrid=False),
-            margin=dict(l=10, r=20, t=20, b=30),
-            barmode="overlay",
-        )
-        st.plotly_chart(fig_cal, use_container_width=True)
-        st.caption(f"{_sel_month} 기준 {len(_mo_events)}개 이벤트 표시")
-    else:
-        st.info(f"{_sel_month}에 기간 정보 있는 이벤트 없음")
+    # 날짜별 이벤트 매핑 {day: [(color, title, session)]}
+    _day_events: dict = {}
+    for ev in _cal_events:
+        _s = ev["start"].date() if hasattr(ev["start"], "date") else ev["start"]
+        _e = ev["end"].date() if hasattr(ev["end"], "date") else ev["end"]
+        for _d in range((_e - _s).days + 1):
+            _cur = _s + _td(days=_d)
+            if _cur.year == _yr and _cur.month == _mo:
+                _day_events.setdefault(_cur.day, []).append(
+                    (ev["color"], ev["title"][:14], ev["session"])
+                )
+
+    _days_of_week = ["월", "화", "수", "목", "금", "토", "일"]
+    _html = '<style>.cal-grid{width:100%;border-collapse:collapse;}.cal-th{text-align:center;padding:6px;font-size:.75rem;color:#888;font-weight:600;}.cal-td{vertical-align:top;border:1px solid rgba(255,255,255,0.06);padding:4px;min-height:64px;width:14.28%;}.cal-day{font-size:.7rem;font-weight:700;margin-bottom:3px;}.cal-today{color:#4d9fff;}.cal-ev{border-radius:4px;padding:2px 5px;margin:2px 0;font-size:.6rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}</style>'
+    _html += '<table class="cal-grid"><tr>'
+    for _d in _days_of_week:
+        _html += f'<th class="cal-th">{_d}</th>'
+    _html += '</tr><tr>'
+
+    # 첫 주 빈 칸
+    for _ in range(_first_weekday):
+        _html += '<td class="cal-td"></td>'
+
+    _col = _first_weekday
+    for _day in range(1, _days_in_month + 1):
+        _is_today = (_yr == _today.year and _mo == _today.month and _day == _today.day)
+        _day_cls = 'cal-today' if _is_today else ''
+        _today_dot = ' 🔵' if _is_today else ''
+        _html += f'<td class="cal-td"><div class="cal-day {_day_cls}">{_day}{_today_dot}</div>'
+        for (_color, _title, _sess) in (_day_events.get(_day, []))[:3]:
+            _bg = _color + "33"
+            _html += f'<div class="cal-ev" style="background:{_bg};color:{_color};border-left:3px solid {_color};" title="{_title}">{_title}</div>'
+        if len(_day_events.get(_day, [])) > 3:
+            _html += f'<div style="font-size:.55rem;color:#888;">+{len(_day_events[_day])-3}개</div>'
+        _html += '</td>'
+        _col += 1
+        if _col % 7 == 0 and _day < _days_in_month:
+            _html += '</tr><tr>'
+
+    # 마지막 주 빈 칸
+    _remaining = 6 - (_col - 1) % 7
+    if _remaining < 6:
+        for _ in range(_remaining):
+            _html += '<td class="cal-td"></td>'
+    _html += '</tr></table>'
+
+    st.markdown(_html, unsafe_allow_html=True)
+    st.caption(f"{_yr}년 {_mo}월 · 이벤트 {len(_mo_events)}개")
 else:
     st.info("기간 정보 있는 이벤트 없음 — 마케팅 수집 후 이벤트 기간이 추출되면 표시됩니다.")

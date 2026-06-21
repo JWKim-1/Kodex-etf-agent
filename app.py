@@ -728,7 +728,7 @@ all_sheets = {}
 base_loaded = False
 
 # 1순위: KRX 캐시 최근 (8+1)주만 로드 — 분석에 필요한 만큼만
-krx_cache = load_cache_recent(BASELINE_WEEKS + 1)
+krx_cache = load_cache_recent(BASELINE_WEEKS + 3)  # 과거 주차 선택 시 베이스라인 확보
 if krx_cache:
     all_sheets = krx_cache
     base_loaded = True
@@ -1019,7 +1019,6 @@ else:
                 llm_result = keyword_fallback(collection_results, all_kodex_etfs)
         _sec_llm_failed = "실패" in llm_result.get("summary", "")
         if _sec_llm_failed:
-            st.warning("LLM 호출 실패 — 키워드 기반으로 전환합니다.")
             llm_result = keyword_fallback(collection_results, all_kodex_etfs)
         if llm_result and llm_result.get("marketing_detected") is not None and not _sec_llm_failed:
             save_raw_data(_sec_llm_key, llm_result)

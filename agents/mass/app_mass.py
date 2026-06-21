@@ -56,7 +56,7 @@ with st.sidebar:
 # ── KRX 데이터 로드 ───────────────────────────────────────────────────────────
 @st.cache_data(ttl=300)
 def _load_krx():
-    return load_cache_recent()
+    return load_cache_recent(11)  # 8주 베이스라인 + 과거 주차 선택 여유분
 
 all_sheets = _load_krx()
 if not all_sheets:

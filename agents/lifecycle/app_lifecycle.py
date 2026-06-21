@@ -2,7 +2,7 @@
 ETF 사후관리 — 신규상장 / 상장폐지 모니터링
 """
 
-import os, sys
+import os, sys, html as _html
 from datetime import date
 from collections import defaultdict
 
@@ -15,6 +15,7 @@ if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
 from krx_data_fetcher import load_cache, detect_listing_changes, _parse_week_label
+from dart_lifecycle import load_history as _load_lc_history, collect_lifecycle as _collect_lc
 
 st.markdown("""
 <style>
@@ -104,12 +105,20 @@ st.caption("🟢 신규상장 주차  🔴 상폐 주차  🔵 변동 없음")
 
 st.divider()
 
-# ── 탭: 신규상장 / 상폐 / 만기청산 ──────────────────────────────────────────
-tab_new, tab_del, tab_mat, tab_gap = st.tabs([
+# ── 뉴스/DART 히스토리 로드 ──────────────────────────────────────────────────
+lc_history = _load_lc_history()
+delist_news   = [x for x in lc_history.get("delist_news", [])   if "ETF" in x.get("title","") or "상장폐지" in x.get("title","")]
+newlist_news  = [x for x in lc_history.get("newlist_news", [])  if "ETF" in x.get("title","") or "상장" in x.get("title","")]
+dart_notices  = lc_history.get("dart_notices", [])
+lc_updated    = lc_history.get("collected_at", "미수집")
+
+# ── 탭: 신규상장 / 상폐 / 만기청산 / 뉴스 ────────────────────────────────────
+tab_new, tab_del, tab_mat, tab_gap, tab_news = st.tabs([
     f"🆕 신규상장 ({len(new_confirmed)+len(new_pending)})",
     f"⛔ 상폐 ({len(delist_conf)+len(delist_pend)})",
     f"⏳ 만기청산 ({len(maturity)})",
     f"🔍 수집 갭 ({len(gaps)})",
+    f"📰 뉴스·공시 ({len(delist_news)+len(dart_notices)})",
 ])
 
 def _cards(items, status_field, badge_color_map):
@@ -169,3 +178,71 @@ with tab_mat:
 with tab_gap:
     st.caption("1주 미등장 후 다시 등장 → 수집 오류 (실제 상폐 아님)")
     _cards(gaps, "reason", GAP_BADGE)
+
+with tab_news:
+    st.caption(f"네이버 뉴스 + DART 공시 기반 · 마지막 수집: {lc_updated}")
+
+    # 수집 버튼
+    if st.button("🔄 뉴스·공시 새로고침 (최근 6개월)", key="lc_refresh"):
+        with st.spinner("수집 중..."):
+            lc_history = _collect_lc(days_back=180)
+            delist_news  = [x for x in lc_history.get("delist_news", [])  if "ETF" in x.get("title","") or "상장폐지" in x.get("title","")]
+            newlist_news = [x for x in lc_history.get("newlist_news", []) if "ETF" in x.get("title","") or "상장" in x.get("title","")]
+            dart_notices = lc_history.get("dart_notices", [])
+        st.success("수집 완료")
+
+    st.markdown("#### ⛔ 상장폐지 뉴스")
+    if delist_news:
+        for x in delist_news:
+            url = x.get("link","")
+            title = _html.escape(x.get("title",""))
+            desc  = _html.escape(x.get("description",""))
+            date_ = x.get("pub_date","")
+            link_html = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;font-weight:600;">{title}</a>' if url else f'<span style="font-weight:600;">{title}</span>'
+            st.markdown(
+                f'<div style="border:1px solid rgba(207,32,47,0.3);background:rgba(207,32,47,0.06);'
+                f'border-radius:10px;padding:10px 14px;margin:5px 0;">'
+                f'<div style="font-size:.7rem;color:#f43f5e;margin-bottom:4px;">📅 {date_}</div>'
+                f'{link_html}'
+                f'<div style="font-size:.78rem;color:#aaa;margin-top:4px;">{desc}</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+    else:
+        st.info("상폐 관련 뉴스 없음 (새로고침 버튼으로 수집)")
+
+    st.markdown("#### 🆕 신규상장 뉴스")
+    if newlist_news:
+        for x in newlist_news[:15]:
+            url = x.get("link","")
+            title = _html.escape(x.get("title",""))
+            date_ = x.get("pub_date","")
+            link_html = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;font-weight:600;">{title}</a>' if url else f'<span style="font-weight:600;">{title}</span>'
+            st.markdown(
+                f'<div style="border:1px solid rgba(5,177,105,0.25);background:rgba(5,177,105,0.05);'
+                f'border-radius:10px;padding:8px 14px;margin:4px 0;">'
+                f'<div style="font-size:.7rem;color:#05b169;margin-bottom:3px;">📅 {date_}</div>'
+                f'{link_html}'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+    else:
+        st.info("신규상장 뉴스 없음")
+
+    if dart_notices:
+        st.markdown("#### 📋 DART 공시 (만기·청산)")
+        for x in dart_notices[:20]:
+            url = x.get("dart_url","")
+            name = _html.escape(x.get("report_name","")[:60])
+            corp = x.get("운용사","")
+            date_ = x.get("date","")
+            link_html = f'<a href="{url}" target="_blank" style="color:#a78bfa;text-decoration:none;">{name}</a>' if url else name
+            st.markdown(
+                f'<div style="border:1px solid rgba(167,139,250,0.2);background:rgba(167,139,250,0.04);'
+                f'border-radius:8px;padding:8px 14px;margin:3px 0;">'
+                f'<span style="font-size:.68rem;color:#a78bfa;margin-right:8px;">{date_}</span>'
+                f'<span style="font-size:.68rem;color:#666;">{corp}</span><br>'
+                f'{link_html}'
+                f'</div>',
+                unsafe_allow_html=True,
+            )

@@ -478,8 +478,42 @@ with st.expander("📊 베이스라인 상세", expanded=False):
 # ════════════════════════════════════════════════════════════════════
 st.markdown('<div class="step-header">Step 5 · DiD 계산 (이중차분법) · 개인 순매수</div>', unsafe_allow_html=True)
 
-with st.spinner("DiD 분석 중..."):
-    did_results = analyzer.analyze(all_sheets, target_codes, current_sheet)
+_mass_did_key = f"mass_did_{current_sheet}"
+did_results = None
+
+if _mass_did_key not in st.session_state:
+    # did_history.parquet에서 mass 채널 결과 로드
+    try:
+        import pandas as _pd_m
+        _dh = _pd_m.read_parquet(os.path.join(_ROOT, "did_history.parquet"))
+        _wh = _dh[(_dh["week"]==current_sheet)&(_dh["channel"]=="mass")]
+        if not _wh.empty and all(str(c) in _wh["code"].astype(str).tolist() for c in target_codes):
+            _m = {}
+            for _, _r in _wh.iterrows():
+                _c = str(_r.get("code",""))
+                _m[_c] = type("_R",(),{
+                    "kodex_code":_c,"kodex_name":str(_r.get("name",_c)),
+                    "did_value":float(_r.get("value",0) or 0),
+                    "raw_did_value":None,"zscore":float(_r.get("value",0) or 0),
+                    "marketing_score":50.0+float(_r.get("value",0) or 0)*10,
+                    "judgement":str(_r.get("judgement","")),"judgement_emoji":"⚪",
+                    "competitors":[],"no_competitors":bool(_r.get("no_competitors",False)),
+                    "notes":[],"calculation_log":[],
+                })()
+            if _m: st.session_state[_mass_did_key] = _m
+    except Exception:
+        pass
+
+if _mass_did_key in st.session_state:
+    did_results = st.session_state[_mass_did_key]
+    st.caption(f"📦 저장된 분석 결과 사용 ({current_sheet})")
+    if st.button("🔄 DiD 재계산", key="mass_rerun_did"):
+        del st.session_state[_mass_did_key]; st.rerun()
+else:
+    with st.spinner("DiD 분석 중..."):
+        did_results = analyzer.analyze(all_sheets, target_codes, current_sheet)
+    if did_results:
+        st.session_state[_mass_did_key] = did_results
 
 if not did_results:
     st.warning("DiD 계산 결과 없음")

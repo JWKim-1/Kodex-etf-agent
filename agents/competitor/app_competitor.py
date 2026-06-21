@@ -231,15 +231,19 @@ with _main_tab1:
                 if img and img.startswith("http"):
                     collected_image_urls.append(img)
             if ch_lines:
-                marketing_texts.append(f"{label}\n" + "\n".join(ch_lines))
+                # 채널명에서 provider 감지해서 태그 추가
+                _prov_tag = next((p for p in ["TIGER","ACE","RISE","HANARO","SOL","PLUS","KODEX"]
+                                  if p in r.channel_name.upper()), "")
+                _prov_str = f" [운용사: {_prov_tag}]" if _prov_tag else ""
+                marketing_texts.append(f"{label}{_prov_str}\n" + "\n".join(ch_lines[:10]))
 
         if not marketing_texts:
             return {"marketing_detected": False, "events": [], "summary": "수집된 텍스트 없음"}
 
-        # 전체 입력 3000자 이내로 제한 (LLM JSON 오류 방지)
+        # 채널당 300자로 제한 (전체 품질 균등 배분)
         combined = "\n\n".join(marketing_texts)
-        if len(combined) > 3000:
-            combined = combined[:3000] + "\n...(이하 생략)"
+        if len(combined) > 6000:
+            combined = combined[:6000] + "\n...(이하 생략)"
 
         prompt = f"""다음은 ETF 운용사 채널(KODEX/TIGER/ACE/RISE/HANARO/SOL)에서 수집된 텍스트입니다.
 

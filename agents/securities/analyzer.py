@@ -154,6 +154,16 @@ class MarketingAnalyzer(MarketingAnalyzerBase):
             f"개인 4주평균={baseline.ind_avg:,.0f} ({baseline.weeks_used}주 사용)"
         )
 
+        # ── Step B-0: 베이스라인 부족 시 AUM 상대강도 폴백 ──
+        if baseline.weeks_used < self.BASELINE_WEEKS:
+            from etf_mapping_loader import get_competitors as _gc
+            _code_s = kodex_code.replace("*001", "")
+            _comp_defs = _gc(_code_s) or auto_map_competitors(kodex_name, _code_s, etf_universe)
+            return self._aum_did_fallback(
+                kodex_code, kodex_name, current_df, current_kodex,
+                _comp_defs, "financial", baseline.weeks_used, log
+            )
+
         # ── Step B-1: 비교군 정의 (LP 감지 전에 필요) ──
         # 우선순위: ① etf_mapping.json (사전 매핑) ② 실시간 auto_map (fallback)
         from etf_mapping_loader import get_competitors as _get_comp

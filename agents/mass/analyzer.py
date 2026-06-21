@@ -124,6 +124,15 @@ class MassAnalyzer(MarketingAnalyzerBase):
         baseline = self._compute_baseline(kodex_code, kodex_name, history)
         log.append(f"[베이스라인] 개인 {self.BASELINE_WEEKS}주평균={baseline.ind_avg:,.0f} ({baseline.weeks_used}주)")
 
+        # ── 베이스라인 부족 시 AUM 상대강도 폴백 ──
+        if baseline.weeks_used < self.BASELINE_WEEKS:
+            _code_s = kodex_code.replace("*001", "")
+            _comp_defs = _get_comp(_code_s) or auto_map_competitors(kodex_name, _code_s, etf_universe)
+            return self._aum_did_fallback(
+                kodex_code, kodex_name, current_df, current_kodex,
+                _comp_defs, "individual", baseline.weeks_used, log
+            )
+
         # LP 감지 없음 — 개인 컬럼은 LP 노이즈 구조적으로 없음
         lp = self._get_lp_result_noop(kodex_code)
 

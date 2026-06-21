@@ -348,6 +348,76 @@ class MarketingAnalyzerBase:
             history=recent,
         )
 
+    def _aum_did_fallback(self, kodex_code: str, kodex_name: str,
+                          current_df: pd.DataFrame, current_kodex,
+                          comp_defs: list, metric: str, weeks_used: int,
+                          log: list) -> Optional["CompetitorResult"]:
+        """
+        베이스라인 부족 시 AUM 상대강도 DiD 폴백.
+        metric: 'financial' (증권) | 'individual' (매스)
+        순매수/AUM(시총) 비율로 KODEX vs 경쟁사 비교.
+        """
+        def _get_aum(code: str) -> float:
+            try:
+                import requests as _req
+                from bs4 import BeautifulSoup as _BS
+                r = _req.get(f"https://finance.naver.com/item/main.naver?code={code}",
+                             headers={"User-Agent": "Mozilla/5.0"}, timeout=6)
+                soup = _BS(r.text, "lxml")
+                em = soup.find("em", id="_market_sum")
+                if em:
+                    txt = em.text.strip().replace(",", "")
+                    # "32조 7,609" → 조·억 파싱
+                    import re as _re
+                    m = _re.match(r"([\d]+)조\s*([\d,]*)", txt)
+                    if m:
+                        val = int(m.group(1)) * 10000 + (int(m.group(2).replace(",","")) if m.group(2).strip() else 0)
+                        return float(val)  # 억원
+                    val = float(txt.replace(",",""))
+                    return val
+            except Exception:
+                pass
+            return 0.0
+
+        col = "financial_investment" if metric == "financial" else "individual"
+        kodex_val = getattr(current_kodex, col, 0.0) or 0.0
+        kodex_aum = _get_aum(kodex_code.replace("*001", ""))
+        # 순매수/AUM: 천원 단위 → 억원(=1e8원=1e5천원) 환산
+        kodex_ratio = kodex_val / (kodex_aum * 1e5) if kodex_aum > 0 else 0.0
+
+        comp_ratios = []
+        for c in (comp_defs or [])[:2]:
+            ccode = c.get("code", "").replace("*001", "")
+            cname = c.get("name", "")
+            crow = self.loader.get_etf_row(current_df, ccode, cname)
+            if crow is None:
+                continue
+            caum = _get_aum(ccode)
+            cval = getattr(crow, col, 0.0) or 0.0
+            if caum > 0:
+                comp_ratios.append(cval / (caum * 1e5))
+
+        comp_avg = float(np.mean(comp_ratios)) if comp_ratios else 0.0
+        did_aum = round(kodex_ratio - comp_avg, 6)
+        z_approx = did_aum * 1000
+        score = round(100 / (1 + np.exp(-z_approx * 1.5)), 1)
+
+        log.append(
+            f"[AUM상대강도 폴백] 베이스라인 {weeks_used}주 < {self.BASELINE_WEEKS}주  "
+            f"KODEX {metric}/AUM={kodex_ratio:.6f}  경쟁사평균={comp_avg:.6f}  "
+            f"DiD={did_aum:+.6f}  점수={score:.1f}"
+        )
+        judgement, emoji = self._judge_score(score)
+        return CompetitorResult(
+            kodex_code=kodex_code, kodex_name=kodex_name,
+            did_value=did_aum, raw_did_value=did_aum,
+            zscore=None, marketing_score=score,
+            judgement=judgement + " (AUM상대강도)", judgement_emoji=emoji,
+            competitors=[], no_competitors=not bool(comp_ratios),
+            notes=[f"신규/데이터부족 — AUM상대강도 DiD (베이스라인 {weeks_used}주)"],
+            calculation_log=log,
+        )
+
     def _get_lp_result_noop(self, code: str) -> LPResult:
         """LP 감지 불필요한 채널(개인 컬럼) 용 — 항상 개인 기준 반환."""
         return LPResult(code=code, suspicious=False, z_score=0.0,

@@ -35,6 +35,7 @@ CHANNEL_LABELS = {
     # ── 삼성증권 ─────────────────────────────────────
     "samsung_youtube":     "삼성증권 유튜브",
     "samsung_blog":        "삼성증권 블로그 (네이버)",
+    "kodex_blog":          "KODEX 공식 블로그 (samsungfundblog.com)",
     # ── 미래에셋증권 ─────────────────────────────────
     "mirae_youtube":       "미래에셋증권 유튜브",
     "mirae_blog":          "미래에셋증권 블로그 (how2invest)",
@@ -233,6 +234,7 @@ class DataCollector:
             # 삼성증권
             ("samsung_youtube",    self._ch_samsung_youtube),
             ("samsung_blog",       self._ch_samsung_blog),
+            ("kodex_blog",         self._ch_kodex_blog),
             # 미래에셋증권
             ("mirae_youtube",      self._ch_mirae_youtube),
             ("mirae_blog",         self._ch_mirae_blog),
@@ -622,6 +624,62 @@ class DataCollector:
             error="Instagram은 비로그인 스크래핑 차단 — 공식 Graph API 또는 로그인 세션 필요",
             error_type="LOGIN_REQUIRED",
         )
+
+    # ── KODEX 공식 블로그 (samsungfundblog.com) ───────────────────────────────
+
+    def _ch_kodex_blog(self) -> ChannelResult:
+        ch, name = "kodex_blog", CHANNEL_LABELS["kodex_blog"]
+        try:
+            r = requests.get("https://samsungfundblog.com", headers=BROWSER_HEADERS, timeout=10)
+            r.raise_for_status()
+            from bs4 import BeautifulSoup as _BS
+            soup = _BS(r.text, "lxml")
+
+            articles, raw_texts = [], []
+            for a in soup.find_all("a", href=True):
+                href = a.get("href", "")
+                title = a.get_text(strip=True)
+                if "/archives/" not in href or len(title) < 10:
+                    continue
+                # 날짜는 개별 포스트 메타에서 — 목록에서 안 보이면 포스트 직접 확인 생략하고 이번주 판단
+                # 일단 제목으로 ETF 관련 여부 판단
+                if not any(k in title for k in ["ETF","KODEX","펀드","투자","채권","주식"]):
+                    continue
+                articles.append({"title": title[:80], "url": href, "thumbnail": "", "description": ""})
+                raw_texts.append(title)
+                if len(articles) >= 10:
+                    break
+
+            # 날짜 필터: 각 포스트 published_time 확인 (최대 5개만)
+            week_articles = []
+            for art in articles[:5]:
+                try:
+                    pr = requests.get(art["url"], headers=BROWSER_HEADERS, timeout=8)
+                    ps = _BS(pr.text, "lxml")
+                    pub_meta = ps.find("meta", property="article:published_time")
+                    thumb_meta = ps.find("meta", property="og:image")
+                    if thumb_meta:
+                        art["thumbnail"] = thumb_meta.get("content", "")
+                    if pub_meta:
+                        from datetime import timezone
+                        pub_str = pub_meta.get("content", "")
+                        pub_dt = datetime.fromisoformat(pub_str.replace("Z", "+00:00")).replace(tzinfo=None)
+                        pub_dt_local = pub_dt + timedelta(hours=9)
+                        if self.week_start <= pub_dt_local <= self.week_end:
+                            week_articles.append(art)
+                except Exception:
+                    pass
+
+            if not week_articles:
+                return ChannelResult(ch, name, True,
+                    data={"articles": [], "raw_text": ""},
+                    error_label=f"이번 주 KODEX 블로그 게시물 없음 (전체 {len(articles)}개)")
+
+            return ChannelResult(ch, name, True,
+                data={"articles": week_articles,
+                      "raw_text": " / ".join(a["title"] for a in week_articles)[:400]})
+        except Exception as e:
+            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
 
     # ── CH4: 삼성증권 블로그 (네이버 RSS) ───────────────────────────────────
 

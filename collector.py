@@ -55,6 +55,12 @@ CHANNEL_LABELS = {
     "instagram":           "삼성증권 인스타그램",
     "kakao":               "삼성자산운용 카카오채널",
     "google_trends":       "구글 트렌드 + 네이버 데이터랩",
+    # ── 증권사 카카오 채널 ──────────────────────────────────────────────────
+    "samsung_sec_kakao":   "삼성증권 카카오채널",
+    "mirae_sec_kakao":     "미래에셋증권 카카오채널",
+    "kiwoom_sec_kakao":    "키움증권 카카오채널",
+    "kis_sec_kakao":       "한국투자증권 카카오채널",
+    "shinhan_sec_kakao":   "신한투자증권 카카오채널",
     # ── ETF 운용사 채널 (개인·경쟁사 모드 공용) ─────────────────────────
     "kodex_youtube":    "KODEX ETF 유튜브 (삼성자산운용)",
     "tiger_youtube":    "TIGER ETF 유튜브 (미래에셋자산운용)",
@@ -247,6 +253,11 @@ class DataCollector:
             ("instagram",          self._ch_instagram),
             ("kakao",              self._ch_kakao),
             ("google_trends",      self._ch_google_trends),
+            ("samsung_sec_kakao",  lambda: self._ch_kakao_etf("_xlfheu",  "samsung_sec_kakao")),
+            ("mirae_sec_kakao",    lambda: self._ch_kakao_etf("_xgqfxkC", "mirae_sec_kakao")),
+            ("kiwoom_sec_kakao",   lambda: self._ch_kakao_etf("_FZeAd",   "kiwoom_sec_kakao")),
+            ("kis_sec_kakao",      lambda: self._ch_kakao_etf("_YCAes",   "kis_sec_kakao")),
+            ("shinhan_sec_kakao",  lambda: self._ch_kakao_etf("_xdnLFd",  "shinhan_sec_kakao")),
         ]
         results: Dict[str, ChannelResult] = {}
         for idx, (key, func) in enumerate(channels):

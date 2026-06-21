@@ -42,6 +42,11 @@ CHANNEL_LABELS = {
     "hana_blog":        "하나은행 블로그",
     "naver_news":       "네이버 뉴스 (은행+ETF)",
     "google_news":      "구글 뉴스 (은행+ETF)",
+    # 카카오 채널
+    "shinhan_bank_kakao": "신한은행 카카오채널",
+    "hana_bank_kakao":    "하나은행 카카오채널",
+    "woori_bank_kakao":   "우리은행 카카오채널",
+    "nh_bank_kakao":      "NH농협은행 카카오채널",
 }
 
 # ── 유튜브 채널 ID ─────────────────────────────────────────────────────────────
@@ -345,6 +350,49 @@ class BankChannelCollector:
 
     # ── 전체 수집 ─────────────────────────────────────────────────────────────
 
+    def _ch_kakao(self, channel_id: str, ch_key: str) -> ChannelResult:
+        """카카오 채널 공통 수집 (rocket-web 내부 API)."""
+        name = CHANNEL_LABELS.get(ch_key, ch_key)
+        api_url = f"https://pf.kakao.com/rocket-web/web/profiles/{channel_id}/posts?includePinnedPost=true"
+        try:
+            r = requests.get(api_url, headers={
+                **BROWSER_HEADERS,
+                "Referer": f"https://pf.kakao.com/{channel_id}/posts",
+                "Accept": "application/json, text/plain, */*",
+            }, timeout=10)
+            r.raise_for_status()
+            items = r.json().get("items", [])
+            if not items:
+                return ChannelResult(ch_key, name, False, error="게시물 없음")
+
+            cutoff_ts = int(self.week_start.timestamp() * 1000)
+            end_ts    = int(self.week_end.timestamp() * 1000)
+            articles, raw_texts = [], []
+            for item in items:
+                pub_ts = item.get("published_at", 0)
+                if pub_ts < cutoff_ts or pub_ts > end_ts:
+                    continue
+                title = item.get("title") or item.get("text", "")[:60] or "카카오 게시물"
+                post_url = f"https://pf.kakao.com/{channel_id}/posts/{item.get('id','')}"
+                media = item.get("media", [])
+                thumbnail = media[0].get("medium_url", "") if media else ""
+                text_body = item.get("text", "") or ""
+                articles.append({
+                    "title": title[:80], "url": post_url,
+                    "thumbnail": thumbnail, "published_at": str(pub_ts),
+                    "description": text_body[:200],
+                })
+                raw_texts.append(f"{title} {text_body[:80]}")
+
+            if not articles:
+                return ChannelResult(ch_key, name, False,
+                    data={"articles": [], "raw_text": ""},
+                    error=f"이번 주 게시물 없음 (전체 {len(items)}개)")
+            return ChannelResult(ch_key, name, True,
+                data={"articles": articles, "raw_text": " / ".join(raw_texts[:5])[:500]})
+        except Exception as e:
+            return ChannelResult(ch_key, name, False, error=str(e))
+
     def collect_all(self, progress_callback=None) -> dict:
         channels = [
             ("kb_youtube",      lambda: self._fetch_youtube_rss("kb_youtube",      YOUTUBE_CHANNEL_IDS["kb_youtube"])),
@@ -356,6 +404,10 @@ class BankChannelCollector:
             ("hana_blog",       self._ch_hana_blog),
             ("naver_news",      self._ch_naver_news),
             ("google_news",     self._ch_google_news),
+            ("shinhan_bank_kakao", lambda: self._ch_kakao("_jcxdxcu", "shinhan_bank_kakao")),
+            ("hana_bank_kakao",    lambda: self._ch_kakao("_xjxitxoh","hana_bank_kakao")),
+            ("woori_bank_kakao",   lambda: self._ch_kakao("_xmMhps",  "woori_bank_kakao")),
+            ("nh_bank_kakao",      lambda: self._ch_kakao("_xgmDbz",  "nh_bank_kakao")),
         ]
 
         results = {}

@@ -1460,7 +1460,7 @@ for code, res in did_results.items():
                   delta_color="normal" if _score >= 60 else ("off" if _score >= 40 else "inverse"))
 
         # ── 베이스라인 부족 경고 ──
-        bw = res.baseline.weeks_used
+        bw = res.baseline.weeks_used if res.baseline else 0
         if bw < 8:
             st.warning(
                 f"⚠️ 베이스라인 {bw}주만 확보 (8주 미만) — 신규 상장 ETF로 데이터 부족. "

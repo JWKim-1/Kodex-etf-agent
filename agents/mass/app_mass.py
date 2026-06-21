@@ -429,7 +429,7 @@ with st.expander("🔗 비교군 매핑", expanded=True):
 # ════════════════════════════════════════════════════════════════════
 # STEP 4: 베이스라인 (직전 4주 평균)
 # ════════════════════════════════════════════════════════════════════
-st.markdown('<div class="step-header">Step 4 · 베이스라인 (직전 4주 평균) · 개인 순매수</div>', unsafe_allow_html=True)
+st.markdown('<div class="step-header">Step 4 · 베이스라인 (직전 8주 평균) · 개인 순매수</div>', unsafe_allow_html=True)
 
 current_idx = sheet_names.index(current_sheet)
 history_sheets = {k: all_sheets[k] for k in sheet_names[:current_idx]}
@@ -547,5 +547,39 @@ fig_did.update_layout(
     bargap=0.3,
 )
 st.plotly_chart(fig_did, use_container_width=True)
+
+# ── ETF별 계산 로그 ──────────────────────────────────────────────────────────
+for code, res in did_results.items():
+    _score = float(getattr(res, 'marketing_score', None) or 50.0)
+    _z     = float(getattr(res, 'zscore', None) or 0.0)
+    _raw   = float(getattr(res, 'raw_did_value', None) or 0.0)
+    with st.expander(
+        f"{res.judgement_emoji} {res.kodex_name}  |  {_score_label_m(res)}  —  {res.judgement}",
+        expanded=False
+    ):
+        # 주요 지표
+        c1, c2, c3 = st.columns(3)
+        c1.metric("마케팅 점수 (0~100)", f"{_score:.0f}점")
+        c2.metric("Z-score", f"{_z:+.3f}")
+        c3.metric("1단계 DiD", f"{_raw:+.4f}")
+
+        if res.notes:
+            for note in res.notes:
+                if note.startswith("[2단계") or note.startswith("[AUM") or note.startswith("[베이스"):
+                    st.info(note)
+                else:
+                    st.warning(note)
+
+        # 단계별 계산 로그
+        if hasattr(res, 'calculation_log') and res.calculation_log:
+            with st.expander("📋 단계별 계산 로그", expanded=False):
+                log_html = ""
+                icons = {"[KODEX":"🟦","[베이스라인":"📊","[비교군":"🆚","[DiD":"🧮","[판정":"🏁","[2단계":"📈","[AUM":"💡"}
+                for line in res.calculation_log:
+                    icon = "▸"
+                    for k, v in icons.items():
+                        if line.startswith(k): icon = v; break
+                    log_html += f"<div style='padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);'><span style='opacity:.5;margin-right:6px;'>{icon}</span><span style='font-size:0.82rem;font-family:monospace;'>{line}</span></div>"
+                st.markdown(f"<div style='background:rgba(0,0,0,0.2);padding:12px;border-radius:8px;'>{log_html}</div>", unsafe_allow_html=True)
 
 st.caption("삼성자산운용 ETF 마케팅 AI Agent · 개인 채널 분석")

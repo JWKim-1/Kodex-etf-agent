@@ -705,13 +705,9 @@ with st.expander("📐 마케팅 점수(0~100) 산정 방식", expanded=False):
     """)
 
 # ── 데이터 로드 ───────────────────────────────────────────────────────────────
-from analyzer import (ExcelLoader, COMPARISON_MAP,
+from analyzer import (ExcelLoader, MarketingAnalyzer, COMPARISON_MAP,
                       auto_map_competitors, extract_keyword,
                       extract_target_etfs_with_llm)
-# securities analyzer: Z-score 2단계 포함 버전
-import importlib as _sec_lib
-_sec_mod = _sec_lib.import_module('agents.securities.analyzer')
-MarketingAnalyzer = _sec_mod.MarketingAnalyzer
 from collector import DataCollector, CHANNEL_LABELS
 from report import build_report, export_html
 

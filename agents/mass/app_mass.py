@@ -18,7 +18,9 @@ import plotly.graph_objects as go
 
 from collector import DataCollector
 from agents.mass.analyzer import MassAnalyzer
-from analyzer import extract_target_etfs_with_llm
+import importlib as _anal_lib
+_anal_mod = _anal_lib.import_module('analyzer')
+extract_target_etfs_with_llm = _anal_mod.extract_target_etfs_with_llm
 from krx_data_fetcher import load_cache_recent, load_cache, save_cache, _parse_week_label
 import importlib as _ilib
 import channel_archive as _ch_arch_mod

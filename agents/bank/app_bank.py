@@ -558,7 +558,7 @@ else:
                     "KODEX 변화율": f"{int(r.kodex_change_pct*100):+d}%",
                     "비교군": comp_names if comp_names else "없음",
                     "비교군 변화율": f"{int(r.control_avg_pct*100):+d}%",
-                    "점수": f"{getattr(r, 'marketing_score', 50.0):.0f}점 (Z={getattr(r, 'zscore', 0.0):+.2f})",
+                    "점수": f"{float(getattr(r, 'marketing_score', None) or 50.0):.0f}점 (Z={float(getattr(r, 'zscore', None) or 0.0):+.2f})",
                     "매핑": r.mapping_source,
                 })
             st.dataframe(pd.DataFrame(rows), use_container_width=True)

@@ -236,16 +236,15 @@ class CompetitorResult:
 class ETFDiDResult:
     kodex_code: str
     kodex_name: str
-    current: ETFWeekData
-    baseline: Baseline
-    lp: LPResult
-    # 변화율
-    kodex_change_pct: float
-    control_avg_pct: float
-    did_value: float          # 2단계 후: 배수(ratio) = raw_did / 16주평균DiD
-    raw_did_value: float = 0.0   # 1단계 원값: KODEX변화율 - 비교군평균변화율
+    did_value: float
     judgement: str = ""
     judgement_emoji: str = ""
+    current: Optional[ETFWeekData] = None
+    baseline: Optional[Baseline] = None
+    lp: Optional[LPResult] = None
+    kodex_change_pct: float = 0.0
+    control_avg_pct: float = 0.0
+    raw_did_value: float = 0.0
     # 비교군 상세
     competitors: List[CompetitorResult] = field(default_factory=list)
     mapping_source: str = ""

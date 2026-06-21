@@ -11,6 +11,10 @@ import numpy as np
 from datetime import datetime, timedelta, date
 from typing import Optional, Dict, List
 
+# KRX 수집 품질 기준 — 이 미만이면 수집 실패/빵꾸로 간주
+KRX_MIN_ETF_COUNT = 950   # 전체 ETF 수 (1000+ 정상, 950 미만 = 빵꾸)
+KRX_MIN_KODEX_COUNT = 200  # KODEX ETF 수
+
 # KODEX ETF 우선 수집 목록 (멘토님 엑셀 기준 234개) — 모듈 레벨 상수
 KODEX_PRIORITY = [
     '091160','233740','069500','261220','144600','114800','314250','379810','252670','0064K0',
@@ -811,9 +815,20 @@ def detect_listing_changes(cache: dict = None) -> dict:
     new_listings = []
     raw_removed: list = []  # (disappear_week, code, name)
 
+    def _is_bad_week(w: str) -> bool:
+        """KRX 수집 품질 기준 미달 주차 (빵꾸) 판별."""
+        df = cache.get(w, None)
+        if df is None: return True
+        total = len(df)
+        kodex = df["종목명"].str.contains("KODEX", na=False).sum() if "종목명" in df.columns else 0
+        return total < KRX_MIN_ETF_COUNT or kodex < KRX_MIN_KODEX_COUNT
+
     for i in range(1, len(sorted_weeks)):
         prev_week = sorted_weeks[i - 1]
         curr_week = sorted_weeks[i]
+        # 빵꾸 주차는 신규/상폐 감지에서 제외 (노이즈 방지)
+        if _is_bad_week(prev_week) or _is_bad_week(curr_week):
+            continue
         prev_codes = set(cache[prev_week]["종목코드"].astype(str).tolist())
         curr_codes = set(cache[curr_week]["종목코드"].astype(str).tolist())
 

@@ -796,15 +796,58 @@ class DataCollector:
     # ── CH6: 삼성증권 카카오톡 채널 ──────────────────────────────────────────
 
     def _ch_kakao(self) -> ChannelResult:
-        """카카오 Plus 채널 — pf.kakao.com/posts 페이지는 JS 렌더링 필요, 정적 수집 불가."""
+        """카카오 Plus 채널 — rocket-web 내부 API로 게시물 직접 수집."""
         ch, name = "kakao", CHANNEL_LABELS["kakao"]
-        # 확인된 채널: _UxctLxb=삼성자산운용 (https://pf.kakao.com/_UxctLxb/posts)
-        # /posts 페이지는 SPA — 정적 HTTP로는 3700바이트 HTML shell만 반환, 게시물 없음
-        return ChannelResult(
-            ch, name, False,
-            error="카카오 채널 /posts 페이지 JS 렌더링 필요 — 비로그인 정적 수집 구조적 불가",
-            error_type="SPA_STRUCTURE",
-        )
+        channel_id = "_UxctLxb"  # 삼성자산운용 카카오 채널
+        api_url = f"https://pf.kakao.com/rocket-web/web/profiles/{channel_id}/posts?includePinnedPost=true"
+        try:
+            r = requests.get(api_url, headers={
+                **BROWSER_HEADERS,
+                "Referer": f"https://pf.kakao.com/{channel_id}/posts",
+                "Accept": "application/json, text/plain, */*",
+            }, timeout=10)
+            r.raise_for_status()
+            data = r.json()
+            items = data.get("items", [])
+            if not items:
+                return ChannelResult(ch, name, False, error="게시물 없음", error_type="NO_DATA")
+
+            # 주차 필터
+            cutoff_ts = int(self.week_start.timestamp() * 1000)
+            end_ts    = int(self.week_end.timestamp() * 1000)
+
+            articles, raw_texts = [], []
+            for item in items:
+                pub_ts = item.get("published_at", 0)
+                if pub_ts < cutoff_ts or pub_ts > end_ts:
+                    continue
+                title = item.get("title") or item.get("text", "")[:60] or "카카오 게시물"
+                post_url = f"https://pf.kakao.com/{channel_id}/posts/{item.get('id','')}"
+                thumbnail = ""
+                media = item.get("media", [])
+                if media:
+                    thumbnail = media[0].get("medium_url") or media[0].get("url", "")
+                text_body = item.get("text", "") or item.get("title", "")
+                articles.append({
+                    "title": title[:80],
+                    "url": post_url,
+                    "thumbnail": thumbnail,
+                    "published_at": str(pub_ts),
+                    "description": text_body[:200],
+                })
+                raw_texts.append(f"{title} {text_body[:100]}")
+
+            if not articles:
+                return ChannelResult(ch, name, True,
+                    data={"articles": [], "raw_text": ""},
+                    error_label=f"이번 주 카카오 게시물 없음 (전체 {len(items)}개 중)")
+
+            raw_text = " / ".join(raw_texts[:5])
+            return ChannelResult(ch, name, True,
+                data={"articles": articles, "raw_text": raw_text[:500]})
+
+        except Exception as e:
+            return ChannelResult(ch, name, False, error=str(e), error_type="UNKNOWN")
 
     # ── CH9: 구글 트렌드 ─────────────────────────────────────────────────────
 

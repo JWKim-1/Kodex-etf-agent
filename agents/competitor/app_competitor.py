@@ -500,8 +500,12 @@ with _main_tab1:
         has_period = bool(ev.get("event_period") and ev["event_period"] not in ("null","None",""))
         return (0 if mt in ("이벤트","프로모션","수수료혜택") else 1, 0 if has_period else 1)
 
-    for prov, prov_events in by_provider.items():
-        prov_events = sorted(prov_events, key=_ev_priority)
+    # 기타(알 수 없는 운용사) 분리 → 맨 마지막에 표시
+    _known_provs = [p for p in by_provider if p not in ("기타", "")]
+    _other_provs = [p for p in by_provider if p in ("기타", "")]
+
+    for prov in _known_provs + _other_provs:
+        prov_events = sorted(by_provider[prov], key=_ev_priority)
         pinfo = COMP_PROVIDERS.get(prov, {"color":"#aaa","bg":"rgba(255,255,255,0.05)"})
         icon  = _prov_icon.get(prov, "⬜")
         st.markdown(

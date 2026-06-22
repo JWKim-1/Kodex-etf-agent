@@ -1568,12 +1568,19 @@ class DataCollector:
                     not any(sk in line for sk in skip_kw) and
                     line not in seen):
                 seen.add(line)
-                # 다음 줄에 날짜 패턴 있으면 기간으로 사용
+                # 기간 추출 1: 다음 줄에 날짜 패턴
                 period = ""
                 if i + 1 < len(lines):
                     nxt = lines[i+1]
                     if re.search(r"20\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2}", nxt):
-                        period = nxt; i += 1
+                        period = nxt.strip(); i += 1
+                # 기간 추출 2: 제목 자체에서 (~날짜) 또는 날짜~날짜 패턴
+                if not period:
+                    _pm = re.search(r"[\(~]?\s*(20\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2})\s*[~\-]\s*(20\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2})", line)
+                    if _pm: period = f"{_pm.group(1)} ~ {_pm.group(2)}"
+                    elif re.search(r"[~(]\s*(\d{1,2}/\d{1,2})\s*[)]", line):
+                        _em = re.search(r"[~(]\s*(\d{1,2}/\d{1,2})\s*[)]", line)
+                        if _em: period = f"~ {_em.group(1)}"
                 events.append({"title": line[:80], "url": url, "period": period, "image_url": ""})
             i += 1
 
@@ -1754,6 +1761,19 @@ class DataCollector:
             for item in items:
                 title = item.get("TITLE", "")
                 no    = item.get("NO", "")
+                # 날짜 필터: 이번 주 이후 등록/종료 이벤트만
+                reg_dt_str = item.get("REG_DT","") or item.get("WDATE","") or ""
+                if reg_dt_str:
+                    try:
+                        import re as _re2
+                        _dm = _re2.search(r"20\d{2}[.\-]\d{2}[.\-]\d{2}", reg_dt_str)
+                        if _dm:
+                            _rd = datetime.strptime(_dm.group(), "%Y.%m.%d" if "." in _dm.group() else "%Y-%m-%d")
+                            # 3개월 이상 지난 이벤트 제외
+                            if (datetime.now() - _rd).days > 90:
+                                continue
+                    except Exception:
+                        pass
                 if not title or title in seen_titles:
                     continue
                 is_event = bool(re.search(r"이벤트|EVENT|프로모션|경품|혜택|매수|기념|팬덤", title, re.I))

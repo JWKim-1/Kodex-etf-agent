@@ -309,24 +309,37 @@ if st.session_state.selected_mode is None:
     <div class="collect-banner">
         <div class="collect-banner-icon">🔄</div>
         <div class="collect-banner-text">
-            <div class="collect-banner-title">이번 주 전체 수집</div>
-            <div class="collect-banner-desc">증권 · 은행 · 개인 · 경쟁사 마케팅 채널 수집 + 시장 트렌드(ETF 수익률/거래대금) + 사후관리(상폐/신규상장 뉴스) — 한 번에 전부</div>
+            <div class="collect-banner-title">전체 수집</div>
+            <div class="collect-banner-desc">증권 · 은행 · 개인 · 경쟁사 마케팅 채널 수집 + 시장 트렌드 + 사후관리 — 주차 선택 후 한 번에 전부</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("🔄  전체 채널 수집  —  증권·은행·개인·경쟁사·시장트렌드·사후관리 일괄 수집 & 저장", key="btn_collect_all", use_container_width=True):
+    # 주차 선택
+    from datetime import date as _date, timedelta as _td
+    _today = _date.today()
+    _week_opts = {}
+    for _i in range(12):  # 최근 12주
+        _m = _today - _td(days=_today.weekday()) - _td(weeks=_i)
+        _f = _m + _td(days=4)
+        _l = f"{_m.month}.{_m.day}-{_f.month}.{_f.day}"
+        _week_opts[_l] = (_m, _f)
+    _week_labels = list(_week_opts.keys())
+    _sel_week = st.selectbox("수집 주차 선택", _week_labels, index=0, key="collect_week_select")
+    _sel_mon, _sel_fri = _week_opts[_sel_week]
+    _lbl = _sel_week
+
+    if st.button(f"🔄  {_lbl} 전체 수집 — 증권·은행·개인·경쟁사·시장트렌드·사후관리", key="btn_collect_all", use_container_width=True):
         import scheduled_collect as _sc
-        from datetime import date as _date, timedelta as _td
-        _today = _date.today()
-        _mon   = _today - _td(days=_today.weekday())
-        _fri   = _mon + _td(days=4)
-        _lbl   = f"{_mon.month}.{_mon.day}-{_fri.month}.{_fri.day}"
+        from datetime import datetime as _dt
 
         # 1. 마케팅 채널 4개 세션
         with st.spinner(f"[1/3] {_lbl} 마케팅 채널 수집 중..."):
             try:
-                _sc.run()
+                # run()은 항상 이번 주 기준이라 직접 호출
+                _wstart = _dt(_sel_mon.year, _sel_mon.month, _sel_mon.day)
+                _wend   = _dt(_sel_fri.year, _sel_fri.month, _sel_fri.day, 23, 59)
+                _sc.run_for_week(_lbl, _wstart, _wend) if hasattr(_sc, 'run_for_week') else _sc.run()
                 st.caption("✅ 마케팅 채널 완료")
             except Exception as _e:
                 st.caption(f"⚠️ 마케팅 채널 오류: {_e}")
@@ -344,7 +357,7 @@ if st.session_state.selected_mode is None:
                     else:
                         st.caption("⚠️ 시장 트렌드 수집 실패")
                 else:
-                    st.caption("📦 시장 트렌드 캐시 사용")
+                    st.caption(f"📦 {_lbl} 시장 트렌드 캐시 사용")
             except Exception as _e:
                 st.caption(f"⚠️ 시장 트렌드 오류: {_e}")
 

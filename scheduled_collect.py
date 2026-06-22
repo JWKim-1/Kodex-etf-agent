@@ -197,6 +197,12 @@ def collection_summary(results: dict) -> dict:
 
 # ── 메인 수집 루틴 ────────────────────────────────────────────────────────────
 
+def run_for_week(week_label: str, week_start_dt: datetime, week_end_dt: datetime):
+    """특정 주차로 수집 실행 (랜딩 전체수집 버튼에서 호출)."""
+    logger.info(f"=== 수집 시작: {week_label} ===")
+    _run_core(week_label, week_start_dt, week_end_dt)
+
+
 def run():
     today = date.today()
     monday = today - timedelta(days=today.weekday())
@@ -207,6 +213,10 @@ def run():
     week_end_dt   = datetime(friday.year, friday.month, friday.day, 23, 59)
 
     logger.info(f"=== 자동 수집 시작: {week_label} ===")
+    _run_core(week_label, week_start_dt, week_end_dt)
+
+
+def _run_core(week_label: str, week_start_dt: datetime, week_end_dt: datetime):
 
     api_key = os.getenv("ANTHROPIC_API_KEY", "")
     naver_id  = os.getenv("NAVER_CLIENT_ID", "")

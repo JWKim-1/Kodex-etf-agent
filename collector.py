@@ -1329,10 +1329,10 @@ class DataCollector:
                     continue
                 if not any(k in title for k in ETF_KW):
                     continue
-                # 날짜 필터: 3개월 이상 지난 이벤트 제외
+                # 날짜 필터: 이미 종료된 이벤트 제외 (종료일 < week_start)
                 try:
                     _evt_dt = datetime.strptime(date_str.replace("/","."), "%Y.%m.%d")
-                    if (datetime.now() - _evt_dt).days > 90:
+                    if _evt_dt < self.week_start:
                         continue
                 except Exception:
                     pass
@@ -1399,12 +1399,12 @@ class DataCollector:
                     continue
                 if not any(k in title for k in ETF_KW):
                     continue
-                # 날짜 필터: 제목에 기간 있으면 3개월 지난 거 제외
+                # 날짜 필터: 이번 주 이전에 끝난 이벤트 제외 (기간종료일 < week_start)
                 _date_m = re.search(r"20\d{2}[./]\d{2}[./]\d{2}", title)
                 if _date_m:
                     try:
                         _dt = datetime.strptime(_date_m.group().replace("/","."), "%Y.%m.%d")
-                        if (datetime.now() - _dt).days > 90:
+                        if _dt < self.week_start:
                             continue
                     except Exception:
                         pass
@@ -1793,8 +1793,8 @@ class DataCollector:
                         _dm = _re2.search(r"20\d{2}[.\-]\d{2}[.\-]\d{2}", reg_dt_str)
                         if _dm:
                             _rd = datetime.strptime(_dm.group(), "%Y.%m.%d" if "." in _dm.group() else "%Y-%m-%d")
-                            # 3개월 이상 지난 이벤트 제외
-                            if (datetime.now() - _rd).days > 90:
+                            # 이미 종료된 이벤트 제외
+                            if _rd < self.week_start:
                                 continue
                     except Exception:
                         pass
@@ -1885,11 +1885,11 @@ class DataCollector:
                     continue
                 date_m = re.search(r"20\d{2}\.\d{2}\.\d{2}", raw_title)
                 period = date_m.group() if date_m else ""
-                # 날짜 필터: 3개월 이상 지난 거 제외
+                # 날짜 필터: 이미 지난 이벤트 제외
                 if date_m:
                     try:
                         _dt = datetime.strptime(date_m.group(), "%Y.%m.%d")
-                        if (datetime.now() - _dt).days > 90:
+                        if _dt < self.week_start:
                             continue
                     except Exception:
                         pass

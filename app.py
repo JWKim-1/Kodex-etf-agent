@@ -315,19 +315,49 @@ if st.session_state.selected_mode is None:
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("🔄  전체 채널 수집  —  증권·은행·개인·경쟁사 4개 세션 일괄 수집 & 저장", key="btn_collect_all", use_container_width=True):
+    if st.button("🔄  전체 채널 수집  —  증권·은행·개인·경쟁사·시장트렌드·사후관리 일괄 수집 & 저장", key="btn_collect_all", use_container_width=True):
         import scheduled_collect as _sc
         from datetime import date as _date, timedelta as _td
         _today = _date.today()
         _mon   = _today - _td(days=_today.weekday())
         _fri   = _mon + _td(days=4)
         _lbl   = f"{_mon.month}.{_mon.day}-{_fri.month}.{_fri.day}"
-        with st.spinner(f"🔄 {_lbl} 전체 수집 중... (2~5분 소요)"):
+
+        # 1. 마케팅 채널 4개 세션
+        with st.spinner(f"[1/3] {_lbl} 마케팅 채널 수집 중..."):
             try:
                 _sc.run()
-                st.success(f"✅ {_lbl} 전체 수집 완료 — 각 세션에서 버튼 없이 결과가 바로 표시됩니다.")
+                st.caption("✅ 마케팅 채널 완료")
             except Exception as _e:
-                st.error(f"수집 중 오류: {_e}")
+                st.caption(f"⚠️ 마케팅 채널 오류: {_e}")
+
+        # 2. 시장 트렌드 (네이버 금융)
+        with st.spinner("[2/3] 시장 트렌드 수집 중..."):
+            try:
+                from krx_data_fetcher import fetch_etf_market_summary_naver, load_trend_cache, save_trend_cache
+                _tc = load_trend_cache()
+                if _lbl not in _tc:
+                    _trend_df = fetch_etf_market_summary_naver()
+                    if not _trend_df.empty:
+                        save_trend_cache(_lbl, _trend_df)
+                        st.caption(f"✅ 시장 트렌드 완료 ({len(_trend_df)}개 ETF)")
+                    else:
+                        st.caption("⚠️ 시장 트렌드 수집 실패")
+                else:
+                    st.caption("📦 시장 트렌드 캐시 사용")
+            except Exception as _e:
+                st.caption(f"⚠️ 시장 트렌드 오류: {_e}")
+
+        # 3. 사후관리 (상폐/신규상장 뉴스)
+        with st.spinner("[3/3] 사후관리 수집 중..."):
+            try:
+                from dart_lifecycle import collect_lifecycle as _lc_run
+                _lc_run(days=7)
+                st.caption("✅ 사후관리 완료")
+            except Exception as _e:
+                st.caption(f"⚠️ 사후관리 오류: {_e}")
+
+        st.success(f"✅ {_lbl} 전체 수집 완료 — 각 세션에서 버튼 없이 결과가 바로 표시됩니다.")
 
     # ── KRX 순매수 데이터 수집 (VPN 필수) ────────────────────────────────────────
     st.markdown("""

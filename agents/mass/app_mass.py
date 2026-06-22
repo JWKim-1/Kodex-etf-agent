@@ -322,17 +322,25 @@ if llm_result.get("marketing_detected"):
             url = ev.get("url","")
             ev_etf_codes = ev.get("etf_codes", [])
             ev_etf_names = [all_kodex_etfs.get(c, c) for c in ev_etf_codes if c]
-            # 썸네일 수집 결과에서 자동 매칭
+            # 썸네일: URL/title 매칭 → 없으면 카카오CDN 풀에서 대체
             img_url = ev.get("image_url","")
             if not img_url and collection_results:
                 for _cr in collection_results.values():
                     if not _cr.success or not _cr.data: continue
                     for _v in (_cr.data.get("videos") or []):
-                        if _v.get("thumbnail") and (title[:15] in _v.get("title","") or _v.get("url","") == url):
+                        if _v.get("thumbnail") and (_v.get("url","") == url or title[:20] in _v.get("title","")):
                             img_url = _v["thumbnail"]; break
                     for _a in (_cr.data.get("articles") or []):
-                        if _a.get("thumbnail") and _a.get("url","") == url:
+                        if _a.get("thumbnail") and (_a.get("url","") == url or title[:20] in _a.get("title","")):
                             img_url = _a["thumbnail"]; break
+                    if img_url: break
+            if not img_url and collection_results:
+                for _cr in collection_results.values():
+                    if not _cr.success or not _cr.data: continue
+                    for _a in (_cr.data.get("articles") or []):
+                        _th = _a.get("thumbnail","")
+                        if _th and "kakaocdn" in _th:
+                            img_url = _th; break
                     if img_url: break
             title_html = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>' if url and url.startswith("http") else title
             period_html = f'<div class="ev-period">📅 {period}</div>' if period and period != "null" else ""

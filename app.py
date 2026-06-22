@@ -1077,15 +1077,25 @@ else:
                 img_url = ev.get("image_url","")
                 # 썸네일 없으면 채널 수집 결과에서 자동 매칭
                 if not img_url and collection_results:
+                    # 1) URL/title 직접 매칭
                     for _cr in collection_results.values():
                         if not _cr.success or not _cr.data: continue
                         for _v in (_cr.data.get("videos") or []):
-                            if _v.get("thumbnail") and (title[:15] in _v.get("title","") or _v.get("url","") == url):
+                            if _v.get("thumbnail") and (_v.get("url","") == url or title[:20] in _v.get("title","")):
                                 img_url = _v["thumbnail"]; break
                         for _a in (_cr.data.get("articles") or []):
-                            if _a.get("thumbnail") and _a.get("url","") == url:
+                            if _a.get("thumbnail") and (_a.get("url","") == url or title[:20] in _a.get("title","")):
                                 img_url = _a["thumbnail"]; break
                         if img_url: break
+                    # 2) 없으면 카카오 채널에서 썸네일 풀로 대체
+                    if not img_url and collection_results:
+                        for _cr in collection_results.values():
+                            if not _cr.success or not _cr.data: continue
+                            for _a in (_cr.data.get("articles") or []):
+                                _th = _a.get("thumbnail","")
+                                if _th and "kakaocdn" in _th:
+                                    img_url = _th; break
+                            if img_url: break
                 title_html  = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>' if url and url.startswith("http") else title
                 period_html = f'<div class="ev-period">📅 {period}</div>' if period and period not in ("","null") else ""
                 etf_html    = f'<div class="ev-etf" style="color:#4d9fff;">🎯 {etf_label}</div>' if etf_label else ""

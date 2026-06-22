@@ -66,8 +66,12 @@ def save_history(history: dict):
 
 # ── LLM 마케팅 이벤트 추출 ────────────────────────────────────────────────────
 
+_MKTG_KW = ["이벤트","프로모션","수수료","혜택","매수","경품","추첨","ETF","KODEX",
+            "TIGER","ACE","RISE","HANARO","SOL","PLUS","펀드","신규상장","출시","투자"]
+
 def extract_events(collection_results: dict, api_key: str, mode: str) -> dict:
-    """채널 수집 결과에서 LLM으로 마케팅 이벤트 구조화."""
+    """채널 수집 결과에서 키워드 1차 필터 → LLM으로 마케팅 활동 구조화.
+    이벤트만 아니라 모든 마케팅 활동(유튜브 영상, 콘텐츠 등) 포함."""
     texts = []
     for r in collection_results.values():
         ok = getattr(r, "success", None)
@@ -77,24 +81,25 @@ def extract_events(collection_results: dict, api_key: str, mode: str) -> dict:
             continue
         d = r.data
         label = f"[{r.channel_name}]"
-        if "raw_text" in d:
-            texts.append(f"{label}\n{d['raw_text'][:600]}")
-        elif "videos" in d:
-            lines = [f"- {v['title']}" for v in d["videos"][:5]]
-            if lines:
-                texts.append(f"{label}\n" + "\n".join(lines))
-        elif "event_details" in d:
-            lines = [f"- {e['title']}" for e in d["event_details"][:5]]
-            if lines:
-                texts.append(f"{label}\n" + "\n".join(lines))
-        elif "posts" in d:
-            lines = [f"- {p['title']}" for p in d["posts"][:5]]
-            if lines:
-                texts.append(f"{label}\n" + "\n".join(lines))
-        elif "articles" in d:
-            lines = [f"- {a['title']}" for a in d["articles"][:8]]
-            if lines:
-                texts.append(f"{label}\n" + "\n".join(lines))
+        lines = []
+        # 모든 소스에서 텍스트 수집 (elif 아닌 중첩 if)
+        if "raw_text" in d and d["raw_text"]:
+            lines.append(d["raw_text"][:400])
+        for v in d.get("videos", [])[:5]:
+            if v.get("title"): lines.append(f"- {v['title']}")
+        for e in d.get("event_details", [])[:5]:
+            if e.get("title"): lines.append(f"- {e['title']}")
+        for a in d.get("articles", [])[:5]:
+            if a.get("title"): lines.append(f"- {a['title']}")
+        for p in d.get("posts", [])[:5]:
+            if p.get("title"): lines.append(f"- {p['title']}")
+        if not lines:
+            continue
+        combined = " ".join(lines)
+        # 키워드 1차 필터 — 관련 없는 채널 LLM 스킵
+        if not any(kw.lower() in combined.lower() for kw in _MKTG_KW):
+            continue
+        texts.append(f"{label}\n" + "\n".join(lines[:10]))
 
     if not texts:
         return {"marketing_detected": False, "events": [], "summary": "수집된 텍스트 없음"}
@@ -122,10 +127,17 @@ def extract_events(collection_results: dict, api_key: str, mode: str) -> dict:
 [분석 관점]
 {focus_desc}
 
-[분석 기준]
-- 마케팅 이벤트, 프로모션, ETF 매수 유도, 수수료 혜택, 신규상장 프로모션 감지
-- 시황 분석·교육 콘텐츠는 제외
-- 이벤트 기간, 대상 ETF, 핵심 혜택 조건 추출
+[마케팅 활동 포함 기준 — 이벤트만이 아닌 모든 마케팅 활동 추출]
+포함:
+- ETF 매수 유도 이벤트/프로모션/경품/수수료혜택
+- ETF 신규상장 홍보, 매수 인증 이벤트
+- ETF 투자를 유도하는 유튜브 영상·콘텐츠 (제목에서 판단)
+- 특정 ETF를 추천하거나 부각하는 모든 활동
+
+제외:
+- 순수 시황 분석 (ETF 매수 유도 없음)
+- 채용공고, 사회공헌, 기업 IR
+- 단순 뉴스 보도 (운용사/채널이 마케팅 주체 아닌 경우)
 
 JSON만 출력:
 {{
@@ -135,11 +147,11 @@ JSON만 출력:
     {{
       "channel": "채널명",
       "provider": "회사/브랜드명",
-      "title": "이벤트 제목",
+      "title": "활동 제목",
       "url": "링크 (없으면 null)",
       "marketing_type": "이벤트|프로모션|추천콘텐츠|수수료혜택|신규상장|기타",
       "event_period": "YYYY-MM-DD ~ YYYY-MM-DD (없으면 null)",
-      "event_summary": "혜택/조건 핵심 1-2문장",
+      "event_summary": "핵심 내용 1-2문장",
       "target_etf": "대상 ETF명 (없으면 null)"
     }}
   ]

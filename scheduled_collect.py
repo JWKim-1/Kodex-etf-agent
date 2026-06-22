@@ -388,6 +388,8 @@ def _run_core(week_label: str, week_start_dt: datetime, week_end_dt: datetime):
         from channel_archive import save_channel_results, save_raw_data
         if sec_results:
             save_channel_results(week_label, sec_results)
+            if api_key and entry.get("securities", {}).get("events"):
+                save_raw_data(f"sec_llm_{week_label}", entry["securities"]["events"])
         if bank_results:
             save_channel_results(f"bank_{week_label}", bank_results)
             if api_key and entry.get("bank", {}).get("events"):
@@ -395,6 +397,10 @@ def _run_core(week_label: str, week_start_dt: datetime, week_end_dt: datetime):
         if etf_results:
             save_channel_results(f"mass_{week_label}", etf_results)
             save_channel_results(f"competitor_{week_label}", etf_results)
+            if api_key and entry.get("mass", {}).get("events"):
+                save_raw_data(f"mass_llm_{week_label}", entry["mass"]["events"])
+            if api_key and entry.get("competitor", {}).get("events"):
+                save_raw_data(f"comp_llm_{week_label}", entry["competitor"]["events"])
         logger.info("channel_archive 저장 완료")
     except Exception as e:
         logger.warning(f"channel_archive 저장 실패 (무시): {e}")

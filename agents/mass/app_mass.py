@@ -155,6 +155,10 @@ with st.expander("📐 마케팅 점수(0~100) 산정 방식", expanded=False):
 
 **판정 기준:** 🟢 ≥75점 효과 있음 / 🟡 ≥60점 가능성 / ⚪ ≥40점 중립 / 🔴 <40점 경쟁사 우위
 
+**베이스라인 부족 시 (신규상장 ETF, 8주 미만) — AUM 상대강도 방식:**
+> `KODEX비율 = 개인순매수/AUM` vs `경쟁사비율 = 개인순매수/AUM` → AUM DiD → sigmoid 0~100점
+> AUM으로 체급 차이 제거. AUM DiD > 0 = KODEX 개인 자금 유입 상대 우위. ⚠️ 이번 주 단면 비교라 다른 종목 점수와 직접 비교 시 주의.
+
 *기준 컬럼: 개인 순매수 (금융투자·은행 제외)*
     """)
 
@@ -499,12 +503,15 @@ if _mass_did_key not in st.session_state:
             _m = {}
             for _, _r in _wh.iterrows():
                 _c = str(_r.get("code",""))
+                import math as _mth
+                _z2=float(_r.get("value",0) or 0)
+                _sc2=round(100/(1+_mth.exp(-_z2*1.5)),1)
+                _em2="🟢" if _sc2>=75 else "🟡" if _sc2>=60 else "⚪" if _sc2>=40 else "🔴"
                 _m[_c] = type("_R",(),{
                     "kodex_code":_c,"kodex_name":str(_r.get("name",_c)),
-                    "did_value":float(_r.get("value",0) or 0),
-                    "raw_did_value":None,"zscore":float(_r.get("value",0) or 0),
-                    "marketing_score":50.0+float(_r.get("value",0) or 0)*10,
-                    "judgement":str(_r.get("judgement","")),"judgement_emoji":"⚪",
+                    "did_value":_z2,"raw_did_value":_z2,"zscore":_z2,
+                    "marketing_score":_sc2,
+                    "judgement":str(_r.get("judgement","")),"judgement_emoji":_em2,
                     "competitors":[],"no_competitors":bool(_r.get("no_competitors",False)),
                     "notes":[],"calculation_log":[],
                 })()

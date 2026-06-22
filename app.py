@@ -715,6 +715,10 @@ with st.expander("📐 마케팅 점수(0~100) 산정 방식", expanded=False):
 
 **판정 기준:** 🟢 ≥75점 효과 있음 / 🟡 ≥60점 가능성 / ⚪ ≥40점 중립 / 🔴 <40점 경쟁사 우위
 
+**베이스라인 부족 시 (신규상장 ETF, 8주 미만) — AUM 상대강도 방식:**
+> `KODEX비율 = 순매수/AUM` vs `경쟁사비율 = 순매수/AUM` → AUM DiD → sigmoid 0~100점
+> AUM(시가총액)으로 나눠 체급 차이 제거. AUM DiD > 0 = KODEX 상대 유입 우위. ⚠️ Z-score 이력 없이 이번 주 단면만 측정하므로 다른 종목과 직접 비교 시 주의.
+
 *기준 컬럼: 금융투자 순매수 (LP 노이즈 감지 시 개인 컬럼으로 자동 전환)*
     """)
 
@@ -1344,15 +1348,20 @@ if _did_cache_key not in st.session_state:
             _hist_map = {}
             for _, _hrow in _week_hist.iterrows():
                 _code = str(_hrow.get("code",""))
+                import math as _math
+                _z = float(_hrow.get("value",0) or 0)
+                _score = round(100 / (1 + _math.exp(-_z * 1.5)), 1)
+                _j = str(_hrow.get("judgement",""))
+                _emoji = "🟢" if _score>=75 else "🟡" if _score>=60 else "⚪" if _score>=40 else "🔴"
                 _hist_map[_code] = type("_R", (), {
                     "kodex_code": _code,
                     "kodex_name": str(_hrow.get("name",_code)),
-                    "did_value": float(_hrow.get("value",0) or 0),
-                    "raw_did_value": None,
-                    "zscore": float(_hrow.get("value",0) or 0),
-                    "marketing_score": 50.0 + float(_hrow.get("value",0) or 0) * 10,
-                    "judgement": str(_hrow.get("judgement","")),
-                    "judgement_emoji": "🟢" if "효과" in str(_hrow.get("judgement","")) else "⚪",
+                    "did_value": _z,
+                    "raw_did_value": _z,
+                    "zscore": _z,
+                    "marketing_score": _score,
+                    "judgement": _j,
+                    "judgement_emoji": _emoji,
                     "competitors": [], "no_competitors": bool(_hrow.get("no_competitors",False)),
                     "notes": [], "calculation_log": [],
                     "lp": None, "current": None, "baseline": None,

@@ -277,7 +277,6 @@ with tab1:
                     if _marketing_etfs:
                         _sel.update(_mx_full[_mx_full["종목코드"].isin(_marketing_etfs) |
                                              _mx_full["종목명"].apply(lambda n: any(k in n for k in _marketing_etfs))]["종목코드"])
-                    _sel.update(_mx_full[_mx_full["종목명"].str.contains("KODEX", case=False, na=False)]["종목코드"])
                     _mx = _mx_full[_mx_full["종목코드"].isin(_sel)].copy()
                     _med_ret = _mx["수익률_pct"].median()
                     _med_net = _mx["순매수"].median()

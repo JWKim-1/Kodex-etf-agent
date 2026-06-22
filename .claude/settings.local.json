@@ -10,7 +10,25 @@
       "mcp__Claude_in_Chrome__tabs_context_mcp",
       "Bash(curl -s http://localhost:8501)",
       "Bash(del krx_data_cache.parquet)",
-      "mcp__visualize__show_widget"
+      "mcp__visualize__show_widget",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('collector.py',encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "WebSearch",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app.py',encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('agents/history/app_history.py',encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('krx_data_fetcher.py',encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('agents/competitor/app_competitor.py',encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('agents/mass/app_mass.py',encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('agents/bank/analyzer.py',encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app.py',encoding='utf-8'\\).read\\(\\)\\); ast.parse\\(open\\('agents/mass/app_mass.py',encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(streamlit run *)",
+      "Bash(python weekly_pipeline.py)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('did_calculator.py',encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('dart_lifecycle.py',encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")"
     ]
   }
 }

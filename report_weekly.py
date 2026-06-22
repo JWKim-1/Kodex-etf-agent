@@ -239,7 +239,7 @@ with tab1:
                         from llm_client import call_llm
                         with st.spinner("분석 중..."):
                             try:
-                                _insight = call_llm(_prompt, anthropic_key=api_key, max_tokens=300)
+                                _insight = call_llm(_prompt, anthropic_key=api_key, max_tokens=600)
                                 _save_report_cache(_insight_key, _insight)
                                 st.markdown(f'<div class="insight-box">{_insight}</div>', unsafe_allow_html=True)
                             except Exception as e:
@@ -561,7 +561,7 @@ with tab5:
 
                 with st.spinner("AI 분석 중..."):
                     try:
-                        md = call_llm(prompt, anthropic_key=api_key, max_tokens=1500)
+                        md = call_llm(prompt, anthropic_key=api_key, max_tokens=8000)
                         _save_report_cache(selected_week, md)
                         st.markdown(f'<div class="insight-box">', unsafe_allow_html=True)
                         st.markdown(md)

@@ -223,7 +223,9 @@ with tab1:
                     _top5_vol = df_vol.nlargest(5, "거래대금_억")[["종목명","거래대금_억"]].values.tolist() if not df_vol.empty else []
                     _ret_lines = "\n".join(f"  {n}: {v:+.2f}%" for n, v in _top5_ret)
                     _vol_lines = "\n".join(f"  {n}: {v:.0f}억" for n, v in _top5_vol)
-                    _prompt = f"""삼성자산운용 KODEX ETF 마케팅 담당자를 위한 {selected_week} 주간 시장 동향 분석입니다.
+                    from datetime import date as _date2
+                    _year2 = _date2.today().year
+                    _prompt = f"""삼성자산운용 KODEX ETF 마케팅 담당자를 위한 {_year2}년 {selected_week} 주간 시장 동향 분석입니다.
 
 수익률 Top5:
 {_ret_lines}
@@ -535,8 +537,11 @@ with tab5:
                 hist_text = "\n".join(ev_lines) or "이벤트 없음"
 
                 from llm_client import call_llm
+                from datetime import date as _date
+                _year = _date.today().year
                 prompt = f"""삼성자산운용 KODEX ETF 마케팅 전략 AI 어시스턴트입니다.
-{selected_week} 주간 데이터를 분석해 마케팅 담당자용 인사이트를 작성하세요.
+{_year}년 {selected_week} 주간 데이터를 분석해 마케팅 담당자용 인사이트를 작성하세요.
+(작성 기준: {_year}년 {selected_week})
 
 === KRX 투자자별 순매수 Top3 ===
 {krx_text}

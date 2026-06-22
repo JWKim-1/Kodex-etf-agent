@@ -508,17 +508,24 @@ with tab4:
 with tab5:
     api_key = os.getenv("ANTHROPIC_API_KEY","")
 
-    # 캐시 확인
     _rcache = _load_report_cache()
     _cached = _rcache.get(selected_week)
+
+    # 캐시 있으면 API 키 없어도 항상 표시
     if _cached and not refresh:
         st.caption("📦 저장된 AI 인사이트")
         st.markdown(f'<div class="insight-box">', unsafe_allow_html=True)
         st.markdown(_cached)
         st.markdown('</div>', unsafe_allow_html=True)
-    else:
+        # API 키 있으면 재생성 버튼 추가 제공
+        if api_key:
+            if st.button("🔄 AI 인사이트 재생성", key="regen_insight"):
+                refresh = True
+                _cached = None
+
+    if not _cached or refresh:
         if not api_key:
-            st.info("Anthropic API 키가 없어 AI 인사이트를 생성할 수 없습니다.")
+            st.info("이번 주 AI 인사이트가 아직 생성되지 않았습니다. API 키를 입력하면 생성할 수 있습니다.")
         else:
             if st.button("🤖 AI 인사이트 생성", type="primary", use_container_width=True, key="gen_insight"):
                 # 데이터 요약 준비

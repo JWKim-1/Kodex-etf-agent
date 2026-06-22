@@ -1329,6 +1329,13 @@ class DataCollector:
                     continue
                 if not any(k in title for k in ETF_KW):
                     continue
+                # 날짜 필터: 3개월 이상 지난 이벤트 제외
+                try:
+                    _evt_dt = datetime.strptime(date_str.replace("/","."), "%Y.%m.%d")
+                    if (datetime.now() - _evt_dt).days > 90:
+                        continue
+                except Exception:
+                    pass
                 seen.add(title)
                 articles.append({
                     "title": title[:80], "url": "https://securities.miraeasset.com/hki/hki7000/r05.do",
@@ -1392,6 +1399,15 @@ class DataCollector:
                     continue
                 if not any(k in title for k in ETF_KW):
                     continue
+                # 날짜 필터: 제목에 기간 있으면 3개월 지난 거 제외
+                _date_m = re.search(r"20\d{2}[./]\d{2}[./]\d{2}", title)
+                if _date_m:
+                    try:
+                        _dt = datetime.strptime(_date_m.group().replace("/","."), "%Y.%m.%d")
+                        if (datetime.now() - _dt).days > 90:
+                            continue
+                    except Exception:
+                        pass
                 seen.add(title)
                 href = a.get("href","")
                 full_url = href if href.startswith("http") else f"https://www.truefriend.com{href}"
@@ -1547,7 +1563,7 @@ class DataCollector:
         if title_kw is None:
             title_kw = ["이벤트", "EVENT", "프로모션", "매수", "경품", "혜택", "인증"]
         if skip_kw is None:
-            skip_kw  = ["종료된 이벤트", "당첨자 발표", "당첨자발표"]
+            skip_kw  = ["종료된 이벤트", "당첨자 발표", "당첨자발표", "종료 이벤트", "이벤트 종료"]
         try:
             driver = _selenium_driver()
             driver.get(url)
@@ -1704,13 +1720,21 @@ class DataCollector:
                 # 종료 이벤트 제외
                 if re.search(r"종료|당첨자", raw_title):
                     continue
-                # 기간 추출
+                # 기간 추출 + 종료일 필터
                 period = ""
                 parent = a.find_parent()
                 if parent:
                     period_m = re.search(r"\d{4}[-./]\d{2}[-./]\d{2}\s*[-~]\s*\d{4}[-./]\d{2}[-./]\d{2}", parent.get_text())
                     if period_m:
                         period = period_m.group()
+                        # 종료일이 오늘 이전이면 제외
+                        try:
+                            end_str = re.split(r"[-~]", period)[-1].strip().replace("/",".")
+                            end_dt = datetime.strptime(end_str, "%Y.%m.%d")
+                            if end_dt < datetime.now():
+                                continue
+                        except Exception:
+                            pass
                 # og:image 수집 (외부 이벤트 사이트는 이벤트별 고유 이미지 있음)
                 img_url = ""
                 try:
@@ -1859,10 +1883,18 @@ class DataCollector:
                 title = re.sub(r"\d{4}\.\d{2}\.\d{2}.*", "", title).strip()
                 if not title or len(title) < 5 or title in seen:
                     continue
-                seen.add(title)
-                full_url = f"https://www.plusetf.co.kr{href}" if href.startswith("/") else href
                 date_m = re.search(r"20\d{2}\.\d{2}\.\d{2}", raw_title)
                 period = date_m.group() if date_m else ""
+                # 날짜 필터: 3개월 이상 지난 거 제외
+                if date_m:
+                    try:
+                        _dt = datetime.strptime(date_m.group(), "%Y.%m.%d")
+                        if (datetime.now() - _dt).days > 90:
+                            continue
+                    except Exception:
+                        pass
+                seen.add(title)
+                full_url = f"https://www.plusetf.co.kr{href}" if href.startswith("/") else href
                 articles.append({"title": title[:60], "url": full_url,
                                   "thumbnail": "", "description": period})
                 raw_texts.append(title)

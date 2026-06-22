@@ -72,42 +72,25 @@ st.divider()
 
 # ── 주차별 ETF 수 추이 차트 ───────────────────────────────────────────────────
 st.subheader("📈 주차별 ETF 수 추이")
-from krx_data_fetcher import KRX_MIN_ETF_COUNT
 week_counts = [(w, len(cache[w])) for w in sorted_weeks]
-bad_week_set = {w for w, n in week_counts if n < KRX_MIN_ETF_COUNT}
 
 # 신규상장 주차 마커
 new_weeks = set(x["week"] for x in new_confirmed + new_pending)
 del_weeks = set(x["week"] for x in delist_conf + delist_pend)
 
-# 정상/빵꾸 분리
-good_counts = [(w, n) for w, n in week_counts if w not in bad_week_set]
-bad_counts  = [(w, n) for w, n in week_counts if w in bad_week_set]
-
 fig = go.Figure()
-# 정상 주차 라인
 fig.add_trace(go.Scatter(
-    x=[w for w, _ in good_counts],
-    y=[n for _, n in good_counts],
+    x=[w for w, _ in week_counts],
+    y=[n for _, n in week_counts],
     mode="lines+markers",
     line=dict(color="#60a5fa", width=2),
     marker=dict(size=6, color=[
         "#28a745" if w in new_weeks else "#dc3545" if w in del_weeks else "#60a5fa"
-        for w, _ in good_counts
+        for w, _ in week_counts
     ]),
     hovertemplate="%{x}<br>ETF %{y}개<extra></extra>",
     name="ETF 수",
 ))
-# 빵꾸 주차 점 (반투명 빨강)
-if bad_counts:
-    fig.add_trace(go.Scatter(
-        x=[w for w, _ in bad_counts],
-        y=[n for _, n in bad_counts],
-        mode="markers",
-        marker=dict(size=8, color="#f87171", opacity=0.5, symbol="x"),
-        hovertemplate="%{x}<br>ETF %{y}개 ⚠️ 수집 불완전<extra></extra>",
-        name="수집 불완전",
-    ))
 fig.update_layout(
     height=240,
     margin=dict(l=0, r=0, t=10, b=0),

@@ -71,7 +71,11 @@ st.markdown("""
     border-radius:12px; padding:12px 14px; margin:5px 0;
     border:1px solid rgba(255,255,255,0.08);
     background:rgba(255,255,255,0.03);
+    box-sizing:border-box; height:100%;
 }
+/* 카드 행 align */
+[data-testid="column"] > div { height:100%; }
+[data-testid="stVerticalBlockBorderWrapper"] { height:100%; }
 .ev-type { font-size:.65rem; font-weight:700; padding:2px 8px; border-radius:100px;
     display:inline-block; margin-bottom:4px; }
 .ev-title { font-size:.88rem; font-weight:700; color:#e8eaed; margin:3px 0; }
@@ -91,7 +95,7 @@ st.markdown("""
 _TYPE_COLOR = {"이벤트":"#00c6ff","프로모션":"#05b169","추천콘텐츠":"#f0c040","수수료혜택":"#a78bfa"}
 _TYPE_ICON  = {"이벤트":"🎁","프로모션":"💰","추천콘텐츠":"📺","수수료혜택":"🎯"}
 _SESS_COLOR = {"securities":"#4d9fff","bank":"#05b169","mass":"#f0c040","competitor":"#f43f5e"}
-_SESS_LABEL = {"securities":"📈 증권사","bank":"🏦 은행","mass":"🎯 개인(KODEX)","competitor":"🏢 경쟁사"}
+_SESS_LABEL = {"securities":"📈 증권","bank":"🏦 은행","mass":"🎯 개인(KODEX)","competitor":"🏢 경쟁사"}
 _PROV_COLOR = {
     "KODEX":"#4d9fff","TIGER":"#ff8c42","ACE":"#05b169",
     "RISE":"#a78bfa","HANARO":"#00c6ff","SOL":"#f43f5e","PLUS":"#fb923c",
@@ -254,8 +258,25 @@ with tab1:
                 _krx["종목코드"] = _krx["종목코드"].astype(str).str.strip()
                 _ret = trend_df[["종목코드","종목명","수익률_pct"]].copy()
                 _ret["종목코드"] = _ret["종목코드"].astype(str).str.strip()
-                _mx = pd.merge(_krx[["종목코드","순매수"]], _ret, on="종목코드", how="inner").dropna(subset=["수익률_pct","순매수"])
-                if not _mx.empty:
+                _mx_full = pd.merge(_krx[["종목코드","순매수"]], _ret, on="종목코드", how="inner").dropna(subset=["수익률_pct","순매수"])
+                if not _mx_full.empty:
+                    # 수익 Top10 + 하위5 + 순매수 Top10 + 하위5 + 마케팅 감지 종목 + KODEX 전체
+                    _marketing_etfs = set()
+                    for _ev in all_events:
+                        _etf_str = _ev.get("target_etf","") or ""
+                        for _part in re.split(r"[,/\s]+", _etf_str):
+                            _part = _part.strip()
+                            if _part: _marketing_etfs.add(_part)
+                    _sel = set()
+                    _sel.update(_mx_full.nlargest(10, "수익률_pct")["종목코드"])
+                    _sel.update(_mx_full.nsmallest(5, "수익률_pct")["종목코드"])
+                    _sel.update(_mx_full.nlargest(10, "순매수")["종목코드"])
+                    _sel.update(_mx_full.nsmallest(5, "순매수")["종목코드"])
+                    if _marketing_etfs:
+                        _sel.update(_mx_full[_mx_full["종목코드"].isin(_marketing_etfs) |
+                                             _mx_full["종목명"].apply(lambda n: any(k in n for k in _marketing_etfs))]["종목코드"])
+                    _sel.update(_mx_full[_mx_full["종목명"].str.contains("KODEX", case=False, na=False)]["종목코드"])
+                    _mx = _mx_full[_mx_full["종목코드"].isin(_sel)].copy()
                     _med_ret = _mx["수익률_pct"].median()
                     _med_net = _mx["순매수"].median()
                     def _quad(row):
@@ -270,7 +291,7 @@ with tab1:
                     fig3 = go.Figure()
                     _bg = _mx[~_mx["is_kodex"]]
                     fig3.add_trace(go.Scatter(x=_bg["순매수"],y=_bg["수익률_pct"],mode="markers",
-                        marker=dict(size=4,color="rgba(150,150,150,0.2)"),name="기타",showlegend=True,
+                        marker=dict(size=5,color="rgba(150,150,150,0.35)"),name="기타",showlegend=True,
                         hovertemplate="%{customdata[0]}<extra></extra>",customdata=_bg[["종목명"]].values))
                     _kx = _mx[_mx["is_kodex"]]
                     for strat, color in _Q_C.items():
@@ -308,29 +329,31 @@ with tab2:
     if not all_events:
         st.info(f"이번 주({selected_week}) 감지된 마케팅 이벤트 없음")
     else:
-        # 채널별 이벤트 카드
+        # 채널별 이벤트 카드 — 3열 그리드
         for sk, slabel in _SESS_LABEL.items():
             sess_events = [e for e in all_events if e.get("_sess")==sk]
             if not sess_events: continue
             color = _SESS_COLOR[sk]
             st.markdown(f'<div style="font-size:1rem;font-weight:700;color:{color};margin:14px 0 6px;">{slabel}</div>', unsafe_allow_html=True)
-            for ev in sess_events:
+            _gcols = st.columns(3)
+            for i, ev in enumerate(sess_events):
                 mtype = ev.get("marketing_type","기타")
                 tc = _TYPE_COLOR.get(mtype,"#aaa")
                 icon = _TYPE_ICON.get(mtype,"📋")
                 title = _html.escape(ev.get("title","")[:60])
                 period = ev.get("event_period","") or ""
                 etf = ev.get("target_etf","") or ""
-                summary = _html.escape((ev.get("event_summary") or "")[:120])
+                summary = _html.escape((ev.get("event_summary") or "")[:100])
                 url = ev.get("url","") or ""
                 title_html = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>' if url.startswith("http") else title
-                st.markdown(
-                    f'<div class="ev-card" style="border-color:{color}33;background:{color}06;">'
-                    f'<span class="ev-type" style="background:{tc}18;color:{tc};border:1px solid {tc}44;">{icon} {mtype}</span>'
-                    f'<div class="ev-title">{title_html}</div>'
-                    f'<div class="ev-meta">{("📅 "+period+" · ") if period else ""}{"🎯 "+etf if etf else ""}</div>'
-                    f'<div style="font-size:.76rem;color:#aaa;margin-top:4px;">{summary}</div>'
-                    f'</div>', unsafe_allow_html=True)
+                with _gcols[i % 3]:
+                    st.markdown(
+                        f'<div class="ev-card" style="border-color:{color}33;background:{color}06;height:100%;">'
+                        f'<span class="ev-type" style="background:{tc}18;color:{tc};border:1px solid {tc}44;">{icon} {mtype}</span>'
+                        f'<div class="ev-title">{title_html}</div>'
+                        f'<div class="ev-meta">{("📅 "+period+" · ") if period else ""}{"🎯 "+etf if etf else ""}</div>'
+                        f'<div style="font-size:.76rem;color:#aaa;margin-top:4px;">{summary}</div>'
+                        f'</div>', unsafe_allow_html=True)
 
     # 유튜브/카카오 썸네일
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
@@ -341,15 +364,17 @@ with tab2:
         sess = hist_entry.get(sk) or {}
         raw = sess.get("raw") or {}
         all_videos = []
+        _seen_thumbs = set()
         for ch_key, ch_data in raw.items():
             for v in ch_data.get("videos",[]):
-                if v.get("thumbnail") and v.get("title"):
+                thumb = v.get("thumbnail","")
+                if v.get("title") and thumb and thumb not in _seen_thumbs:
+                    _seen_thumbs.add(thumb)
                     all_videos.append(v)
         if not all_videos: continue
         thumb_found = True
         color = _SESS_COLOR[sk]
         st.markdown(f'<div style="font-size:.9rem;font-weight:700;color:{color};margin:10px 0 6px;">{slabel}</div>', unsafe_allow_html=True)
-        # ETF 관련 우선 정렬
         all_videos.sort(key=lambda v: (0 if v.get("is_etf_related") else 1))
         cols = st.columns(4)
         for i, v in enumerate(all_videos[:8]):
@@ -414,12 +439,37 @@ with tab4:
     comp_events = (comp_sess.get("events") or {}).get("events") or []
     comp_raw = comp_sess.get("raw") or {}
 
+    # marketing_history에 없으면 channel_archive에서 직접 읽기
+    if not comp_events:
+        import json as _json
+        try:
+            _arch_all = _json.loads(open(os.path.join(_ROOT, "channel_archive.json"), encoding="utf-8").read())
+        except Exception:
+            _arch_all = {}
+        for _wk in [f"competitor_{selected_week}", f"competitor_{hist_week}"]:
+            _arch_entry = _arch_all.get(_wk, {})
+            _arch_channels = _arch_entry.get("channels", {})
+            if _arch_channels:
+                # channels[key]["data"]["event_details"] 구조에서 이벤트 추출
+                for _ch_key, _ch_snap in _arch_channels.items():
+                    _ch_data = _ch_snap.get("data") or {}
+                    for _ev in _ch_data.get("event_details", []):
+                        _ev2 = dict(_ev)
+                        _ev2.setdefault("marketing_type", "이벤트")
+                        _ev2.setdefault("channel", _ch_snap.get("channel_name", _ch_key))
+                        comp_events.append(_ev2)
+                if not comp_raw:
+                    comp_raw = {k: v.get("data") or {} for k, v in _arch_channels.items()}
+                if comp_events:
+                    break
+
     if not comp_events and not comp_raw:
         st.info("경쟁사 채널 수집 데이터 없음")
     else:
         if comp_events:
             st.markdown("#### 🏢 경쟁사 마케팅 이벤트")
-            for ev in comp_events:
+            _comp_gcols = st.columns(3)
+            for _ci, ev in enumerate(comp_events):
                 mtype = ev.get("marketing_type","기타")
                 tc = _TYPE_COLOR.get(mtype,"#aaa")
                 icon = _TYPE_ICON.get(mtype,"📋")
@@ -429,13 +479,14 @@ with tab4:
                 url = ev.get("url","") or ""
                 _, pc = _prov(channel)
                 title_html = f'<a href="{url}" target="_blank" style="color:#e8eaed;text-decoration:none;">{title}</a>' if url.startswith("http") else title
-                st.markdown(
-                    f'<div class="ev-card" style="border-color:{pc}33;background:{pc}06;">'
-                    f'<span class="ev-type" style="background:{tc}18;color:{tc};border:1px solid {tc}44;">{icon} {mtype}</span>'
-                    f'<span style="font-size:.65rem;color:{pc};margin-left:8px;">{_html.escape(channel)}</span>'
-                    f'<div class="ev-title">{title_html}</div>'
-                    f'<div style="font-size:.76rem;color:#aaa;margin-top:3px;">{summary}</div>'
-                    f'</div>', unsafe_allow_html=True)
+                with _comp_gcols[_ci % 3]:
+                    st.markdown(
+                        f'<div class="ev-card" style="border-color:{pc}33;background:{pc}06;height:100%;">'
+                        f'<span class="ev-type" style="background:{tc}18;color:{tc};border:1px solid {tc}44;">{icon} {mtype}</span>'
+                        f'<span style="font-size:.65rem;color:{pc};margin-left:8px;">{_html.escape(channel)}</span>'
+                        f'<div class="ev-title">{title_html}</div>'
+                        f'<div style="font-size:.76rem;color:#aaa;margin-top:3px;">{summary}</div>'
+                        f'</div>', unsafe_allow_html=True)
 
         # 경쟁사 채널별 활동 요약
         if comp_raw:

@@ -580,28 +580,180 @@ with tab5:
                     except Exception as e:
                         st.error(f"생성 실패: {e}")
 
-# ── 다운로드 ─────────────────────────────────────────────────────────────────
+# ── 종합 리포트 다운로드 ──────────────────────────────────────────────────────
 st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
-_ai_md = _load_report_cache().get(selected_week, "")
-if _ai_md:
-    try:
-        import markdown as _mdlib
-        _body = _mdlib.markdown(_ai_md, extensions=["tables","fenced_code"])
-    except:
-        _body = f"<pre>{_html.escape(_ai_md)}</pre>"
-    _html_full = f"""<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">
+
+def _build_full_report_html():
+    from datetime import date as _d
+    import plotly.io as pio
+    parts = []
+    _year = _d.today().year
+
+    # ── CSS ──
+    parts.append(f"""<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">
 <title>KODEX 주간 리포트 {selected_week}</title>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <style>
-body{{font-family:'Pretendard','Noto Sans KR',sans-serif;max-width:860px;margin:40px auto;padding:0 24px;color:#1a1a2e;line-height:1.7;}}
-h1{{color:#0052ff;border-bottom:2px solid #0052ff;padding-bottom:8px;}}
-h2{{color:#1f6feb;margin-top:32px;}} h3{{color:#3b82f6;}}
-table{{border-collapse:collapse;width:100%;margin:16px 0;}}
-th{{background:#0052ff;color:white;padding:8px 12px;}}
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
+body{{font-family:'Pretendard',sans-serif;max-width:1100px;margin:40px auto;padding:0 28px;color:#1a1a2e;line-height:1.7;background:#fff;}}
+h1{{color:#0052ff;border-bottom:3px solid #0052ff;padding-bottom:10px;font-size:1.8rem;}}
+h2{{color:#1f3c88;margin-top:40px;font-size:1.2rem;border-left:4px solid #0052ff;padding-left:12px;}}
+h3{{color:#2563eb;margin-top:24px;font-size:1rem;}}
+.week-badge{{display:inline-block;background:#e8f0fe;color:#0052ff;border-radius:100px;padding:4px 16px;font-size:.85rem;font-weight:700;margin-bottom:24px;}}
+.section{{margin:32px 0;}}
+.chart-row{{display:flex;gap:20px;flex-wrap:wrap;margin:16px 0;}}
+.chart-col{{flex:1;min-width:300px;}}
+.ev-grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin:12px 0;}}
+.ev-card{{border:1px solid #dde;border-radius:10px;padding:12px 14px;background:#f8faff;}}
+.ev-type{{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:100px;display:inline-block;margin-bottom:6px;background:#e8f0fe;color:#0052ff;}}
+.ev-title{{font-size:.9rem;font-weight:700;color:#1a1a2e;margin:4px 0;}}
+.ev-meta{{font-size:.75rem;color:#666;}}
+.ev-sum{{font-size:.78rem;color:#444;margin-top:4px;}}
+.sess-label{{font-size:.95rem;font-weight:700;margin:18px 0 8px;}}
+table{{border-collapse:collapse;width:100%;margin:12px 0;font-size:.88rem;}}
+th{{background:#0052ff;color:white;padding:8px 12px;text-align:left;}}
 td{{border:1px solid #dde;padding:8px 12px;}}
 tr:nth-child(even){{background:#f5f8ff;}}
-blockquote{{border-left:4px solid #0052ff;margin:0;padding-left:16px;color:#555;}}
+.insight-box{{background:linear-gradient(135deg,#e8f0fe,#ede9fe);border:1px solid #a5b4fc;border-radius:14px;padding:24px 28px;margin:16px 0;}}
+.insight-box h2,.insight-box h3{{color:#1e40af;border:none;padding:0;}}
+.divider{{height:1px;background:#e5e7eb;margin:32px 0;}}
+.footer{{text-align:center;color:#888;font-size:.8rem;margin-top:48px;padding-top:16px;border-top:1px solid #e5e7eb;}}
 </style></head><body>
-<h1>KODEX 주간 리포트 — {selected_week}</h1>{_body}</body></html>"""
-    st.download_button("📥 AI 인사이트 HTML 다운로드", data=_html_full.encode("utf-8"),
-        file_name=f"kodex_report_{selected_week.replace('.','_')}.html",
-        mime="text/html", use_container_width=True)
+<h1>📊 KODEX ETF 주간 마케팅 리포트</h1>
+<span class="week-badge">📅 {_year}년 {selected_week}</span>
+""")
+
+    # ── 섹션1: 시장 트렌드 ──
+    parts.append('<div class="section"><h2>📊 시장 트렌드</h2>')
+    if not trend_df.empty and "수익률_pct" in trend_df.columns:
+        df_r = trend_df.dropna(subset=["수익률_pct"])
+        top10r = df_r.nlargest(10,"수익률_pct")
+        fig_r = go.Figure(go.Bar(
+            x=top10r["수익률_pct"], y=top10r["종목명"].str[:18],
+            orientation="h", marker=dict(color="#0052ff",opacity=0.8),
+            text=[f"{v:+.2f}%" for v in top10r["수익률_pct"]], textposition="outside"))
+        fig_r.update_layout(height=320,margin=dict(l=0,r=60,t=30,b=0),
+            title="수익률 Top 10",paper_bgcolor="white",plot_bgcolor="white",
+            font=dict(color="#1a1a2e"),xaxis=dict(ticksuffix="%"),yaxis=dict(autorange="reversed"))
+        parts.append('<div class="chart-row">')
+        parts.append(f'<div class="chart-col">{pio.to_html(fig_r,full_html=False,include_plotlyjs=False)}</div>')
+
+        if "거래대금_억" in trend_df.columns:
+            df_v = trend_df[trend_df["거래대금_억"]>0]
+            top10v = df_v.nlargest(10,"거래대금_억")
+            vol_labels = [f"{v/10000:.1f}조" if v>=10000 else f"{v:.0f}억" for v in top10v["거래대금_억"]]
+            fig_v = go.Figure(go.Bar(
+                x=top10v["거래대금_억"], y=top10v["종목명"].str[:18],
+                orientation="h", marker=dict(color="#10b981",opacity=0.8),
+                text=vol_labels, textposition="outside"))
+            fig_v.update_layout(height=320,margin=dict(l=0,r=80,t=30,b=0),
+                title="거래대금 Top 10",paper_bgcolor="white",plot_bgcolor="white",
+                font=dict(color="#1a1a2e"),xaxis=dict(title="억원"),yaxis=dict(autorange="reversed"))
+            parts.append(f'<div class="chart-col">{pio.to_html(fig_v,full_html=False,include_plotlyjs=False)}</div>')
+        parts.append('</div>')
+
+        _mi = _load_report_cache().get(f"market_insight_{selected_week}","")
+        if _mi:
+            parts.append(f'<div class="insight-box"><strong>💡 시장요인 인사이트</strong><br>{_html.escape(_mi)}</div>')
+    else:
+        parts.append("<p>시장 트렌드 데이터 없음</p>")
+    parts.append('</div><div class="divider"></div>')
+
+    # ── 섹션2: 마케팅 활동 ──
+    parts.append('<div class="section"><h2>📣 마케팅 활동</h2>')
+    _SESS_COLOR_HEX = {"securities":"#0052ff","bank":"#10b981","mass":"#f59e0b","competitor":"#f43f5e"}
+    if all_events:
+        for sk, slabel in _SESS_LABEL.items():
+            sevs = [e for e in all_events if e.get("_sess")==sk]
+            if not sevs: continue
+            c = _SESS_COLOR_HEX.get(sk,"#888")
+            parts.append(f'<div class="sess-label" style="color:{c};">{slabel}</div><div class="ev-grid">')
+            for ev in sevs:
+                mtype = _html.escape(ev.get("marketing_type","기타"))
+                title = _html.escape(ev.get("title","")[:60])
+                period = _html.escape(ev.get("event_period","") or "")
+                etf = _html.escape(ev.get("target_etf","") or "")
+                summ = _html.escape((ev.get("event_summary") or "")[:120])
+                url = ev.get("url","") or ""
+                t_html = f'<a href="{url}" target="_blank" style="color:#1a1a2e;text-decoration:none;">{title}</a>' if url.startswith("http") else title
+                parts.append(f'<div class="ev-card"><span class="ev-type">{mtype}</span>'
+                              f'<div class="ev-title">{t_html}</div>'
+                              f'<div class="ev-meta">{("📅 "+period+" · ") if period else ""}{"🎯 "+etf if etf else ""}</div>'
+                              f'<div class="ev-sum">{summ}</div></div>')
+            parts.append('</div>')
+    else:
+        parts.append("<p>이번 주 감지된 마케팅 이벤트 없음</p>")
+    parts.append('</div><div class="divider"></div>')
+
+    # ── 섹션3: 수급 분석 ──
+    parts.append('<div class="section"><h2>💰 수급 분석</h2>')
+    if not krx_df.empty:
+        num_cols = [c for c in ["금융투자","은행","개인"] if c in krx_df.columns]
+        col_colors = {"금융투자":"#0052ff","은행":"#10b981","개인":"#f59e0b"}
+        parts.append('<div class="chart-row">')
+        for col in num_cols:
+            top = krx_df.nlargest(10,col)[["종목명",col]].reset_index(drop=True)
+            fig_s = go.Figure(go.Bar(
+                x=top[col]/1000, y=top["종목명"].str[:18], orientation="h",
+                marker=dict(color=col_colors.get(col,"#888"),opacity=0.8),
+                text=[f"{v/1000:,.0f}M" for v in top[col]], textposition="outside"))
+            fig_s.update_layout(height=280,margin=dict(l=0,r=80,t=30,b=0),
+                title=f"{col} 순매수 Top 10",paper_bgcolor="white",plot_bgcolor="white",
+                font=dict(color="#1a1a2e"),xaxis=dict(title="백만원"),yaxis=dict(autorange="reversed"))
+            parts.append(f'<div class="chart-col">{pio.to_html(fig_s,full_html=False,include_plotlyjs=False)}</div>')
+        parts.append('</div>')
+        kodex = krx_df[krx_df["종목명"].str.contains("KODEX",case=False,na=False)]
+        if not kodex.empty and num_cols:
+            parts.append('<h3>🔵 KODEX ETF 투자자별 순매수 합산</h3><table><tr>'+''.join(f'<th>{c}</th>' for c in num_cols)+'</tr><tr>'
+                +''.join(f'<td>{kodex[c].sum()/1e6:,.1f}억원</td>' for c in num_cols)+'</tr></table>')
+    else:
+        parts.append("<p>KRX 수급 데이터 없음</p>")
+    parts.append('</div><div class="divider"></div>')
+
+    # ── 섹션4: 경쟁사 동향 ──
+    parts.append('<div class="section"><h2>🏢 경쟁사 동향</h2>')
+    comp_evs = [e for e in all_events if e.get("_sess")=="competitor"]
+    if comp_evs:
+        parts.append('<div class="ev-grid">')
+        for ev in comp_evs:
+            ch = _html.escape(ev.get("channel","") or ev.get("provider","") or "")
+            mtype = _html.escape(ev.get("marketing_type","기타"))
+            title = _html.escape(ev.get("title","")[:60])
+            summ = _html.escape((ev.get("event_summary") or "")[:100])
+            url = ev.get("url","") or ""
+            t_html = f'<a href="{url}" target="_blank" style="color:#1a1a2e;text-decoration:none;">{title}</a>' if url.startswith("http") else title
+            parts.append(f'<div class="ev-card"><span class="ev-type">{mtype}</span>'
+                          f'<span style="font-size:.7rem;color:#f43f5e;margin-left:6px;">{ch}</span>'
+                          f'<div class="ev-title">{t_html}</div>'
+                          f'<div class="ev-sum">{summ}</div></div>')
+        parts.append('</div>')
+    else:
+        parts.append("<p>경쟁사 이벤트 데이터 없음</p>")
+    parts.append('</div><div class="divider"></div>')
+
+    # ── 섹션5: AI 인사이트 ──
+    _ai_md = _load_report_cache().get(selected_week,"")
+    if _ai_md:
+        parts.append('<div class="section"><h2>🤖 AI 인사이트</h2><div class="insight-box">')
+        try:
+            import markdown as _mdlib
+            parts.append(_mdlib.markdown(_ai_md, extensions=["tables","fenced_code"]))
+        except:
+            parts.append(f"<pre>{_html.escape(_ai_md)}</pre>")
+        parts.append('</div></div>')
+
+    parts.append(f'<div class="footer">KODEX ETF 마케팅 모니터링 AI Agent · Powered by Claude · {_year}</div>')
+    parts.append('</body></html>')
+    return "".join(parts)
+
+if st.button("📥 종합 리포트 HTML 다운로드", type="primary", use_container_width=True, key="dl_full"):
+    with st.spinner("리포트 생성 중..."):
+        _full_html = _build_full_report_html()
+    st.download_button(
+        "⬇️ 다운로드",
+        data=_full_html.encode("utf-8"),
+        file_name=f"kodex_weekly_report_{selected_week.replace('.','_')}.html",
+        mime="text/html",
+        use_container_width=True,
+        key="dl_full_btn"
+    )

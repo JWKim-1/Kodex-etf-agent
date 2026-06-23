@@ -162,7 +162,20 @@ with st.expander("📐 마케팅 점수(0~100) 산정 방식", expanded=False):
 
 # 아카이브 있으면 버튼 없이 자동 진행
 if not st.session_state.get("mass_analysis_run", False):
-    if has_archive(f"mass_{current_sheet}") or has_archive(f"mass_llm_{current_sheet}"):
+    from scheduled_collect import load_history as _load_hist
+    _hist = _load_hist()
+    _hist_week = current_sheet
+    if _hist_week not in _hist:
+        # 날짜가 가까운 주차 폴백
+        from krx_data_fetcher import _parse_week_label as _pwl
+        _target = _pwl(current_sheet)
+        if _target:
+            for _hw in _hist:
+                _hd = _pwl(_hw)
+                if _hd and abs((_hd - _target).days) <= 7:
+                    _hist_week = _hw; break
+    _has_mass_hist = bool(_hist.get(_hist_week, {}).get("mass"))
+    if has_archive(f"mass_{current_sheet}") or has_archive(f"mass_llm_{current_sheet}") or _has_mass_hist:
         st.session_state["mass_analysis_run"] = True
 
 if not st.session_state.get("mass_analysis_run", False):
@@ -437,7 +450,7 @@ with st.expander("🔗 비교군 매핑", expanded=True):
         st.divider()
 
 # ════════════════════════════════════════════════════════════════════
-# STEP 4: 베이스라인 (직전 4주 평균)
+# STEP 4: 베이스라인 (직전 8주 평균)
 # ════════════════════════════════════════════════════════════════════
 st.markdown('<div class="step-header">Step 4 · 베이스라인 (직전 8주 평균) · 개인 순매수</div>', unsafe_allow_html=True)
 

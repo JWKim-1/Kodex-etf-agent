@@ -356,13 +356,15 @@ def save_trend_cache(week_label: str, df: pd.DataFrame):
     """주간 시장 트렌드 데이터 캐시에 추가/갱신.
     네이버금융은 실시간 데이터라 해당 주차에 수집한 것만 유효.
     수집 시점이 week_label 범위 밖이면 저장 거부."""
-    from datetime import date as _date
+    from datetime import date as _date, timedelta as _td
     today = _date.today()
     week_start = _parse_week_label(week_label)
     if week_start:
-        week_end = week_start + __import__("datetime").timedelta(days=6)
-        if not (week_start <= today <= week_end):
-            print(f"트렌드 캐시 저장 거부: {week_label} 범위({week_start}~{week_end}) 밖에서 수집 (오늘={today})")
+        # 금요일 장마감 후 수집 기준 → 해당 주 월~다음주 화요일까지 허용
+        week_end = week_start + _td(days=4)   # 금요일
+        allow_until = week_end + _td(days=4)  # 다음주 화요일까지
+        if not (week_start <= today <= allow_until):
+            print(f"트렌드 캐시 저장 거부: {week_label} 허용범위({week_start}~{allow_until}) 밖 (오늘={today})")
             return
 
     existing = load_trend_cache()

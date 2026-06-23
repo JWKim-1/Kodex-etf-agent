@@ -501,32 +501,22 @@ with st.expander("📊 베이스라인 상세", expanded=False):
 # ════════════════════════════════════════════════════════════════════
 st.markdown('<div class="step-header">Step 5 · DiD 계산 (이중차분법) · 개인 순매수</div>', unsafe_allow_html=True)
 
+import pickle as _pickle, math as _mth
 _mass_did_key = f"mass_did_{current_sheet}"
+_pkl_dir = os.path.join(_ROOT, ".did_cache")
+os.makedirs(_pkl_dir, exist_ok=True)
+_pkl_path = os.path.join(_pkl_dir, f"mass_{current_sheet.replace('.','_').replace('-','_')}.pkl")
 did_results = None
 
-if _mass_did_key not in st.session_state:
-    # did_history.parquet에서 mass 채널 결과 로드
+# pkl 캐시 우선 로드 (session_state보다 영구적)
+if _mass_did_key not in st.session_state and os.path.exists(_pkl_path):
     try:
-        import pandas as _pd_m
-        _dh = _pd_m.read_parquet(os.path.join(_ROOT, "did_history.parquet"))
-        _wh = _dh[(_dh["week"]==current_sheet)&(_dh["channel"]=="mass")&(_dh["code"].astype(str).isin([str(c) for c in target_codes]))]
-        if not _wh.empty and all(str(c) in _wh["code"].astype(str).tolist() for c in target_codes):
-            _m = {}
-            for _, _r in _wh.iterrows():
-                _c = str(_r.get("code",""))
-                import math as _mth
-                _z2=float(_r.get("value",0) or 0)
-                _sc2=round(100/(1+_mth.exp(-_z2*1.5)),1)
-                _em2="🟢" if _sc2>=75 else "🟡" if _sc2>=60 else "⚪" if _sc2>=40 else "🔴"
-                _m[_c] = type("_R",(),{
-                    "kodex_code":_c,"kodex_name":str(_r.get("name",_c)),
-                    "did_value":_z2,"raw_did_value":_z2,"zscore":_z2,
-                    "marketing_score":_sc2,
-                    "judgement":str(_r.get("judgement","")),"judgement_emoji":_em2,
-                    "competitors":[],"no_competitors":bool(_r.get("no_competitors",False)),
-                    "notes":[],"calculation_log":[],
-                })()
-            if _m: st.session_state[_mass_did_key] = _m
+        with open(_pkl_path, "rb") as _pf:
+            _cached_pkl = _pickle.load(_pf)
+        # target_codes에 해당하는 것만 필터
+        _filtered = {c: v for c, v in _cached_pkl.items() if c in [str(x) for x in target_codes]}
+        if _filtered:
+            st.session_state[_mass_did_key] = _filtered
     except Exception:
         pass
 
@@ -534,12 +524,24 @@ if _mass_did_key in st.session_state:
     did_results = st.session_state[_mass_did_key]
     st.caption(f"📦 저장된 분석 결과 사용 ({current_sheet})")
     if st.button("🔄 DiD 재계산", key="mass_rerun_did"):
+        if os.path.exists(_pkl_path): os.remove(_pkl_path)
         del st.session_state[_mass_did_key]; st.rerun()
 else:
     with st.spinner("DiD 분석 중..."):
         did_results = analyzer.analyze(all_sheets, target_codes, current_sheet)
     if did_results:
         st.session_state[_mass_did_key] = did_results
+        try:
+            # 기존 pkl 있으면 병합, 없으면 새로 저장
+            _existing = {}
+            if os.path.exists(_pkl_path):
+                with open(_pkl_path, "rb") as _pf:
+                    _existing = _pickle.load(_pf)
+            _existing.update(did_results)
+            with open(_pkl_path, "wb") as _pf:
+                _pickle.dump(_existing, _pf)
+        except Exception:
+            pass
 
 if not did_results:
     st.warning("DiD 계산 결과 없음")

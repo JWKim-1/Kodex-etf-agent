@@ -589,12 +589,13 @@ class DataCollector:
                     snippet = item.get("snippet", {})
                     title = snippet.get("title", "")
                     pub = snippet.get("publishedAt", "")
-                    stats_r = yt.videos().list(part="statistics", id=vid_id).execute()
-                    stats = stats_r["items"][0]["statistics"] if stats_r.get("items") else {}
+                    thumb = (snippet.get("thumbnails", {}).get("medium", {}).get("url")
+                             or f"https://img.youtube.com/vi/{vid_id}/mqdefault.jpg")
                     is_etf = bool(re.search(r"ETF|KODEX|코덱스|배당|채권|지수|리츠", title, re.I))
                     videos.append(
-                        {"title": title, "published_at": pub, "view_count": int(stats.get("viewCount", 0)),
-                         "is_etf_related": is_etf, "url": f"https://youtu.be/{vid_id}"}
+                        {"title": title, "published_at": pub,
+                         "thumbnail": thumb, "is_etf_related": is_etf,
+                         "url": f"https://youtu.be/{vid_id}"}
                     )
                 return ChannelResult(ch, name, True, data={"source": "api", "videos": videos})
             except Exception as e:
@@ -1330,12 +1331,13 @@ class DataCollector:
                 if not any(k in title for k in ETF_KW):
                     continue
                 # 날짜 필터: 이미 종료된 이벤트 제외 (종료일 < week_start)
-                try:
-                    _evt_dt = datetime.strptime(date_str.replace("/","."), "%Y.%m.%d")
-                    if _evt_dt < self.week_start:
-                        continue
-                except Exception:
-                    pass
+                if self.week_start:
+                    try:
+                        _evt_dt = datetime.strptime(date_str.replace("/","."), "%Y.%m.%d")
+                        if _evt_dt < self.week_start:
+                            continue
+                    except Exception:
+                        pass
                 seen.add(title)
                 articles.append({
                     "title": title[:80], "url": "https://securities.miraeasset.com/hki/hki7000/r05.do",
@@ -1401,7 +1403,7 @@ class DataCollector:
                     continue
                 # 날짜 필터: 이번 주 이전에 끝난 이벤트 제외 (기간종료일 < week_start)
                 _date_m = re.search(r"20\d{2}[./]\d{2}[./]\d{2}", title)
-                if _date_m:
+                if _date_m and self.week_start:
                     try:
                         _dt = datetime.strptime(_date_m.group().replace("/","."), "%Y.%m.%d")
                         if _dt < self.week_start:
@@ -1727,11 +1729,12 @@ class DataCollector:
                     period_m = re.search(r"\d{4}[-./]\d{2}[-./]\d{2}\s*[-~]\s*\d{4}[-./]\d{2}[-./]\d{2}", parent.get_text())
                     if period_m:
                         period = period_m.group()
-                        # 종료일이 오늘 이전이면 제외
+                        # 종료일이 week_start 이전이면 제외
                         try:
                             end_str = re.split(r"[-~]", period)[-1].strip().replace("/",".")
                             end_dt = datetime.strptime(end_str, "%Y.%m.%d")
-                            if end_dt < datetime.now():
+                            _cutoff = self.week_start or datetime.now()
+                            if end_dt < _cutoff:
                                 continue
                         except Exception:
                             pass

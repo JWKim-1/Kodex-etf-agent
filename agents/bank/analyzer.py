@@ -926,12 +926,11 @@ class MarketingAnalyzer:
         else:           return "경쟁사 우위 — 경쟁 마케팅 의심", "🔴"
 
     def _judge_score(self, score: float):
-        """sigmoid 0~100점 기반 판정 (3채널 공통)."""
-        if score >= 75:   return "마케팅 효과 있음", "🟢"
-        elif score >= 60: return "효과 있을 수 있음", "🟡"
-        elif score >= 40: return "중립", "⚪"
-        elif score >= 25: return "경쟁사 우위", "🔴"
-        else:             return "경쟁사 강세", "🔴"
+        """sigmoid 점수 기반 판정 — 은행 채널 기준 (Z≥2.0=🟢, Z≥1.5=🟡, Z<-1.5=🔴)."""
+        if score >= 95:   return "강한 이상 감지 — 은행 마케팅 거의 확실", "🟢"
+        elif score >= 90: return "이상 감지 — 역추적 권고", "🟡"
+        elif score >= 10: return "정상 변동 범위", "⚪"
+        else:             return "경쟁사 우위 — 경쟁 마케팅 의심", "🔴"
 
 
 # ── LLM ETF 추출 ──────────────────────────────────────────────────────────────

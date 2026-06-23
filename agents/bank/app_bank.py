@@ -85,7 +85,7 @@ AUM으로 나누는 이유: ETF 크기가 달라도 동등하게 비교 가능 (
 - **AUM DiD < 0** → 경쟁사에 상대적으로 더 많은 자금 유입
 - sigmoid 변환 후 0~100점으로 표현 (50점 = 경쟁사와 동일 수준)
 
-**판정 기준:** 🟢 ≥75점 마케팅 효과 강함 / 🟡 ≥60점 이상 감지 / ⚪ ≥40점 정상 / 🔴 <40점 경쟁사 우위
+**판정 기준:** 🟢 Z≥2.0(95점↑) 강한 이상 감지 / 🟡 Z≥1.5(90점↑) 이상 감지 / ⚪ 정상 변동 / 🔴 Z≤-1.5 경쟁사 우위 · ⚠️ 비교군없음 = 절대변화율(참고용)
     """)
 st.caption("은행 순매수 이상 감지 → ETF 특정 → DiD 분석 → 역추적")
 
@@ -450,21 +450,23 @@ else:
         return f"{score:.0f}점 (Z={z:+.2f})"
 
     sorted_results = sorted(did_results, key=lambda x: getattr(x, 'marketing_score', 50.0), reverse=True)
-    spikes    = [r for r in sorted_results if getattr(r, 'marketing_score', 50.0) >= 75 or getattr(r, 'marketing_score', 50.0) <= 25]
+    spikes    = [r for r in sorted_results if getattr(r, 'marketing_score', 50.0) >= 90 or getattr(r, 'marketing_score', 50.0) <= 10]
     normals   = [r for r in sorted_results if r not in spikes]
 
     # ── 이상 감지 ETF 카드 ──
     if spikes:
-        st.markdown(f"**⚡ 이상 감지: {len(spikes)}개** (점수 75점 이상 또는 25점 이하)")
+        st.markdown(f"**⚡ 이상 감지: {len(spikes)}개** (Z≥1.5 또는 Z≤-1.5 기준)")
         cols = st.columns(min(len(spikes), 4))
         for col, r in zip(cols, spikes):
             c = c_map.get(r.judgement_emoji, "#6c757d")
             with col:
+                _no_comp_badge = "<div style='font-size:0.65rem;color:#aaa;margin-top:2px;'>⚠️ 비교군없음</div>" if r.no_competitors else ""
                 st.markdown(
                     f"<div style='border:2px solid {c};border-radius:8px;padding:14px;text-align:center;'>"
                     f"<div style='font-size:2rem;'>{r.judgement_emoji}</div>"
                     f"<div style='font-weight:700;font-size:0.85rem;'>{r.kodex_name}</div>"
                     f"<div class='did-result' style='color:{c};font-size:1rem;'>{_score_label(r)}</div>"
+                    f"{_no_comp_badge}"
                     f"</div>", unsafe_allow_html=True)
     else:
         st.info("이번 주 이상 변동 없음 — 모든 KODEX ETF 정상 범위")
@@ -585,7 +587,7 @@ else:
 # ══════════════════════════════════════════════════════════════════
 st.markdown('<div class="step-header">Step 5 · 주간 요약</div>', unsafe_allow_html=True)
 
-spikes = [r for r in did_results if getattr(r, 'marketing_score', 50.0) >= 75 or getattr(r, 'marketing_score', 50.0) <= 25]
+spikes = [r for r in did_results if getattr(r, 'marketing_score', 50.0) >= 90 or getattr(r, 'marketing_score', 50.0) <= 10]
 spike_names = [r.kodex_name for r in sorted(spikes, key=lambda x: abs(getattr(x, 'marketing_score', 50.0) - 50), reverse=True)[:3]]
 
 st.markdown(f"**분석 주차:** {selected}")

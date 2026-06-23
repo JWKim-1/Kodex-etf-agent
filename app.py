@@ -1399,7 +1399,8 @@ if _did_cache_key not in st.session_state:
                     "kodex_change_pct": 0.0, "control_avg_pct": 0.0,
                 })()
             if _hist_map and all(c in _hist_map for c in target_codes):
-                st.session_state[_did_cache_key] = _hist_map
+                # target_codes에 해당하는 것만 — 과거 분석 결과 전체가 뜨는 버그 방지
+                st.session_state[_did_cache_key] = {c: _hist_map[c] for c in target_codes if c in _hist_map}
     except Exception:
         pass
 

@@ -618,26 +618,44 @@ def keyword_fallback(collection_results, all_kodex_etfs: dict) -> dict:
         # 채널 유형별 마케팅 분류 근거 명시
         ch = r.channel_name
         for v in d.get("videos", []):
-            # 제목 + 자막(있으면) 합쳐서 판단
-            transcript = v.get("transcript", "")
-            full_text = v.get("title","") + (" " + transcript if transcript else "")
+            if not v.get("is_etf_related"):
+                continue
             items.append({"title": v.get("title",""), "url": v.get("url",""),
-                          "text": full_text,
-                          "channel_reason": "증권 유튜브 채널 ETF 관련 영상" + (" (자막 포함)" if transcript else " (제목 기준)")})
+                          "text": v.get("title",""),
+                          "channel_reason": "증권 유튜브 채널 ETF 관련 영상"})
         for p in d.get("posts", []):
             items.append({"title": p.get("title",""), "url": p.get("link",""),
-                          "text": p.get("title","") + " " + p.get("description",""),
+                          "text": p.get("title",""),
                           "channel_reason": "증권 공식 블로그에서 해당 ETF 관련 포스트 게시 확인"})
         for a in d.get("articles", []):
             items.append({"title": a.get("title",""), "url": a.get("link",""),
-                          "text": a.get("title","") + " " + a.get("description",""),
+                          "text": a.get("title",""),
                           "channel_reason": "삼성증권 ETF 이벤트 관련 뉴스 기사에서 종목명 확인"})
         for ev in d.get("event_details", []):
-            # full_text 있으면 본문까지 활용, 없으면 제목만
-            text = ev.get("full_text", ev.get("title",""))
+            # samsung_fund_event: 수집 시 추출한 etf_names 직접 사용 (full_text 스캔 금지 — 본문에 무관한 ETF명 범람)
+            if is_event_channel and ev.get("etf_names"):
+                pre_codes = [k for k, v in all_kodex_etfs.items() if any(v in n or n in v for n in ev["etf_names"])]
+                if pre_codes:
+                    for code in pre_codes:
+                        if code not in found:
+                            found.append(code)
+                    evidence.append({
+                        "channel": r.channel_name,
+                        "title": ev.get("title","")[:80],
+                        "url": ev.get("url",""),
+                        "image_url": ev.get("image_url",""),
+                        "marketing_type": "이벤트",
+                        "event_summary": "삼성자산운용 공식 이벤트 페이지에 '진행중' 이벤트로 등록됨",
+                        "reason": f"감지: {', '.join(ev['etf_names'][:3])}",
+                        "marketing_reason": "삼성자산운용 공식 이벤트 페이지에 '진행중' 이벤트로 등록됨",
+                        "etf_codes": pre_codes[:3],
+                        "target_etf": ", ".join(ev["etf_names"][:2]),
+                    })
+                continue
+            # 그 외: 제목만 스캔 (full_text 금지)
             items.append({"title": ev.get("title",""), "url": ev.get("url",""),
                           "image_url": ev.get("image_url",""),
-                          "text": text,
+                          "text": ev.get("title",""),
                           "channel_reason": "삼성자산운용 공식 이벤트 페이지에 '진행중' 이벤트로 등록됨 (이벤트 제목·기간 명시)"})
         if not d.get("event_details"):
             for e in d.get("events", []):

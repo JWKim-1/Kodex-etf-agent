@@ -123,7 +123,7 @@ _news_total = len(delist_news) + len(dart_notices) + len(etf_site_delist)
 # ── 탭: 신규상장 / 상폐 / 만기청산 / 뉴스 (수집갭 제거) ──────────────────────
 tab_new, tab_del, tab_mat, tab_news = st.tabs([
     f"🆕 신규상장 ({len(new_confirmed)+len(new_pending)})",
-    f"⛔ 상폐 ({len(delist_conf)+len(delist_pend)})",
+    f"⛔ 상폐 ({len(delist_conf)+len(delist_pend)+len([x for x in etf_site_delist if not any(k in x.get('title','') for k in ['만기','청산','존속기한'])])})",
     f"⏳ 만기청산 ({len(maturity)})",
     f"📰 뉴스·공시 ({_news_total})",
 ])
@@ -185,14 +185,41 @@ with tab_new:
             _cards(older_new, "status", NEW_BADGE)
 
 with tab_del:
-    st.caption("2주+ 연속 미등장 → 상폐 확정 / 1주 미등장 → 추적 중")
-    # 상폐 확정/추적 + 뉴스 LLM 검증 결과 함께 표시
+    st.caption("2주+ 연속 미등장 → 상폐 확정 / 1주 미등장 → 추적 중 / 운용사 공지 → 공지 확인")
     all_del = delist_conf + delist_pend
-    if not all_del:
+
+    # 운용사 공지 상폐를 카드 형식으로 변환해 병합
+    NOTICE_DEL_BADGE = {"notice": ("📢", "#f59e0b", "공지 확인")}
+    notice_del_items = []
+    _krx_titles = {x.get("종목명","")[:10] for x in all_del}
+    for nd in etf_site_delist:
+        title = nd.get("title","")
+        # 만기/청산 키워드면 만기청산 탭 소관 — 여기선 제외
+        if any(k in title for k in ["만기","청산","존속기한"]):
+            continue
+        # KRX 감지랑 중복이면 스킵
+        if any(t and t in title for t in _krx_titles):
+            continue
+        notice_del_items.append({
+            "종목명": title[:50],
+            "종목코드": nd.get("corp_name",""),
+            "week": nd.get("date","")[:7] or "공지",
+            "reason": "notice",
+            "llm_verified": None,
+            "llm_summary": f"출처: {nd.get('corp_name','')} · {nd.get('url','')}",
+            "_url": nd.get("url",""),
+        })
+
+    if not all_del and not notice_del_items:
         st.info("감지된 상폐 없음 — KRX 데이터에서 2주+ 연속 미등장 종목 없음")
-        st.caption("※ 만기 정상 청산 ETF(ACE 26-06 등)는 만기청산 탭에 있음")
+        st.caption("※ 만기 정상 청산 ETF는 만기청산 탭에 있음")
     else:
-        _cards(all_del, "reason", DEL_BADGE)
+        if all_del:
+            st.markdown("**📊 KRX 데이터 감지**")
+            _cards(all_del, "reason", DEL_BADGE)
+        if notice_del_items:
+            st.markdown("**📢 운용사 공지 상폐**")
+            _cards(notice_del_items, "reason", NOTICE_DEL_BADGE)
 
 with tab_mat:
     st.caption("이름에 YY-MM 만기 패턴 포함, 재등장 없음 → 만기 정상 청산")

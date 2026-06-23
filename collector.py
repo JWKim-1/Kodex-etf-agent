@@ -1586,19 +1586,30 @@ class DataCollector:
                     not any(sk in line for sk in skip_kw) and
                     line not in seen):
                 seen.add(line)
-                # 기간 추출 1: 다음 줄에 날짜 패턴
+                # 기간 추출: 이후 최대 3줄 범위에서 날짜 패턴 탐색
                 period = ""
-                if i + 1 < len(lines):
-                    nxt = lines[i+1]
-                    if re.search(r"20\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2}", nxt):
-                        period = nxt.strip(); i += 1
-                # 기간 추출 2: 제목 자체에서 (~날짜) 또는 날짜~날짜 패턴
+                for _look in range(1, 4):
+                    if i + _look >= len(lines): break
+                    nxt = lines[i + _look]
+                    # YYYY.MM.DD ~ YYYY.MM.DD 형태
+                    _pm = re.search(r"(20\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2})\s*[~\-]\s*(20\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2})", nxt)
+                    if _pm:
+                        period = f"{_pm.group(1)} ~ {_pm.group(2)}"; i += _look; break
+                    # YYYY.MM.DD 단독 (종료일)
+                    _sm = re.search(r"20\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2}", nxt)
+                    if _sm:
+                        period = _sm.group(); i += _look; break
+                    # ~MM/DD 또는 MM/DD~MM/DD 형태
+                    _em = re.search(r"[~(]\s*(\d{1,2}[./]\d{1,2})\s*[~\-]?\s*(\d{1,2}[./]\d{1,2})?", nxt)
+                    if _em:
+                        period = f"{_em.group(1)}" + (f" ~ {_em.group(2)}" if _em.group(2) else ""); i += _look; break
+                # 제목 자체에도 기간 있으면 추출
                 if not period:
-                    _pm = re.search(r"[\(~]?\s*(20\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2})\s*[~\-]\s*(20\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2})", line)
-                    if _pm: period = f"{_pm.group(1)} ~ {_pm.group(2)}"
-                    elif re.search(r"[~(]\s*(\d{1,2}/\d{1,2})\s*[)]", line):
-                        _em = re.search(r"[~(]\s*(\d{1,2}/\d{1,2})\s*[)]", line)
-                        if _em: period = f"~ {_em.group(1)}"
+                    _pm2 = re.search(r"(20\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2})\s*[~\-]\s*(20\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2})", line)
+                    if _pm2: period = f"{_pm2.group(1)} ~ {_pm2.group(2)}"
+                    else:
+                        _em2 = re.search(r"[~(]\s*(\d{1,2}[./]\d{1,2})\s*[)]", line)
+                        if _em2: period = f"~ {_em2.group(1)}"
                 events.append({"title": line[:80], "url": url, "period": period, "image_url": ""})
             i += 1
 

@@ -85,20 +85,7 @@ COMP_PROVIDERS = {
 }
 
 # ── API 키 ────────────────────────────────────────────────────────────────────
-anthropic_key = st.session_state.get("_anthropic_key", "")
-if not anthropic_key:
-    with st.sidebar:
-        st.header("⚙️ 설정")
-        anthropic_key = st.text_input(
-            "Anthropic API Key", value=os.getenv("ANTHROPIC_API_KEY", ""),
-            type="password", key="comp_ant_key", help="Anthropic Claude 사용 시"
-        )
-        gemini_key = st.text_input(
-            "Gemini API Key", value=os.getenv("GEMINI_API_KEY", ""),
-            type="password", key="comp_gem_key", help="Google Gemini 무료 사용 시 (둘 중 하나만)"
-        )
-        if gemini_key: os.environ["GEMINI_API_KEY"] = gemini_key
-        api_key = anthropic_key or gemini_key
+anthropic_key = os.getenv("ANTHROPIC_API_KEY", "")
 
 # ── 메인 탭 ──────────────────────────────────────────────────────────────────
 _main_tab1, _main_tab2 = st.tabs(["📡 이번 주 경쟁사 모니터링", "📁 채널 수집 히스토리"])
@@ -284,24 +271,8 @@ with _main_tab1:
     }}"""
 
         try:
-            from llm_client import call_llm, call_llm_with_images
-            gem_key = os.getenv("GEMINI_API_KEY", "")
-            text = None
-            if collected_image_urls:
-                try:
-                    img_note = f"\n\n[첨부 이미지 {len(collected_image_urls)}개: 이벤트 배너 이미지입니다.]"
-                    text = call_llm_with_images(
-                        prompt + img_note,
-                        collected_image_urls,
-                        anthropic_key=api_key,
-                        gemini_key=gem_key,
-                        max_tokens=1500,
-                    )
-                except Exception as img_e:
-                    logger.warning(f"이미지 LLM 실패, 텍스트 전용으로 전환: {img_e}")
-                    text = None
-            if not text:
-                text = call_llm(prompt, anthropic_key=api_key, gemini_key=gem_key, max_tokens=3000)
+            from llm_client import call_llm
+            text = call_llm(prompt, anthropic_key=api_key, max_tokens=3000)
             m = re.search(r"\{.*\}", text, re.DOTALL)
             if m:
                 raw = m.group()
@@ -401,7 +372,7 @@ with _main_tab1:
         return {"marketing_detected": False, "events": [], "summary": "감지 없음 (키워드 방식)"}
 
 
-    _use_api = anthropic_key or os.getenv("GEMINI_API_KEY","")
+    _use_api = anthropic_key
     _llm_cache_key = f"comp_llm_{selected_week_lbl}"
 
     # LLM 분석 결과 캐시 자동 로드 (실패 결과는 무시하고 재실행)

@@ -509,7 +509,7 @@ if _mass_did_key not in st.session_state:
     try:
         import pandas as _pd_m
         _dh = _pd_m.read_parquet(os.path.join(_ROOT, "did_history.parquet"))
-        _wh = _dh[(_dh["week"]==current_sheet)&(_dh["channel"]=="mass")]
+        _wh = _dh[(_dh["week"]==current_sheet)&(_dh["channel"]=="mass")&(_dh["code"].astype(str).isin([str(c) for c in target_codes]))]
         if not _wh.empty and all(str(c) in _wh["code"].astype(str).tolist() for c in target_codes):
             _m = {}
             for _, _r in _wh.iterrows():

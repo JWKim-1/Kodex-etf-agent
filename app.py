@@ -623,11 +623,11 @@ def keyword_fallback(collection_results, all_kodex_etfs: dict) -> dict:
             full_text = v.get("title","") + (" " + transcript if transcript else "")
             items.append({"title": v.get("title",""), "url": v.get("url",""),
                           "text": full_text,
-                          "channel_reason": "증권사 유튜브 채널 ETF 관련 영상" + (" (자막 포함)" if transcript else " (제목 기준)")})
+                          "channel_reason": "증권 유튜브 채널 ETF 관련 영상" + (" (자막 포함)" if transcript else " (제목 기준)")})
         for p in d.get("posts", []):
             items.append({"title": p.get("title",""), "url": p.get("link",""),
                           "text": p.get("title","") + " " + p.get("description",""),
-                          "channel_reason": "증권사 공식 블로그에서 해당 ETF 관련 포스트 게시 확인"})
+                          "channel_reason": "증권 공식 블로그에서 해당 ETF 관련 포스트 게시 확인"})
         for a in d.get("articles", []):
             items.append({"title": a.get("title",""), "url": a.get("link",""),
                           "text": a.get("title","") + " " + a.get("description",""),
@@ -1076,7 +1076,7 @@ else:
         if events_with_info:
             _type_cls  = {"이벤트":"ev-type-event","프로모션":"ev-type-promo","추천콘텐츠":"ev-type-content","수수료혜택":"ev-type-fee"}
             _type_icon = {"이벤트":"🎁","프로모션":"💰","추천콘텐츠":"📺","수수료혜택":"🎯"}
-            _ch_icon   = {"삼성자산운용 이벤트 페이지":"🎪","삼성증권 이벤트":"🏦","네이버/구글 뉴스":"📰","증권사 유튜브":"▶️"}
+            _ch_icon   = {"삼성자산운용 이벤트 페이지":"🎪","삼성증권 이벤트":"🏦","네이버/구글 뉴스":"📰","증권 유튜브":"▶️"}
             cards_html = '<div class="ev-board">'
             for ev in events_with_info[:8]:
                 mtype   = ev.get("marketing_type","기타")

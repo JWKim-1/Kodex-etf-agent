@@ -36109,7 +36109,7 @@
   },
   "6.22-6.26": {
     "week": "6.22-6.26",
-    "collected_at": "2026-06-22 23:59:15",
+    "collected_at": "2026-06-23 00:50:10",
     "securities": {
       "collection": {
         "success": [
@@ -36456,7 +36456,7 @@
       },
       "events": {
         "marketing_detected": true,
-        "summary": "삼성자산운용은 KODEX ETF 신규상장 이벤트와 매수 인증 프로모션을 적극 진행 중이며, 삼성증권은 유튜브를 통해 반도체·ESS 관련 ETF 투자 유도 콘텐츠를 배포하고 있다. 신한·KB증권은 ISA, 수수료 혜택 등 일반 상품 위주로 마케팅하며 KODEX ETF 직접 프로모션은 미감지되었다.",
+        "summary": "삼성자산운용과 각 증권사들이 KODEX ETF 신규상장, 매수 이벤트, 수수료 혜택 등을 통해 적극적으로 ETF 투자를 유도하고 있습니다. 특히 삼성자산운용은 전고체배터리·로보틱스·AI반도체 등 인기 테마의 신규 KODEX ETF 상장 이벤트를 집중 프로모션하고 있으며, 각 증권사는 ISA, 중개형ISA, 수수료 면제 등의 혜택으로 고객 유입을 촉진 중입니다.",
         "events": [
           {
             "channel": "삼성자산운용 이벤트 페이지",
@@ -36465,7 +36465,7 @@
             "url": null,
             "marketing_type": "신규상장",
             "event_period": "2026-06-23 ~ 2026-07-31",
-            "event_summary": "전고체배터리ESS 관련 신규 ETF 상장 기념 이벤트로 경품 제공 및 투자 유도. 당첨자 발표 예정.",
+            "event_summary": "KODEX 전고체배터리ESS TOP2플러스 ETF의 신규 상장을 기념한 이벤트로, 당첨자 발표는 2026년 8월 중 예정",
             "target_etf": "KODEX 전고체배터리ESS TOP2플러스 ETF"
           },
           {
@@ -36475,7 +36475,7 @@
             "url": null,
             "marketing_type": "신규상장",
             "event_period": null,
-            "event_summary": "현대차 로보틱스 밸류체인 관련 신규 ETF 상장 프로모션.",
+            "event_summary": "현대차 로보틱스 밸류체인 관련 KODEX ETF의 신규 상장 이벤트",
             "target_etf": "KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF"
           },
           {
@@ -36483,19 +36483,19 @@
             "provider": "삼성자산운용",
             "title": "[6~8월 릴레이 이벤트] Kodex ETF 순자산 200조 돌파 기념",
             "url": null,
-            "marketing_type": "프로모션",
+            "marketing_type": "이벤트",
             "event_period": "2026-06-01 ~ 2026-08-31",
-            "event_summary": "KODEX ETF 순자산 200조 돌파 기념 릴레이 이벤트로 브랜드 인지도 제고 및 투자 유도.",
-            "target_etf": "KODEX ETF (전사 브랜드)"
+            "event_summary": "KODEX ETF 순자산 200조 돌파를 기념하는 릴레이 이벤트",
+            "target_etf": "KODEX ETF (전체)"
           },
           {
             "channel": "삼성자산운용 이벤트 페이지",
             "provider": "삼성자산운용",
             "title": "KODEX 미국대표지수 ETF 적립식 매수 이벤트",
             "url": null,
-            "marketing_type": "프로모션",
+            "marketing_type": "이벤트",
             "event_period": null,
-            "event_summary": "KODEX 미국대표지수 ETF의 적립식 매수 프로모션을 통한 투자 유도.",
+            "event_summary": "KODEX 미국대표지수 ETF의 적립식 매수를 유도하는 이벤트",
             "target_etf": "KODEX 미국대표지수 ETF"
           },
           {
@@ -36505,7 +36505,7 @@
             "url": null,
             "marketing_type": "이벤트",
             "event_period": null,
-            "event_summary": "AI반도체 관련 KODEX ETF 매수 인증을 통한 이벤트 참여 유도 및 경품 제공.",
+            "event_summary": "KODEX AI반도체TOP2플러스 ETF의 매수 인증을 통한 이벤트 참여 유도",
             "target_etf": "KODEX AI반도체TOP2플러스 ETF"
           },
           {
@@ -36515,8 +36515,8 @@
             "url": null,
             "marketing_type": "추천콘텐츠",
             "event_period": null,
-            "event_summary": "반도체 업종 중심의 투자 전략 콘텐츠로 관련 ETF 투자 수요 유도.",
-            "target_etf": null
+            "event_summary": "반도체 업종 중심의 투자 전략 콘텐츠로, KODEX 반도체 관련 ETF 투자 유도 가능성 있음",
+            "target_etf": "KODEX 반도체 관련 ETF (추정)"
           },
           {
             "channel": "삼성증권 유튜브",
@@ -36525,8 +36525,8 @@
             "url": null,
             "marketing_type": "추천콘텐츠",
             "event_period": null,
-            "event_summary": "반도체 업종 시장 분석으로 해당 섹터 ETF 투자 관심 유도.",
-            "target_etf": null
+            "event_summary": "반도체 업종 상승 흐름을 분석하는 콘텐츠로 관련 ETF 투자 관심 유도",
+            "target_etf": "KODEX 반도체 관련 ETF (추정)"
           },
           {
             "channel": "삼성증권 유튜브",
@@ -36535,8 +36535,8 @@
             "url": null,
             "marketing_type": "추천콘텐츠",
             "event_period": null,
-            "event_summary": "ESS 업계 전망 분석으로 에너지저장 관련 ETF 투자 수요 창출.",
-            "target_etf": null
+            "event_summary": "ESS(에너지저장장치) 관련 산업 전망 분석으로 KODEX 전고체배터리ESS 관련 ETF 투자 유도",
+            "target_etf": "KODEX 전고체배터리ESS 관련 ETF (추정)"
           },
           {
             "channel": "삼성증권 유튜브",
@@ -36545,7 +36545,67 @@
             "url": null,
             "marketing_type": "추천콘텐츠",
             "event_period": null,
-            "event_summary": "반도체, 현대차, 에너지 관련 우량주 추천으로 관련 ETF 투자 유도.",
+            "event_summary": "삼성전자, SK하이닉스, 현대차 등 KODEX 구성 종목들의 투자 추천으로 관련 ETF 투자 유도",
+            "target_etf": "KODEX 200, KODEX AI반도체TOP2플러스 등 (추정)"
+          },
+          {
+            "channel": "KB증권 유튜브",
+            "provider": "KB증권",
+            "title": "삼전, 하이닉스 말고... 젠슨 황이 대놓고 밀어주는 '여기' 주목하세요",
+            "url": null,
+            "marketing_type": "추천콘텐츠",
+            "event_period": null,
+            "event_summary": "AI·반도체 관련 투자처 추천으로 관련 ETF 투자 유도",
+            "target_etf": "AI반도체 관련 KODEX ETF (추정)"
+          },
+          {
+            "channel": "KB증권 이벤트",
+            "provider": "KB증권",
+            "title": "중개형ISA 순입금(이전) 이벤트 시즌3",
+            "url": null,
+            "marketing_type": "수수료혜택",
+            "event_period": null,
+            "event_summary": "중개형ISA를 통한 ETF 투자 시 세제 혜택 및 수수료 혜택 제공",
+            "target_etf": null
+          },
+          {
+            "channel": "KB증권 이벤트",
+            "provider": "KB증권",
+            "title": "영(Young)하니까 수수료는 0원!",
+            "url": null,
+            "marketing_type": "수수료혜택",
+            "event_period": null,
+            "event_summary": "젊은 투자자 대상 주식·ETF 온라인 거래 수수료 면제",
+            "target_etf": null
+          },
+          {
+            "channel": "KB증권 이벤트",
+            "provider": "KB증권",
+            "title": "RIA ETF 순매수 이벤트",
+            "url": null,
+            "marketing_type": "이벤트",
+            "event_period": null,
+            "event_summary": "RIA(로보어드바이저) ETF의 순매수를 통한 이벤트 참여 유도",
+            "target_etf": null
+          },
+          {
+            "channel": "신한투자증권 이벤트",
+            "provider": "신한투자증권",
+            "title": "중개형ISA 이벤트",
+            "url": null,
+            "marketing_type": "수수료혜택",
+            "event_period": null,
+            "event_summary": "중개형ISA 계좌 개설을 통한 ETF 투자 시 세제 혜택 제공",
+            "target_etf": null
+          },
+          {
+            "channel": "신한투자증권 이벤트",
+            "provider": "신한투자증권",
+            "title": "국내주식 온라인 수수료 제로베이스 이벤트",
+            "url": null,
+            "marketing_type": "수수료혜택",
+            "event_period": null,
+            "event_summary": "국내주식 및 ETF 온라인 거래 수수료 감면",
             "target_etf": null
           }
         ]
@@ -36698,59 +36758,8 @@
       },
       "events": {
         "marketing_detected": false,
-        "summary": "하나은행의 마케팅 활동은 금융 세미나(머니쇼), 골프대회 스폰서십, 축구 국가대표팀 응원 이벤트, 어린이 바둑 페스티벌 등 다양한 스포츠·문화 행사 중심으로 진행 중입니다. ETF 매수 유도와 관련된 마케팅 활동은 포함되어 있지 않습니다.",
-        "events": [
-          {
-            "channel": "하나은행 블로그",
-            "provider": "하나은행",
-            "title": "제1회 하나금융 머니쇼 성료",
-            "url": null,
-            "marketing_type": "기타",
-            "event_period": null,
-            "event_summary": "하나금융그룹 관계사가 참여한 통합 자산관리 행사로, 자산관리 분야별 전문가 강연과 1:1 맞춤형 상담 제공. ETF 매수 유도 요소 없음.",
-            "target_etf": null
-          },
-          {
-            "channel": "하나은행 블로그",
-            "provider": "하나은행",
-            "title": "2026 KPGA 투어 하나은행 인비테이셔널",
-            "url": null,
-            "marketing_type": "기타",
-            "event_period": null,
-            "event_summary": "골프대회 스폰서십 및 홍보 활동으로 티켓 판매와 무료입장 혜택 안내. ETF 관련 내용 없음.",
-            "target_etf": null
-          },
-          {
-            "channel": "하나은행 블로그",
-            "provider": "하나은행",
-            "title": "2026 축구 일정과 함께 챙기는 고금리 적금 추천 - Best 11 적금",
-            "url": null,
-            "marketing_type": "프로모션",
-            "event_period": null,
-            "event_summary": "축구 국가대표팀 응원과 연계한 적금 상품 홍보. 적금 상품이지 ETF 관련 마케팅 아님.",
-            "target_etf": null
-          },
-          {
-            "channel": "하나은행 블로그",
-            "provider": "하나은행",
-            "title": "대한민국 축구국가대표팀 경기 일정 & 명단 응원 이벤트",
-            "url": null,
-            "marketing_type": "이벤트",
-            "event_period": "2026-05-29 ~ null",
-            "event_summary": "축구 국가대표팀 응원 댓글 이벤트로 치킨 경품 제공. ETF 관련 유도 요소 없음.",
-            "target_etf": null
-          },
-          {
-            "channel": "하나은행 블로그",
-            "provider": "하나은행",
-            "title": "2026 하나은행 어린이 바둑 페스티벌",
-            "url": null,
-            "marketing_type": "이벤트",
-            "event_period": "2026-05-09 ~ null",
-            "event_summary": "어린이 바둑 축제 스폰서십 및 현장 스케치 공유, 댓글 이벤트 진행. ETF 마케팅 요소 없음.",
-            "target_etf": null
-          }
-        ]
+        "summary": "하나은행의 마케팅 활동은 금융 세미나(머니쇼), 골프 대회 스폰서십, 축구 응원 이벤트, 바둑 페스티벌 등 다양한 브랜드 활동으로 구성되어 있습니다. 다만 ETF 매수를 직접 유도하는 이벤트, 프로모션, 경품, 수수료 혜택은 포함되어 있지 않습니다.",
+        "events": []
       }
     },
     "mass": {
@@ -36929,7 +36938,7 @@
         "etf_am_news": {
           "channel_name": "ETF 운용사 뉴스·이벤트 (네이버/구글)",
           "success": true,
-          "snippet": "ETF 시장도 '반도체 독주'…수익률 상위 21위까지 반도체가 휩쓸어 [투자전략] DRAM ETF 54% 급등…마이크론 실적이 반도체 랠리 가른다 'JTBC 디폴트 사태' 영향?…위축된 은행株 투심, 증권가선 &quot;문제없다&quot; [경제소식] DB손보 '프로미119 안전리더 캠프' 모집 [증권가로수] NH증권/KB증권/키움증권/유안타증권/마스턴운용/NH아문디운... [더밸류 브리핑] 오늘의 증권사 소식...미래에셋·신한투자·키움증권 [금융권 이모저모]삼성자산운용, 삼성 글로벌반도체펀드 순자산 1조원 ... [증시 프리즘] ",
+          "snippet": "ETF 시장도 '반도체 독주'…수익률 상위 21위까지 반도체가 휩쓸어 [투자전략] DRAM ETF 54% 급등…마이크론 실적이 반도체 랠리 가른다 'JTBC 디폴트 사태' 영향?…위축된 은행株 투심, 증권가선 &quot;문제없다&quot; [경제소식] DB손보 '프로미119 안전리더 캠프' 모집 [증권가로수] NH증권/KB증권/키움증권/유안타증권/마스턴운용/NH아문디운... [더밸류 브리핑] 오늘의 증권사 소식...미래에셋·신한투자·키움증권 [금융권 이모저모]삼성자산운용, 삼성 글로벌반도체펀드 순자산 1조원 ... “삼전닉스 순이익",
           "videos": []
         },
         "kodex_kakao": {
@@ -37157,7 +37166,7 @@
         "etf_am_news": {
           "channel_name": "ETF 운용사 뉴스·이벤트 (네이버/구글)",
           "success": true,
-          "snippet": "ETF 시장도 '반도체 독주'…수익률 상위 21위까지 반도체가 휩쓸어 [투자전략] DRAM ETF 54% 급등…마이크론 실적이 반도체 랠리 가른다 'JTBC 디폴트 사태' 영향?…위축된 은행株 투심, 증권가선 &quot;문제없다&quot; [경제소식] DB손보 '프로미119 안전리더 캠프' 모집 [증권가로수] NH증권/KB증권/키움증권/유안타증권/마스턴운용/NH아문디운... [더밸류 브리핑] 오늘의 증권사 소식...미래에셋·신한투자·키움증권 [금융권 이모저모]삼성자산운용, 삼성 글로벌반도체펀드 순자산 1조원 ... [증시 프리즘] ",
+          "snippet": "ETF 시장도 '반도체 독주'…수익률 상위 21위까지 반도체가 휩쓸어 [투자전략] DRAM ETF 54% 급등…마이크론 실적이 반도체 랠리 가른다 'JTBC 디폴트 사태' 영향?…위축된 은행株 투심, 증권가선 &quot;문제없다&quot; [경제소식] DB손보 '프로미119 안전리더 캠프' 모집 [증권가로수] NH증권/KB증권/키움증권/유안타증권/마스턴운용/NH아문디운... [더밸류 브리핑] 오늘의 증권사 소식...미래에셋·신한투자·키움증권 [금융권 이모저모]삼성자산운용, 삼성 글로벌반도체펀드 순자산 1조원 ... “삼전닉스 순이익",
           "videos": []
         },
         "kodex_kakao": {

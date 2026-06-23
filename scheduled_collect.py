@@ -77,7 +77,7 @@ def extract_events(collection_results: dict, api_key: str, mode: str) -> dict:
         ok = getattr(r, "success", None)
         if ok is None:
             ok = getattr(r, "detected", False)
-        if not ok or not r.data:
+        if not ok or r.data is None:
             continue
         d = r.data
         label = f"[{r.channel_name}]"

@@ -947,7 +947,7 @@ def extract_target_etfs_with_llm(collection_results: Dict, anthropic_api_key: st
     for result in collection_results.values():
         # bank ChannelResult는 .detected 필드 사용 (공용 .success 없음)
         ok = getattr(result, "success", None) if hasattr(result, "success") else getattr(result, "detected", False)
-        if not ok or not result.data:
+        if not ok or result.data is None:
             continue
         d = result.data
         label = f"[{result.channel_name}]"

@@ -500,7 +500,7 @@ def extract_target_etfs_with_llm(collection_results: Dict,
         _ok = getattr(result, "success", None)
         if _ok is None:
             _ok = bool(getattr(result, "data", None))
-        if not _ok or not result.data:
+        if not _ok or result.data is None:
             continue
         d = result.data
         label = f"[{result.channel_name}]"

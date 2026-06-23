@@ -497,7 +497,10 @@ def extract_target_etfs_with_llm(collection_results: Dict,
     marketing_texts = []
     collected_image_urls = []
     for result in collection_results.values():
-        if not result.success or not result.data:
+        _ok = getattr(result, "success", None)
+        if _ok is None:
+            _ok = bool(getattr(result, "data", None))
+        if not _ok or not result.data:
             continue
         d = result.data
         label = f"[{result.channel_name}]"

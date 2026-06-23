@@ -164,8 +164,7 @@ with _main_tab1:
             collection_results = collector.collect_all_competitor(progress_callback=on_prog)
         prog_ph.empty()
 
-        if _days_old <= 14:
-            save_channel_results(_archive_key, collection_results)
+        save_channel_results(_archive_key, collection_results)
 
     ok_cnt   = sum(1 for r in collection_results.values() if r.success)
     fail_cnt = len(collection_results) - ok_cnt
@@ -606,5 +605,5 @@ with _main_tab1:
 
 
 with _main_tab2:
-    _hist_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "agents", "history", "app_history.py")
+    _hist_file = os.path.join(_ROOT, "agents", "history", "app_history.py")
     exec(open(_hist_file, encoding="utf-8").read())

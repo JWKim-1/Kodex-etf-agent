@@ -125,8 +125,58 @@ def _dart_notices(days: int = 7) -> list:
 
 # ── ETF 운용사 사이트 상폐 공지 Selenium 수집 ───────────────────────────────
 def _selenium_delist_notices() -> list:
-    """TIGER/HANARO 등 운용사 공지 페이지에서 상폐 공지 Selenium 수집."""
+    """TIGER/HANARO/RISE/ACE/KODEX/SOL/PLUS 운용사 공지 페이지에서 상폐 공지 수집."""
+    import requests as _req
+    from bs4 import BeautifulSoup as _BS
     DELIST_KW = ["상장폐지","상폐","만기","만기상환","청산","해지상환","존속기한","사전안내"]
+    BROWSER_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+
+    results = []
+
+    # ── SOL ETF: JSON API (Selenium 불필요) ─────────────────────────────────
+    try:
+        r = _req.get("https://www.soletf.com/api/cs/notice", headers=BROWSER_HEADERS, timeout=15)
+        items = r.json().get("items", [])
+        for item in items:
+            title = item.get("TITLE", "")
+            if any(k in title for k in DELIST_KW):
+                no = item.get("NO", "")
+                date_str = re.search(r"20\d{2}[.\-]\d{2}[.\-]\d{2}", item.get("REG_DT","") or "")
+                results.append({
+                    "title": title[:80],
+                    "corp_name": "신한자산운용(SOL)",
+                    "date": date_str.group().replace("-",".") if date_str else "",
+                    "url": f"https://www.soletf.com/ko/cs/noticeView?id={no}",
+                    "source": "운용사공지",
+                })
+    except Exception as e:
+        logger.warning(f"SOL 공지 수집 실패: {e}")
+
+    # ── PLUS ETF: 정적 HTTP ──────────────────────────────────────────────────
+    try:
+        r = _req.get("https://www.plusetf.co.kr/customer/notice/list", headers=BROWSER_HEADERS, timeout=10)
+        soup = _BS(r.text, "lxml")
+        for a in soup.find_all("a", href=True):
+            if "/customer/notice/detail" not in a.get("href",""):
+                continue
+            raw = a.get_text(" ", strip=True)
+            if not any(k in raw for k in DELIST_KW):
+                continue
+            title = re.sub(r"^\d+\s*", "", raw)
+            title = re.sub(r"\d{4}\.\d{2}\.\d{2}.*", "", title).strip()
+            date_m = re.search(r"20\d{2}\.\d{2}\.\d{2}", raw)
+            href = a.get("href","")
+            results.append({
+                "title": title[:80],
+                "corp_name": "한화자산운용(PLUS)",
+                "date": date_m.group() if date_m else "",
+                "url": f"https://www.plusetf.co.kr{href}" if href.startswith("/") else href,
+                "source": "운용사공지",
+            })
+    except Exception as e:
+        logger.warning(f"PLUS 공지 수집 실패: {e}")
+
+    # ── TIGER/HANARO/RISE/ACE/KODEX: Selenium ────────────────────────────────
     ETF_SITES = [
         ("미래에셋(TIGER)", "https://investments.miraeasset.com/tigeretf/ko/customer/notice/list.do"),
         ("NH아문디(HANARO)", "https://www.hanaroetf.com/customer/notice"),
@@ -134,7 +184,6 @@ def _selenium_delist_notices() -> list:
         ("한국투자신탁(ACE)", "https://www.aceetf.co.kr/cs/notice"),
         ("삼성자산운용(KODEX)", "https://www.samsungfund.com/etf/lounge/notice.do"),
     ]
-    results = []
     try:
         import sys as _sys; _sys.path.insert(0, str(_ROOT))
         from collector import _selenium_driver
@@ -148,7 +197,6 @@ def _selenium_delist_notices() -> list:
                     lines = [l.strip() for l in text.split("\n") if l.strip()]
                     for i, line in enumerate(lines):
                         if any(k in line for k in DELIST_KW) and len(line) > 8:
-                            # 다음 줄에 날짜 있으면 같이 수집
                             date_str = ""
                             if i+1 < len(lines):
                                 dm = re.search(r"20\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2}", lines[i+1])
@@ -166,6 +214,7 @@ def _selenium_delist_notices() -> list:
             driver.quit()
     except Exception as e:
         logger.warning(f"Selenium 상폐 수집 실패: {e}")
+
     # 중복 제거
     seen = set()
     dedup = []

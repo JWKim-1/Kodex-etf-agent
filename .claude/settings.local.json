@@ -61,7 +61,8 @@
       "Bash(python -m py_compile krx_data_fetcher.py)",
       "PowerShell(Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd 'C:\\\\Users\\\\USER\\\\Desktop\\\\kodex agent'; streamlit run app.py\")",
       "Bash(python -m py_compile app.py)",
-      "Bash(python -m py_compile agents/bank/analyzer.py agents/bank/app_bank.py)"
+      "Bash(python -m py_compile agents/bank/analyzer.py agents/bank/app_bank.py)",
+      "Bash(python -m py_compile collector.py agents/competitor/app_competitor.py)"
     ]
   }
 }

@@ -615,6 +615,7 @@ def keyword_fallback(collection_results, all_kodex_etfs: dict) -> dict:
 
         # 채널별 아이템 추출
         items = []
+        is_event_channel = getattr(r, "channel", "") == "samsung_fund_event"
         # 채널 유형별 마케팅 분류 근거 명시
         ch = r.channel_name
         for v in d.get("videos", []):

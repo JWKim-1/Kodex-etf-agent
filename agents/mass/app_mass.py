@@ -504,12 +504,15 @@ st.markdown('<div class="step-header">Step 5 · DiD 계산 (이중차분법) · 
 import pickle as _pickle, math as _mth
 _mass_did_key = f"mass_did_{current_sheet}"
 _pkl_dir = os.path.join(_ROOT, ".did_cache")
-os.makedirs(_pkl_dir, exist_ok=True)
-_pkl_path = os.path.join(_pkl_dir, f"mass_{current_sheet.replace('.','_').replace('-','_')}.pkl")
+try:
+    os.makedirs(_pkl_dir, exist_ok=True)
+except PermissionError:
+    _pkl_dir = None
+_pkl_path = os.path.join(_pkl_dir, f"mass_{current_sheet.replace('.','_').replace('-','_')}.pkl") if _pkl_dir else None
 did_results = None
 
 # pkl 캐시 우선 로드 (session_state보다 영구적)
-if _mass_did_key not in st.session_state and os.path.exists(_pkl_path):
+if _mass_did_key not in st.session_state and _pkl_path and os.path.exists(_pkl_path):
     try:
         with open(_pkl_path, "rb") as _pf:
             _cached_pkl = _pickle.load(_pf)
@@ -524,24 +527,24 @@ if _mass_did_key in st.session_state:
     did_results = st.session_state[_mass_did_key]
     st.caption(f"📦 저장된 분석 결과 사용 ({current_sheet})")
     if st.button("🔄 DiD 재계산", key="mass_rerun_did"):
-        if os.path.exists(_pkl_path): os.remove(_pkl_path)
+        if _pkl_path and os.path.exists(_pkl_path): os.remove(_pkl_path)
         del st.session_state[_mass_did_key]; st.rerun()
 else:
     with st.spinner("DiD 분석 중..."):
         did_results = analyzer.analyze(all_sheets, target_codes, current_sheet)
     if did_results:
         st.session_state[_mass_did_key] = did_results
-        try:
-            # 기존 pkl 있으면 병합, 없으면 새로 저장
-            _existing = {}
-            if os.path.exists(_pkl_path):
-                with open(_pkl_path, "rb") as _pf:
-                    _existing = _pickle.load(_pf)
-            _existing.update(did_results)
-            with open(_pkl_path, "wb") as _pf:
-                _pickle.dump(_existing, _pf)
-        except Exception:
-            pass
+        if _pkl_path:
+            try:
+                _existing = {}
+                if os.path.exists(_pkl_path):
+                    with open(_pkl_path, "rb") as _pf:
+                        _existing = _pickle.load(_pf)
+                _existing.update(did_results)
+                with open(_pkl_path, "wb") as _pf:
+                    _pickle.dump(_existing, _pf)
+            except Exception:
+                pass
 
 if not did_results:
     st.warning("DiD 계산 결과 없음")

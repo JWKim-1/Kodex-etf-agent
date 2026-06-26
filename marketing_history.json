@@ -36109,7 +36109,7 @@
   },
   "6.22-6.26": {
     "week": "6.22-6.26",
-    "collected_at": "2026-06-23 00:50:10",
+    "collected_at": "2026-06-26 19:13:05",
     "securities": {
       "collection": {
         "success": [
@@ -36128,6 +36128,7 @@
           "KB증권 유튜브",
           "네이버/구글 뉴스",
           "삼성자산운용 카카오채널",
+          "구글 트렌드 + 네이버 데이터랩",
           "삼성증권 카카오채널",
           "미래에셋증권 카카오채널",
           "키움증권 카카오채널",
@@ -36140,60 +36141,91 @@
           {
             "name": "삼성증권 인스타그램",
             "error": "Instagram은 비로그인 스크래핑 차단 — 공식 Graph API 또는 로그인 세션 필요"
-          },
-          {
-            "name": "구글 트렌드 + 네이버 데이터랩",
-            "error": ""
           }
         ],
-        "ok_count": 22,
-        "fail_count": 2
+        "ok_count": 23,
+        "fail_count": 1
       },
       "raw": {
         "samsung_fund_event": {
           "channel_name": "삼성자산운용 이벤트 페이지",
           "success": true,
-          "snippet": " (예정) KODEX 전고체배터리ESS TOP2플러스 ETF 신규 상장 이벤트🔋 Kodex Kodex ETF 삼성펀드 Kodex ETF 삼성펀드 KODEX 페이지로 이동할 수 있어요 ETF분배금 현황 KR EN 마이페이지 검색 메뉴 Kodex search 인기키워드 KODEX200 액티브 fang Kodex ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! KR EN 검색 메뉴 닫기 로그인 해주세요 로그인 마이페이지 최근 본 상품 ETF분배",
+          "snippet": " KODEX 전고체배터리ESS TOP2플러스 ETF 신규 상장 이벤트🔋 Kodex Kodex ETF 삼성펀드 Kodex ETF 삼성펀드 KODEX 페이지로 이동할 수 있어요 ETF분배금 현황 KR EN 마이페이지 검색 메뉴 Kodex search 인기키워드 KODEX200 액티브 fang Kodex ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! KR EN 검색 메뉴 닫기 로그인 해주세요 로그인 마이페이지 최근 본 상품 ETF분배금 현황 ",
           "videos": []
         },
         "samsung_youtube": {
           "channel_name": "삼성증권 유튜브",
           "success": true,
-          "snippet": "주간 투자 전략(6월 4주): 기반지세: 반도체를 타고 달리는 형세 / [마감브리핑] 반도체 업종 중심으로 상승 (2026년 6월 22일) / 리서치 핵심터치] LG에너지솔루션, 2H26 Outlook - 대규모 ESS 수주 본격화",
+          "snippet": "홈~런~!!! 삼성증권 유튜브 300만 돌파!! / 삼성증권 연금저축으로 골든골을 쏩니다! / 삼성증권 퇴직연금으로 완벽한 은퇴준비 골-인",
           "videos": [
             {
-              "title": "주간 투자 전략(6월 4주): 기반지세: 반도체를 타고 달리는 형세",
-              "url": "https://youtu.be/uCUQuL5B7rA",
-              "thumbnail": "",
-              "published_at": "2026-06-22T08:05:20Z",
+              "title": "홈~런~!!! 삼성증권 유튜브 300만 돌파!!",
+              "url": "https://youtu.be/WIKug2B5E9M",
+              "thumbnail": "https://i.ytimg.com/vi/WIKug2B5E9M/mqdefault.jpg",
+              "published_at": "2026-06-26T08:16:48Z",
               "is_etf_related": false
             },
             {
-              "title": "[마감브리핑] 반도체 업종 중심으로 상승 (2026년 6월 22일)",
-              "url": "https://youtu.be/KJSmvuboQFU",
-              "thumbnail": "",
-              "published_at": "2026-06-22T07:54:46Z",
+              "title": "삼성증권 연금저축으로 골든골을 쏩니다!",
+              "url": "https://youtu.be/RdusU_Aq46A",
+              "thumbnail": "https://i.ytimg.com/vi/RdusU_Aq46A/mqdefault.jpg",
+              "published_at": "2026-06-26T08:01:07Z",
               "is_etf_related": false
             },
             {
-              "title": "리서치 핵심터치] LG에너지솔루션, 2H26 Outlook - 대규모 ESS 수주 본격화",
-              "url": "https://youtu.be/VOGNa7bTOWk",
-              "thumbnail": "",
-              "published_at": "2026-06-22T03:56:52Z",
+              "title": "삼성증권 퇴직연금으로 완벽한 은퇴준비 골-인",
+              "url": "https://youtu.be/cRLexyt53OM",
+              "thumbnail": "https://i.ytimg.com/vi/cRLexyt53OM/mqdefault.jpg",
+              "published_at": "2026-06-26T08:02:18Z",
               "is_etf_related": false
             },
             {
-              "title": "주간 추천 종목 10선 (6월 4주) #삼성전자 #SK하이닉스 #SK스퀘어 #삼성전기 #현대차 #삼성물산 #삼성SDI #LSELECTRIC #LG이노텍 #두산",
-              "url": "https://youtu.be/oO2ywOMDRNw",
-              "thumbnail": "",
-              "published_at": "2026-06-22T00:43:29Z",
+              "title": "[긴급시황점검] 국내증시 긴급 시황을 브리핑해드립니다 (2026년 6월 26일)",
+              "url": "https://youtu.be/4UuoKfVxZRs",
+              "thumbnail": "https://i.ytimg.com/vi/4UuoKfVxZRs/mqdefault.jpg",
+              "published_at": "2026-06-26T07:02:10Z",
               "is_etf_related": false
             },
             {
-              "title": "6월 4주 증시일정 체크하세요! (6월 22일 ~ 6월 26일)#증시일정 #증시뉴스 #실적발표 #한국수출입 #미국1분기경상수지 #페덱스 #마이크론",
-              "url": "https://youtu.be/lEqaCumb4Bc",
-              "thumbnail": "",
-              "published_at": "2026-06-22T00:14:10Z",
+              "title": "[인사이트.ZIP] 폭염에 장마까지? 젤리슈즈 거래 폭증한 &#39;웨더프루프&#39; 경제",
+              "url": "https://youtu.be/13YiQby-T-M",
+              "thumbnail": "https://i.ytimg.com/vi/13YiQby-T-M/mqdefault.jpg",
+              "published_at": "2026-06-26T05:01:50Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "[리서치 핵심터치] 성일하이텍, 2분기 흑자 전환 기대",
+              "url": "https://youtu.be/QB6DJpR7UEg",
+              "thumbnail": "https://i.ytimg.com/vi/QB6DJpR7UEg/mqdefault.jpg",
+              "published_at": "2026-06-26T02:49:56Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "[모닝브리핑] 기술주 차별화 속, 뉴욕증시 혼조세 (2026년 6월 26일)",
+              "url": "https://youtu.be/c2Z8V6xFLvs",
+              "thumbnail": "https://i.ytimg.com/vi/c2Z8V6xFLvs/mqdefault.jpg",
+              "published_at": "2026-06-25T22:58:01Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "[마감브리핑] 반도체 투자심리 개선되며 상승 (2026년 6월 25일)",
+              "url": "https://youtu.be/gdz9brcONhI",
+              "thumbnail": "https://i.ytimg.com/vi/gdz9brcONhI/mqdefault.jpg",
+              "published_at": "2026-06-25T07:45:44Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "강건너 Bull구경 EP.2 | ISA 혜택 중 진짜 1등은? 비과세 vs 손익통산!",
+              "url": "https://youtu.be/7UXVt9TMDGc",
+              "thumbnail": "https://i.ytimg.com/vi/7UXVt9TMDGc/mqdefault.jpg",
+              "published_at": "2026-06-25T06:38:11Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "아빠의 빈 자리를 채워준 건 무엇?",
+              "url": "https://youtu.be/CBraXRcDP9U",
+              "thumbnail": "https://i.ytimg.com/vi/CBraXRcDP9U/mqdefault.jpg",
+              "published_at": "2026-06-25T04:06:08Z",
               "is_etf_related": false
             }
           ]
@@ -36207,20 +36239,76 @@
         "mirae_youtube": {
           "channel_name": "미래에셋증권 유튜브",
           "success": true,
-          "snippet": "Back to Normal, Again | 데일리 라이브 | 2026.6.22(월) / Back to Normal, Again | 월스트리트파인더ㅣ2026.6.22(월)",
+          "snippet": "미국 정부가 양자컴퓨터 기업에게 요구한 단 하나의 조건｜양자택일ㅣ2026.6.26(금) / 삼성전자 덕에 웃는 삼성물산 | RE포트 | 2026.6.26(금) / 마이크론 급등, 애플은 급락...미국증시 혼조 | 데일리 라이브 | 2026.6.26(금)",
           "videos": [
             {
-              "title": "Back to Normal, Again | 데일리 라이브 | 2026.6.22(월)",
-              "url": "https://youtu.be/dW1Dfm3u_ms",
-              "thumbnail": "https://i.ytimg.com/vi/dW1Dfm3u_ms/mqdefault.jpg",
-              "published_at": "2026-06-22T11:25:26Z",
+              "title": "미국 정부가 양자컴퓨터 기업에게 요구한 단 하나의 조건｜양자택일ㅣ2026.6.26(금)",
+              "url": "https://youtu.be/u8Ki0v84gwI",
+              "thumbnail": "https://i.ytimg.com/vi/u8Ki0v84gwI/mqdefault.jpg",
+              "published_at": "2026-06-26T07:53:07Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "삼성전자 덕에 웃는 삼성물산 | RE포트 | 2026.6.26(금)",
+              "url": "https://youtu.be/VpUTZGQ6T_w",
+              "thumbnail": "https://i.ytimg.com/vi/VpUTZGQ6T_w/mqdefault.jpg",
+              "published_at": "2026-06-26T00:00:23Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "마이크론 급등, 애플은 급락...미국증시 혼조 | 데일리 라이브 | 2026.6.26(금)",
+              "url": "https://youtu.be/SX1ZvC5M03U",
+              "thumbnail": "https://i.ytimg.com/vi/SX1ZvC5M03U/mqdefault.jpg",
+              "published_at": "2026-06-25T21:20:34Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "미국 증시 혼조 마감... 마이크론 시간외 급등 | 데일리 라이브 | 2026.6.25(목)",
+              "url": "https://youtu.be/ZIsNCHVXZFE",
+              "thumbnail": "https://i.ytimg.com/vi/ZIsNCHVXZFE/mqdefault.jpg",
+              "published_at": "2026-06-25T11:23:57Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "예·적금vs 개별주식 | 공강 | 토크룸",
+              "url": "https://youtu.be/LOpump19GOY",
+              "thumbnail": "https://i.ytimg.com/vi/LOpump19GOY/mqdefault.jpg",
+              "published_at": "2026-06-25T09:00:14Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "중국 AI 산업 최신 이슈 업데이트ㅣ보이는 차이나ㅣ2026.6.25(목)",
+              "url": "https://youtu.be/Rb4PDaiE_kY",
+              "thumbnail": "https://i.ytimg.com/vi/Rb4PDaiE_kY/mqdefault.jpg",
+              "published_at": "2026-06-25T00:00:39Z",
               "is_etf_related": true
             },
             {
-              "title": "Back to Normal, Again | 월스트리트파인더ㅣ2026.6.22(월)",
-              "url": "https://youtu.be/bei5bdfM9HQ",
-              "thumbnail": "https://i.ytimg.com/vi/bei5bdfM9HQ/mqdefault.jpg",
-              "published_at": "2026-06-22T00:00:27Z",
+              "title": "[M-STOCK 이용가이드]  담보대출 약정",
+              "url": "https://youtu.be/q8K1kbL3T4Y",
+              "thumbnail": "https://i.ytimg.com/vi/q8K1kbL3T4Y/mqdefault.jpg",
+              "published_at": "2026-06-24T01:34:30Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "마이크론 실적 경계감... 미국 증시 반도체 중심 약세 | 데일리 라이브 | 2026.6.24(수)",
+              "url": "https://youtu.be/APt7Tq-9PM4",
+              "thumbnail": "https://i.ytimg.com/vi/APt7Tq-9PM4/mqdefault.jpg",
+              "published_at": "2026-06-23T23:09:01Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "AI 수익성 우려 재부각..나스닥 1.3%↓ | 데일리 라이브 | 2026.6.23(화)",
+              "url": "https://youtu.be/jNVY3KtRos4",
+              "thumbnail": "https://i.ytimg.com/vi/jNVY3KtRos4/mqdefault.jpg",
+              "published_at": "2026-06-23T11:18:37Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "AI에서 모델 성능보다 더 중요한 건? &#39;돈 버는 AI&#39;｜애널리스트리포트｜2026.6.23(화)",
+              "url": "https://youtu.be/f9M6Tuel8eA",
+              "thumbnail": "https://i.ytimg.com/vi/f9M6Tuel8eA/mqdefault.jpg",
+              "published_at": "2026-06-23T00:00:30Z",
               "is_etf_related": true
             }
           ]
@@ -36240,28 +36328,77 @@
         "kiwoom_youtube": {
           "channel_name": "키움증권 유튜브",
           "success": true,
-          "snippet": "마이크론 실적, 코스피 살릴까? / 지금 시장에서 가장 중요한 이란·워시·반도체, 그래서 앞으로 전망은? / 미-이란 불확실성 지속, 반도체 쏠림은 계속될까?",
+          "snippet": "마이크론 갑질 계약? SCA의 정체 / 반도체 수퍼 사이클! AI 투자 아직도 유효한 이유는? / 반도체 급등 신호 나왔다! 앞으로 만스피 달성 위한 조건은?",
           "videos": [
             {
-              "title": "마이크론 실적, 코스피 살릴까?",
-              "url": "https://youtu.be/6YDdtnUVvng",
-              "thumbnail": "https://i.ytimg.com/vi/6YDdtnUVvng/mqdefault.jpg",
-              "published_at": "2026-06-22T07:00:09Z",
+              "title": "마이크론 갑질 계약? SCA의 정체",
+              "url": "https://youtu.be/v4_P5itmAUo",
+              "thumbnail": "https://i.ytimg.com/vi/v4_P5itmAUo/mqdefault.jpg",
+              "published_at": "2026-06-26T07:07:41Z",
               "is_etf_related": false
             },
             {
-              "title": "지금 시장에서 가장 중요한 이란·워시·반도체, 그래서 앞으로 전망은?",
-              "url": "https://youtu.be/QCdxpuTybw8",
-              "thumbnail": "https://i.ytimg.com/vi/QCdxpuTybw8/mqdefault.jpg",
-              "published_at": "2026-06-22T03:00:39Z",
+              "title": "반도체 수퍼 사이클! AI 투자 아직도 유효한 이유는?",
+              "url": "https://youtu.be/HUWBzpS2bsI",
+              "thumbnail": "https://i.ytimg.com/vi/HUWBzpS2bsI/mqdefault.jpg",
+              "published_at": "2026-06-26T02:00:36Z",
               "is_etf_related": true
             },
             {
-              "title": "미-이란 불확실성 지속, 반도체 쏠림은 계속될까?",
-              "url": "https://youtu.be/_xh-fCr_Y4k",
-              "thumbnail": "https://i.ytimg.com/vi/_xh-fCr_Y4k/mqdefault.jpg",
-              "published_at": "2026-06-22T02:10:49Z",
+              "title": "반도체 급등 신호 나왔다! 앞으로 만스피 달성 위한 조건은?",
+              "url": "https://youtu.be/yk31RYYyC58",
+              "thumbnail": "https://i.ytimg.com/vi/yk31RYYyC58/mqdefault.jpg",
+              "published_at": "2026-06-26T00:04:04Z",
               "is_etf_related": true
+            },
+            {
+              "title": "패시브vs액티브 ETF 완벽 총정리",
+              "url": "https://youtu.be/g9JuSczNmOw",
+              "thumbnail": "https://i.ytimg.com/vi/g9JuSczNmOw/mqdefault.jpg",
+              "published_at": "2026-06-25T23:42:22Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "채무조정 및 지원 제도 안내",
+              "url": "https://youtu.be/UBmi0bkNQzY",
+              "thumbnail": "https://i.ytimg.com/vi/UBmi0bkNQzY/mqdefault.jpg",
+              "published_at": "2026-06-25T08:15:20Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "마이크론 HBM4E 계획, 삼전·하닉은 이미?",
+              "url": "https://youtu.be/oCMpym4n55s",
+              "thumbnail": "https://i.ytimg.com/vi/oCMpym4n55s/mqdefault.jpg",
+              "published_at": "2026-06-25T07:16:08Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "마이크론 폭등! 삼성전자와 하이닉스, 하반기 상승 요인과 최선호주는?",
+              "url": "https://youtu.be/pxfL8U_YTck",
+              "thumbnail": "https://i.ytimg.com/vi/pxfL8U_YTck/mqdefault.jpg",
+              "published_at": "2026-06-25T03:00:28Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "마이크론 &#39;깜짝 실적&#39;, AI 반도체 슈퍼 사이클은 언제까지?",
+              "url": "https://youtu.be/IJ4oSklcfKo",
+              "thumbnail": "https://i.ytimg.com/vi/IJ4oSklcfKo/mqdefault.jpg",
+              "published_at": "2026-06-25T02:03:25Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "마이크론 시간외 폭등! 국내 반도체 전망은?",
+              "url": "https://youtu.be/2VgA2uoSuBU",
+              "thumbnail": "https://i.ytimg.com/vi/2VgA2uoSuBU/mqdefault.jpg",
+              "published_at": "2026-06-25T00:26:02Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "코스피 1만, 마이크론 실적에 달렸다",
+              "url": "https://youtu.be/cbi82UFcmkQ",
+              "thumbnail": "https://i.ytimg.com/vi/cbi82UFcmkQ/mqdefault.jpg",
+              "published_at": "2026-06-24T07:00:18Z",
+              "is_etf_related": false
             }
           ]
         },
@@ -36280,27 +36417,76 @@
         "kis_youtube": {
           "channel_name": "한국투자증권 유튜브",
           "success": true,
-          "snippet": "[0622 모닝한투] 마이크론 실적 대기 주간 vs 주말 중동 불확실성! 온기 확산이 아닌 낙폭확대를 보여준 금요일 증시 / [0622 끝장뉴스] 시총 1위 내준 삼성전자 보통주 / [모닝한투-핫리포트] LS, 현대로템, CJ제일제당, LG디스플레이",
+          "snippet": "[리서치톡톡] 반도체 쏠림 속 결국 조선주도 휘청 / [0626 리서치톡톡] 반도체 쏠림 속 결국 조선주도 휘청 [끝장뉴스] 반도체 밸류체인 급락에 일본과 대만도 동반 하락 / 📢지아의리포트💊💊에이프릴바이오: 현금 4천억원 보유, 시총은 고작 9천억원인 바이오가 있다💡👀",
           "videos": [
             {
-              "title": "[0622 모닝한투] 마이크론 실적 대기 주간 vs 주말 중동 불확실성! 온기 확산이 아닌 낙폭확대를 보여준 금요일 증시",
-              "url": "https://youtu.be/ni4xb1uaiqo",
-              "thumbnail": "https://i.ytimg.com/vi/ni4xb1uaiqo/mqdefault.jpg",
-              "published_at": "2026-06-22T13:04:51Z",
+              "title": "[리서치톡톡] 반도체 쏠림 속 결국 조선주도 휘청",
+              "url": "https://youtu.be/Ce_-U7cku6M",
+              "thumbnail": "https://i.ytimg.com/vi/Ce_-U7cku6M/mqdefault.jpg",
+              "published_at": "2026-06-26T07:03:48Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "[0626 리서치톡톡] 반도체 쏠림 속 결국 조선주도 휘청 [끝장뉴스] 반도체 밸류체인 급락에 일본과 대만도 동반 하락",
+              "url": "https://youtu.be/APuQ-nkRp5w",
+              "thumbnail": "https://i.ytimg.com/vi/APuQ-nkRp5w/mqdefault.jpg",
+              "published_at": "2026-06-26T05:53:27Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "📢지아의리포트💊💊에이프릴바이오: 현금 4천억원 보유, 시총은 고작 9천억원인 바이오가 있다💡👀",
+              "url": "https://youtu.be/_MEVUceAswY",
+              "thumbnail": "https://i.ytimg.com/vi/_MEVUceAswY/mqdefault.jpg",
+              "published_at": "2026-06-26T01:28:08Z",
               "is_etf_related": false
             },
             {
-              "title": "[0622 끝장뉴스] 시총 1위 내준 삼성전자 보통주",
-              "url": "https://youtu.be/w6hrgucfGwI",
-              "thumbnail": "https://i.ytimg.com/vi/w6hrgucfGwI/mqdefault.jpg",
-              "published_at": "2026-06-22T05:53:06Z",
+              "title": "[모닝한투-핫리포트] POSCO홀딩스, SOOP, 세아베스틸지주, 그린광학",
+              "url": "https://youtu.be/IPUJtASDWE0",
+              "thumbnail": "https://i.ytimg.com/vi/IPUJtASDWE0/mqdefault.jpg",
+              "published_at": "2026-06-26T00:58:50Z",
               "is_etf_related": false
             },
             {
-              "title": "[모닝한투-핫리포트] LS, 현대로템, CJ제일제당, LG디스플레이",
-              "url": "https://youtu.be/7rwLFds5kjU",
-              "thumbnail": "https://i.ytimg.com/vi/7rwLFds5kjU/mqdefault.jpg",
-              "published_at": "2026-06-22T01:09:52Z",
+              "title": "[0626 모닝한투] 애플의 곡소리가 만든 미국 반도체주 변동성! 마이크론 오르긴 했지만 빅테크 급락이 부담된다",
+              "url": "https://youtu.be/dd-lD0L0J9c",
+              "thumbnail": "https://i.ytimg.com/vi/dd-lD0L0J9c/mqdefault.jpg",
+              "published_at": "2026-06-25T23:35:41Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "[리서치톡톡] AI 밸류체인도 반도체주로 쏠리고 있다",
+              "url": "https://youtu.be/MEkIeMslXkM",
+              "thumbnail": "https://i.ytimg.com/vi/MEkIeMslXkM/mqdefault.jpg",
+              "published_at": "2026-06-25T23:20:10Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "[모닝한투-핫리포트] 삼성전자, 이수페타시스, 삼양바이오팜, 네오팜",
+              "url": "https://youtu.be/n3AlcQa2UMs",
+              "thumbnail": "https://i.ytimg.com/vi/n3AlcQa2UMs/mqdefault.jpg",
+              "published_at": "2026-06-25T23:12:24Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "[0625 리서치톡톡] AI 밸류체인도 반도체주로 쏠리고 있다 [끝장뉴스] 쏠림 현상이 반갑지 않았던 코스닥의 하락",
+              "url": "https://youtu.be/2zlypID3M7E",
+              "thumbnail": "https://i.ytimg.com/vi/2zlypID3M7E/mqdefault.jpg",
+              "published_at": "2026-06-25T18:55:36Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "[0625 모닝한투] 마이크론 실적, 미쳤다! 조정은 매수의 기회였다! 이번에도 개인의 승리",
+              "url": "https://youtu.be/y5aKJgCBn30",
+              "thumbnail": "https://i.ytimg.com/vi/y5aKJgCBn30/mqdefault.jpg",
+              "published_at": "2026-06-25T12:47:33Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "[0624 리서치톡톡] 금리 상승 우려와 대표 성장테마 로봇주 하락 [끝장뉴스] 급락한 바이오주 반등. 관심가져야 할 바이오텍은?",
+              "url": "https://youtu.be/iFf7b32UtB0",
+              "thumbnail": "https://i.ytimg.com/vi/iFf7b32UtB0/mqdefault.jpg",
+              "published_at": "2026-06-24T18:47:05Z",
               "is_etf_related": false
             }
           ]
@@ -36314,83 +36500,105 @@
         "shinhan_youtube": {
           "channel_name": "신한투자증권 유튜브",
           "success": true,
-          "snippet": "",
-          "videos": []
+          "snippet": "[장 후 NIGHT] ep.3 | 반려동물과 함께하는 삶의 변화, 펫 휴머니제이션! /신한투자증권 / 국가가 매달 주는 용돈 활용해 자녀 자산 1억 만드는 법ㅣ송현호 전문가 /신한투자증권",
+          "videos": [
+            {
+              "title": "[장 후 NIGHT] ep.3 | 반려동물과 함께하는 삶의 변화, 펫 휴머니제이션! /신한투자증권",
+              "url": "https://youtu.be/8esqz2DMGmU",
+              "thumbnail": "https://i.ytimg.com/vi/8esqz2DMGmU/mqdefault.jpg",
+              "published_at": "2026-06-26T08:00:03Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "국가가 매달 주는 용돈 활용해 자녀 자산 1억 만드는 법ㅣ송현호 전문가 /신한투자증권",
+              "url": "https://youtu.be/owt0rnDfXzo",
+              "thumbnail": "https://i.ytimg.com/vi/owt0rnDfXzo/mqdefault.jpg",
+              "published_at": "2026-06-24T08:00:36Z",
+              "is_etf_related": false
+            }
+          ]
         },
         "kb_youtube": {
           "channel_name": "KB증권 유튜브",
           "success": true,
-          "snippet": "주식 투자 FOMO 멘탈 케어법 / 오늘의 증시 (6월 22일 월요일) / 주 초반 흔들릴 때가 기회 (유영화 차장)｜모닝라이브｜PRIME CLUB",
+          "snippet": "오늘의 증시 (6월 26일 금요일) / 시장이 우려하는 칩플레이션 발생, AI기판주로 선택과 집중 필요!(박건희 차장) | 모닝라이브｜PRIME CLUB / [Daily] 2026년 6월 26일 KB모닝미팅",
           "videos": [
             {
-              "title": "주식 투자 FOMO 멘탈 케어법",
-              "url": "https://youtu.be/YVtvEFEqw5c",
-              "thumbnail": "https://i.ytimg.com/vi/YVtvEFEqw5c/mqdefault.jpg",
-              "published_at": "2026-06-22T09:14:02Z",
+              "title": "오늘의 증시 (6월 26일 금요일)",
+              "url": "https://youtu.be/m73sKVaxxPQ",
+              "thumbnail": "https://i.ytimg.com/vi/m73sKVaxxPQ/mqdefault.jpg",
+              "published_at": "2026-06-26T08:30:33Z",
               "is_etf_related": false
             },
             {
-              "title": "오늘의 증시 (6월 22일 월요일)",
-              "url": "https://youtu.be/VUJkdvMTwII",
-              "thumbnail": "https://i.ytimg.com/vi/VUJkdvMTwII/mqdefault.jpg",
-              "published_at": "2026-06-22T08:30:21Z",
-              "is_etf_related": false
-            },
-            {
-              "title": "주 초반 흔들릴 때가 기회 (유영화 차장)｜모닝라이브｜PRIME CLUB",
-              "url": "https://youtu.be/uVN0YN4u58g",
-              "thumbnail": "https://i.ytimg.com/vi/uVN0YN4u58g/mqdefault.jpg",
-              "published_at": "2026-06-22T04:23:41Z",
-              "is_etf_related": false
-            },
-            {
-              "title": "삼전, 하이닉스 말고... 젠슨 황이 대놓고 밀어주는 &#39;여기&#39; 주목하세요",
-              "url": "https://youtu.be/XHfzVKYAq14",
-              "thumbnail": "https://i.ytimg.com/vi/XHfzVKYAq14/mqdefault.jpg",
-              "published_at": "2026-06-22T03:52:31Z",
-              "is_etf_related": false
-            },
-            {
-              "title": "스페이스X 상장급 자금 빨아들인 알파벳의 무서운 속내",
-              "url": "https://youtu.be/rHL77qFzgac",
-              "thumbnail": "https://i.ytimg.com/vi/rHL77qFzgac/mqdefault.jpg",
-              "published_at": "2026-06-22T03:51:28Z",
-              "is_etf_related": false
-            },
-            {
-              "title": "올라도 너~ 무 오른 삼전·닉스! 지금 타도 괜찮을까?",
-              "url": "https://youtu.be/8GE3MIa_WIk",
-              "thumbnail": "https://i.ytimg.com/vi/8GE3MIa_WIk/mqdefault.jpg",
-              "published_at": "2026-06-22T03:41:31Z",
-              "is_etf_related": false
-            },
-            {
-              "title": "삼전·하닉·엔비디아·마이크론…여의도 선수들이 고른 반도체 1등은?! 🥚미주알고주알",
-              "url": "https://youtu.be/iZ-CJ67902A",
-              "thumbnail": "https://i.ytimg.com/vi/iZ-CJ67902A/mqdefault.jpg",
-              "published_at": "2026-06-22T03:40:39Z",
+              "title": "시장이 우려하는 칩플레이션 발생, AI기판주로 선택과 집중 필요!(박건희 차장) | 모닝라이브｜PRIME CLUB",
+              "url": "https://youtu.be/OAvjaD85_Ps",
+              "thumbnail": "https://i.ytimg.com/vi/OAvjaD85_Ps/mqdefault.jpg",
+              "published_at": "2026-06-26T04:28:33Z",
               "is_etf_related": true
             },
             {
-              "title": "[Daily] 2026년 6월 22일 KB모닝미팅",
-              "url": "https://youtu.be/YjCYhqHAY1E",
-              "thumbnail": "https://i.ytimg.com/vi/YjCYhqHAY1E/mqdefault.jpg",
-              "published_at": "2026-06-22T01:14:49Z",
+              "title": "[Daily] 2026년 6월 26일 KB모닝미팅",
+              "url": "https://youtu.be/7Pg30KfXSB0",
+              "thumbnail": "https://i.ytimg.com/vi/7Pg30KfXSB0/mqdefault.jpg",
+              "published_at": "2026-06-26T00:26:35Z",
               "is_etf_related": true
             },
             {
-              "title": "[연금 라이브] 연금마스터와 연금을 연마하자! 미국 중간선거와 글로벌 빅테크 투자전략",
-              "url": "https://youtu.be/AhDhxg6Lsps",
-              "thumbnail": "https://i.ytimg.com/vi/AhDhxg6Lsps/mqdefault_live.jpg",
-              "published_at": "2026-06-22T00:51:07Z",
+              "title": "엔비디아 AI 팩토리 폭발, 기판과 패키징 대장주 정리",
+              "url": "https://youtu.be/08ts1tfQU1U",
+              "thumbnail": "https://i.ytimg.com/vi/08ts1tfQU1U/mqdefault.jpg",
+              "published_at": "2026-06-26T00:03:22Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "오늘의 증시 (6월 25일 목요일)",
+              "url": "https://youtu.be/bcSBec926m0",
+              "thumbnail": "https://i.ytimg.com/vi/bcSBec926m0/mqdefault.jpg",
+              "published_at": "2026-06-25T08:30:24Z",
               "is_etf_related": false
+            },
+            {
+              "title": "[Daily] 2026년 6월 25일 KB모닝미팅",
+              "url": "https://youtu.be/asAXnA6cWX8",
+              "thumbnail": "https://i.ytimg.com/vi/asAXnA6cWX8/mqdefault.jpg",
+              "published_at": "2026-06-25T00:30:52Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "오늘의 증시 (6월 24일 수요일)",
+              "url": "https://youtu.be/GUO-ZaCdLWs",
+              "thumbnail": "https://i.ytimg.com/vi/GUO-ZaCdLWs/mqdefault.jpg",
+              "published_at": "2026-06-24T08:30:12Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "[LIVE] SK하닉 시총1위 등극, 패러다임 변화? 26년 하반기를 이끌 주도주와 시장전략｜260624｜마스터즈｜민재기 팀장, 박건희 차장",
+              "url": "https://youtu.be/YkcAFBLuHXM",
+              "thumbnail": "https://i.ytimg.com/vi/YkcAFBLuHXM/mqdefault.jpg",
+              "published_at": "2026-06-24T02:29:29Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "숏돌이의 반도체 ETF 투자법",
+              "url": "https://youtu.be/DrIxaaGdOQg",
+              "thumbnail": "https://i.ytimg.com/vi/DrIxaaGdOQg/mqdefault.jpg",
+              "published_at": "2026-06-24T02:00:11Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "[Daily] 2026년 6월 24일 KB모닝미팅",
+              "url": "https://youtu.be/E7Xe6bDmQ5A",
+              "thumbnail": "https://i.ytimg.com/vi/E7Xe6bDmQ5A/mqdefault.jpg",
+              "published_at": "2026-06-24T00:50:57Z",
+              "is_etf_related": true
             }
           ]
         },
         "news": {
           "channel_name": "네이버/구글 뉴스",
           "success": true,
-          "snippet": "[마켓시그널]상반기 한국 증시 결산…결국 돌고 돌아 반도체",
+          "snippet": "반도체 쏠림·레버리지의 부메랑…작은 노이즈에도 장중 9% 휘청 / 코스피 고공행진 속 증권사 광고비는 뒷걸음질…왜? / &quot;연장하면 나만 손해&quot;…수십조 ISA 만기족 흔드는 '3년 리셋'의 비밀",
           "videos": []
         },
         "instagram": {
@@ -36402,13 +36610,13 @@
         "kakao": {
           "channel_name": "삼성자산운용 카카오채널",
           "success": true,
-          "snippet": "",
+          "snippet": "[KODEX 웹세미나] Kodex 하반기 투자 키워드 [코드명 : AI 병목] [KODEX 웹세미나] Kodex 하반기 투자 키워드 [코드명 : AI 병목]",
           "videos": []
         },
         "google_trends": {
           "channel_name": "구글 트렌드 + 네이버 데이터랩",
-          "success": false,
-          "snippet": "구글 인기검색어 10개 (ETF 미포함)",
+          "success": true,
+          "snippet": "구글 인기검색어 10개 (ETF 미포함) | 네이버 검색트렌드: KODEX 12(-7) / ETF 42(-21) / TIGER 4(-4) / ACE 3(-2)",
           "videos": []
         },
         "samsung_sec_kakao": {
@@ -36438,7 +36646,7 @@
         "shinhan_sec_kakao": {
           "channel_name": "신한투자증권 카카오채널",
           "success": true,
-          "snippet": "[쏠쏠한 리포트] 신한투자증권 6월 22일 쇼츠 리포트  / [위클리 가이드북] 신한투자증권 6월 4주차 해외 주식 투자 이슈  / 6월 투자마음가짐  / [쏠쏠한 리포트] 신한투자증권 2026년 6월 22일 글로벌 데일리 ",
+          "snippet": "[쏠쏠한 리포트] 신한투자증권 2026년 6월 26일 글로벌 데일리  / [쏠쏠한 리포트] 신한투자증권 6월 25일 쇼츠 리포트  / [쏠쏠한 리포트] 신한투자증권 2026년 6월 25일 글로벌 데일리  / [쏠쏠한 리포트] 신한투자증권 6월 24일 쇼츠 리포트  / [쏠쏠한 리포트] 신한투자증권 2026년 6월 24일 글로벌 데일리 ",
           "videos": []
         },
         "shinhan_sec_event": {
@@ -36455,160 +36663,9 @@
         }
       },
       "events": {
-        "marketing_detected": true,
-        "summary": "삼성자산운용과 각 증권사들이 KODEX ETF 신규상장, 매수 이벤트, 수수료 혜택 등을 통해 적극적으로 ETF 투자를 유도하고 있습니다. 특히 삼성자산운용은 전고체배터리·로보틱스·AI반도체 등 인기 테마의 신규 KODEX ETF 상장 이벤트를 집중 프로모션하고 있으며, 각 증권사는 ISA, 중개형ISA, 수수료 면제 등의 혜택으로 고객 유입을 촉진 중입니다.",
-        "events": [
-          {
-            "channel": "삼성자산운용 이벤트 페이지",
-            "provider": "삼성자산운용",
-            "title": "(예정) KODEX 전고체배터리ESS TOP2플러스 ETF 신규 상장 이벤트",
-            "url": null,
-            "marketing_type": "신규상장",
-            "event_period": "2026-06-23 ~ 2026-07-31",
-            "event_summary": "KODEX 전고체배터리ESS TOP2플러스 ETF의 신규 상장을 기념한 이벤트로, 당첨자 발표는 2026년 8월 중 예정",
-            "target_etf": "KODEX 전고체배터리ESS TOP2플러스 ETF"
-          },
-          {
-            "channel": "삼성자산운용 이벤트 페이지",
-            "provider": "삼성자산운용",
-            "title": "KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF 신규상장 이벤트",
-            "url": null,
-            "marketing_type": "신규상장",
-            "event_period": null,
-            "event_summary": "현대차 로보틱스 밸류체인 관련 KODEX ETF의 신규 상장 이벤트",
-            "target_etf": "KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF"
-          },
-          {
-            "channel": "삼성자산운용 이벤트 페이지",
-            "provider": "삼성자산운용",
-            "title": "[6~8월 릴레이 이벤트] Kodex ETF 순자산 200조 돌파 기념",
-            "url": null,
-            "marketing_type": "이벤트",
-            "event_period": "2026-06-01 ~ 2026-08-31",
-            "event_summary": "KODEX ETF 순자산 200조 돌파를 기념하는 릴레이 이벤트",
-            "target_etf": "KODEX ETF (전체)"
-          },
-          {
-            "channel": "삼성자산운용 이벤트 페이지",
-            "provider": "삼성자산운용",
-            "title": "KODEX 미국대표지수 ETF 적립식 매수 이벤트",
-            "url": null,
-            "marketing_type": "이벤트",
-            "event_period": null,
-            "event_summary": "KODEX 미국대표지수 ETF의 적립식 매수를 유도하는 이벤트",
-            "target_etf": "KODEX 미국대표지수 ETF"
-          },
-          {
-            "channel": "삼성자산운용 이벤트 페이지",
-            "provider": "삼성자산운용",
-            "title": "KODEX AI반도체TOP2플러스 ETF 매수 인증 이벤트",
-            "url": null,
-            "marketing_type": "이벤트",
-            "event_period": null,
-            "event_summary": "KODEX AI반도체TOP2플러스 ETF의 매수 인증을 통한 이벤트 참여 유도",
-            "target_etf": "KODEX AI반도체TOP2플러스 ETF"
-          },
-          {
-            "channel": "삼성증권 유튜브",
-            "provider": "삼성증권",
-            "title": "주간 투자 전략(6월 4주): 기반지세: 반도체를 타고 달리는 형세",
-            "url": null,
-            "marketing_type": "추천콘텐츠",
-            "event_period": null,
-            "event_summary": "반도체 업종 중심의 투자 전략 콘텐츠로, KODEX 반도체 관련 ETF 투자 유도 가능성 있음",
-            "target_etf": "KODEX 반도체 관련 ETF (추정)"
-          },
-          {
-            "channel": "삼성증권 유튜브",
-            "provider": "삼성증권",
-            "title": "[마감브리핑] 반도체 업종 중심으로 상승 (2026년 6월 22일)",
-            "url": null,
-            "marketing_type": "추천콘텐츠",
-            "event_period": null,
-            "event_summary": "반도체 업종 상승 흐름을 분석하는 콘텐츠로 관련 ETF 투자 관심 유도",
-            "target_etf": "KODEX 반도체 관련 ETF (추정)"
-          },
-          {
-            "channel": "삼성증권 유튜브",
-            "provider": "삼성증권",
-            "title": "[리서치 핵심터치] LG에너지솔루션, 2H26 Outlook - 대규모 ESS 수주 본격화",
-            "url": null,
-            "marketing_type": "추천콘텐츠",
-            "event_period": null,
-            "event_summary": "ESS(에너지저장장치) 관련 산업 전망 분석으로 KODEX 전고체배터리ESS 관련 ETF 투자 유도",
-            "target_etf": "KODEX 전고체배터리ESS 관련 ETF (추정)"
-          },
-          {
-            "channel": "삼성증권 유튜브",
-            "provider": "삼성증권",
-            "title": "주간 추천 종목 10선 (6월 4주)",
-            "url": null,
-            "marketing_type": "추천콘텐츠",
-            "event_period": null,
-            "event_summary": "삼성전자, SK하이닉스, 현대차 등 KODEX 구성 종목들의 투자 추천으로 관련 ETF 투자 유도",
-            "target_etf": "KODEX 200, KODEX AI반도체TOP2플러스 등 (추정)"
-          },
-          {
-            "channel": "KB증권 유튜브",
-            "provider": "KB증권",
-            "title": "삼전, 하이닉스 말고... 젠슨 황이 대놓고 밀어주는 '여기' 주목하세요",
-            "url": null,
-            "marketing_type": "추천콘텐츠",
-            "event_period": null,
-            "event_summary": "AI·반도체 관련 투자처 추천으로 관련 ETF 투자 유도",
-            "target_etf": "AI반도체 관련 KODEX ETF (추정)"
-          },
-          {
-            "channel": "KB증권 이벤트",
-            "provider": "KB증권",
-            "title": "중개형ISA 순입금(이전) 이벤트 시즌3",
-            "url": null,
-            "marketing_type": "수수료혜택",
-            "event_period": null,
-            "event_summary": "중개형ISA를 통한 ETF 투자 시 세제 혜택 및 수수료 혜택 제공",
-            "target_etf": null
-          },
-          {
-            "channel": "KB증권 이벤트",
-            "provider": "KB증권",
-            "title": "영(Young)하니까 수수료는 0원!",
-            "url": null,
-            "marketing_type": "수수료혜택",
-            "event_period": null,
-            "event_summary": "젊은 투자자 대상 주식·ETF 온라인 거래 수수료 면제",
-            "target_etf": null
-          },
-          {
-            "channel": "KB증권 이벤트",
-            "provider": "KB증권",
-            "title": "RIA ETF 순매수 이벤트",
-            "url": null,
-            "marketing_type": "이벤트",
-            "event_period": null,
-            "event_summary": "RIA(로보어드바이저) ETF의 순매수를 통한 이벤트 참여 유도",
-            "target_etf": null
-          },
-          {
-            "channel": "신한투자증권 이벤트",
-            "provider": "신한투자증권",
-            "title": "중개형ISA 이벤트",
-            "url": null,
-            "marketing_type": "수수료혜택",
-            "event_period": null,
-            "event_summary": "중개형ISA 계좌 개설을 통한 ETF 투자 시 세제 혜택 제공",
-            "target_etf": null
-          },
-          {
-            "channel": "신한투자증권 이벤트",
-            "provider": "신한투자증권",
-            "title": "국내주식 온라인 수수료 제로베이스 이벤트",
-            "url": null,
-            "marketing_type": "수수료혜택",
-            "event_period": null,
-            "event_summary": "국내주식 및 ETF 온라인 거래 수수료 감면",
-            "target_etf": null
-          }
-        ]
+        "marketing_detected": false,
+        "events": [],
+        "summary": "LLM 분석 실패"
       }
     },
     "bank": {
@@ -36622,16 +36679,13 @@
           "NH농협은행 블로그",
           "하나은행 블로그",
           "네이버 뉴스 (은행+ETF)",
-          "구글 뉴스 (은행+ETF)"
+          "구글 뉴스 (은행+ETF)",
+          "하나은행 카카오채널"
         ],
         "failed": [
           {
             "name": "신한은행 카카오채널",
             "error": "게시물 없음"
-          },
-          {
-            "name": "하나은행 카카오채널",
-            "error": "이번 주 게시물 없음 (전체 20개)"
           },
           {
             "name": "우리은행 카카오채널",
@@ -36642,21 +36696,99 @@
             "error": "이번 주 게시물 없음 (전체 20개)"
           }
         ],
-        "ok_count": 9,
-        "fail_count": 4
+        "ok_count": 10,
+        "fail_count": 3
       },
       "raw": {
         "kb_youtube": {
           "channel_name": "KB국민은행 유튜브",
           "success": false,
-          "snippet": "",
-          "videos": []
+          "snippet": "[EP.01] K기업의 Bridge가 되다 | Star to START : K기업 Begins ep.01 #드라마 #김남길 / 내 집 마련의 첫 걸음, KB국민은행 주택청약종합저축🏠 / [KB국민은행] &quot;은행이 드라마까지 잘 만들면 어떡하냐...&quot; | 장항준 김은희 부부가 눈을 떼지 못한 드라마는?!",
+          "videos": [
+            {
+              "title": "[EP.01] K기업의 Bridge가 되다 | Star to START : K기업 Begins ep.01 #드라마 #김남길",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "내 집 마련의 첫 걸음, KB국민은행 주택청약종합저축🏠",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "[KB국민은행] &quot;은행이 드라마까지 잘 만들면 어떡하냐...&quot; | 장항준 김은희 부부가 눈을 떼지 못한 드라마는?!",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "[KB골든라이프 × 장항준&amp;김은희] 이제 천만 감독 됐으니까 관리 좀 받자",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "[KB골든라이프 × 장항준&amp;김은희] 다시 태어나도 선택은 같을 거 같아요",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "[KB골든라이프 × 장항준&amp;김은희] 제 인생 최고의 선물이랄까?",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "[KB골든라이프 × 장항준&amp;김은희] 요즘 유행이더라 항준적 사고",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            }
+          ]
         },
         "shinhan_youtube": {
           "channel_name": "신한은행 유튜브",
           "success": false,
-          "snippet": "신한이 한눈에 알려드립니다 | 금융 커버리지 100%! 더 새로워진 ‘신한 슈퍼SOL’ 핵심 기능 완벽 가이드!",
+          "snippet": "신한 나라사랑카드 숏폼 공모전 &#39;최우수상’ 수상작 / 신한 나라사랑카드 숏폼 공모전 &#39;최우수상’ 수상작 / 신한 나라사랑카드 숏폼 공모전 &#39;대상’ 수상작",
           "videos": [
+            {
+              "title": "신한 나라사랑카드 숏폼 공모전 &#39;최우수상’ 수상작",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "신한 나라사랑카드 숏폼 공모전 &#39;최우수상’ 수상작",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "신한 나라사랑카드 숏폼 공모전 &#39;대상’ 수상작",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "신한 나라사랑카드 홍보 숏폼 공모전 &#39;최우수상’ 수상작",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
             {
               "title": "신한이 한눈에 알려드립니다 | 금융 커버리지 100%! 더 새로워진 ‘신한 슈퍼SOL’ 핵심 기능 완벽 가이드!",
               "url": "",
@@ -36689,8 +36821,57 @@
         "nh_youtube": {
           "channel_name": "NH농협은행 유튜브",
           "success": false,
-          "snippet": "[제철대첩] EP.1 오이를 면처럼?! 윤대현 ‘오이 국수‘ 레시피 / [제철대첩] EP.1 오이 뜨겁게 먹으면 극락! 김희은 ‘오이전‘ 레시피",
+          "snippet": "[제철대첩] EP.2 🥒 오이 편식 참교육?! / 농심천심 범농협 농촌일손 집중 지원의 날 / [제철대첩] EP.1 윤대현 셰프: 흑백3 연락주세요",
           "videos": [
+            {
+              "title": "[제철대첩] EP.2 🥒 오이 편식 참교육?!",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "농심천심 범농협 농촌일손 집중 지원의 날",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "[제철대첩] EP.1 윤대현 셰프: 흑백3 연락주세요",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "[체험농협현장] 마을회관에 나이트클럽 DJ가 나타났다(?)",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "[제철대첩] EP.1 오히토 가서 몰디브 한잔?! 윤대현 ‘오히토‘ 레시피",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "[제철대첩] EP.1 메로나맛 궁중 디저트?! 김희은 ‘오이 화채‘ 레시피",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
+            {
+              "title": "[체험농협현장] 무거운 이불빨래 농협이 해드립니다.",
+              "url": "",
+              "thumbnail": "",
+              "published_at": "",
+              "is_etf_related": false
+            },
             {
               "title": "[제철대첩] EP.1 오이를 면처럼?! 윤대현 ‘오이 국수‘ 레시피",
               "url": "",
@@ -36722,13 +36903,13 @@
         "naver_news": {
           "channel_name": "네이버 뉴스 (은행+ETF)",
           "success": false,
-          "snippet": "베일 벗은 ‘청년미래적금’…청년층 관심 속 신청 시작 / '연 19% 효과' 청년미래적금 떴다…은행권 고객 유치전 점화 / 최고 연 8% 청년미래적금…은행마다 우대조건 달라",
+          "snippet": "우대금리에 이벤트·계열사 혜택까지...은행권 '청년미래적금' 확보전 ... / 우리금융 전 계열사, 청년 자산형성 지원 / 청년미래적금, 연 8% 금리시대 열어...은행권 유치 경쟁 치열",
           "videos": []
         },
         "google_news": {
           "channel_name": "구글 뉴스 (은행+ETF)",
           "success": false,
-          "snippet": "금융권 'WM 영토전' 과열…'불안한' 은행 vs '내실 성장' 증권 - 인베스트조선 / KB국민은행, IRP 고객 대상 투자 이벤트…TDF·ETF 가입 시 경품 제공 - 인더스트리뉴스 / \"123조 증권에 뺏길라\"…은행들 퇴직연금 ETF 유치 '혈안' - v.daum.net",
+          "snippet": "\"123조 증권에 뺏길라\"…은행들 퇴직연금 ETF 유치 '혈안' - v.daum.net / KB국민은행, IRP 고객 대상 투자 이벤트…TDF·ETF 가입 시 경품 제공 - 인더스트리뉴스 / KB국민은행, 삼성자산운용 고객 대상 ‘경품 이벤트’ 실시 - 경기신문",
           "videos": []
         },
         "shinhan_bank_kakao": {
@@ -36739,8 +36920,8 @@
         },
         "hana_bank_kakao": {
           "channel_name": "하나은행 카카오채널",
-          "success": false,
-          "snippet": "",
+          "success": true,
+          "snippet": "⚽32강을 위해 하나된 대한민국!⚽ ",
           "videos": []
         },
         "woori_bank_kakao": {
@@ -36758,7 +36939,7 @@
       },
       "events": {
         "marketing_detected": false,
-        "summary": "하나은행의 마케팅 활동은 금융 세미나(머니쇼), 골프 대회 스폰서십, 축구 응원 이벤트, 바둑 페스티벌 등 다양한 브랜드 활동으로 구성되어 있습니다. 다만 ETF 매수를 직접 유도하는 이벤트, 프로모션, 경품, 수수료 혜택은 포함되어 있지 않습니다.",
+        "summary": "하나은행의 6월 마케팅 활동은 청년미래적금, 금융 세미나, 골프대회 스폰십, 축구 연계 적금 상품 등으로 구성되어 있으나, ETF 매수를 직접 유도하는 이벤트나 프로모션은 감지되지 않습니다.",
         "events": []
       }
     },
@@ -36801,20 +36982,77 @@
         "samsung_fund_event": {
           "channel_name": "삼성자산운용 이벤트 페이지",
           "success": true,
-          "snippet": " (예정) KODEX 전고체배터리ESS TOP2플러스 ETF 신규 상장 이벤트🔋 Kodex Kodex ETF 삼성펀드 Kodex ETF 삼성펀드 KODEX 페이지로 이동할 수 있어요 ETF분배금 현황 KR EN 마이페이지 검색 메뉴 Kodex search 인기키워드 KODEX200 액티브 fang Kodex ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! KR EN 검색 메뉴 닫기 로그인 해주세요 로그인 마이페이지 최근 본 상품 ETF분배",
+          "snippet": " KODEX 전고체배터리ESS TOP2플러스 ETF 신규 상장 이벤트🔋 Kodex Kodex ETF 삼성펀드 Kodex ETF 삼성펀드 KODEX 페이지로 이동할 수 있어요 ETF분배금 현황 KR EN 마이페이지 검색 메뉴 Kodex search 인기키워드 KODEX200 액티브 fang Kodex ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! KR EN 검색 메뉴 닫기 로그인 해주세요 로그인 마이페이지 최근 본 상품 ETF분배금 현황 ",
           "videos": []
         },
         "news": {
           "channel_name": "네이버/구글 뉴스",
           "success": true,
-          "snippet": "[마켓시그널]상반기 한국 증시 결산…결국 돌고 돌아 반도체",
+          "snippet": "반도체 쏠림·레버리지의 부메랑…작은 노이즈에도 장중 9% 휘청 / 코스피 고공행진 속 증권사 광고비는 뒷걸음질…왜? / &quot;연장하면 나만 손해&quot;…수십조 ISA 만기족 흔드는 '3년 리셋'의 비밀",
           "videos": []
         },
         "kodex_youtube": {
           "channel_name": "KODEX ETF 유튜브 (삼성자산운용)",
           "success": true,
-          "snippet": "",
-          "videos": []
+          "snippet": "한 번 더 새로워진 AI시대의 반도체 투자ㅣ KODEX AI반도체TOP2플러스 ETFㅣETF상품정보 / 2차전지 투자? 이제 전고체배터리 시대! KODEX 전고체배터리ESS TOP2플러스 ETF (6/23 신규 상장)ㅣETF투자정보 / 캐시우드 x KODEX - 한국 반도체 투자, 외국에서는 어떻게 볼까? 특별 인터뷰 Ep.01",
+          "videos": [
+            {
+              "title": "한 번 더 새로워진 AI시대의 반도체 투자ㅣ KODEX AI반도체TOP2플러스 ETFㅣETF상품정보",
+              "url": "https://youtu.be/4EyHaYKR--0",
+              "thumbnail": "https://i.ytimg.com/vi/4EyHaYKR--0/mqdefault.jpg",
+              "published_at": "2026-06-26T08:25:30Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "2차전지 투자? 이제 전고체배터리 시대! KODEX 전고체배터리ESS TOP2플러스 ETF (6/23 신규 상장)ㅣETF투자정보",
+              "url": "https://youtu.be/jOtwY5duOuE",
+              "thumbnail": "https://i.ytimg.com/vi/jOtwY5duOuE/mqdefault.jpg",
+              "published_at": "2026-06-26T04:59:27Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "캐시우드 x KODEX - 한국 반도체 투자, 외국에서는 어떻게 볼까? 특별 인터뷰 Ep.01",
+              "url": "https://youtu.be/IRYqPyh3lXw",
+              "thumbnail": "https://i.ytimg.com/vi/IRYqPyh3lXw/mqdefault.jpg",
+              "published_at": "2026-06-24T09:20:11Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "🎁KODEX 홈페이지 이벤트🎁 KODEX 전고체배터리ESSTOP2플러스 ETF 신규상장 이벤트🎉",
+              "url": "https://youtu.be/43j3JT8iRRk",
+              "thumbnail": "https://i.ytimg.com/vi/43j3JT8iRRk/mqdefault.jpg",
+              "published_at": "2026-06-23T08:26:35Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "2차전지 Next 스탭! 전고체배터리ESS ETF 출시😎",
+              "url": "https://youtu.be/Uen8kVgkCyc",
+              "thumbnail": "https://i.ytimg.com/vi/Uen8kVgkCyc/mqdefault.jpg",
+              "published_at": "2026-06-23T07:03:31Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "AI데이터센터에 필수! 수요 급증하는 ESS 슈퍼사이클 수혜주 투자! KODEX 전고체배터리ESS TOP2플러스 ETF (6/23 신규 상장)ㅣETF투자정보",
+              "url": "https://youtu.be/00358lfoq4s",
+              "thumbnail": "https://i.ytimg.com/vi/00358lfoq4s/mqdefault.jpg",
+              "published_at": "2026-06-23T01:46:12Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "[웹세미나] Kodex 하반기 투자 키워드 [코드명 : AI 병목]",
+              "url": "https://youtu.be/soXTIr5rvpU",
+              "thumbnail": "https://i.ytimg.com/vi/soXTIr5rvpU/mqdefault_live.jpg",
+              "published_at": "2026-06-23T00:27:28Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "전기차 화재 위험 뚝! 전고체 배터리 양산 임박, 2차전지 ESS 슈퍼사이클 수혜주 투자! KODEX 전고체배터리ESS TOP2플러스 ETF (6/23 신규 상장)ㅣETF투자정보",
+              "url": "https://youtu.be/tjiIoMyw-O8",
+              "thumbnail": "https://i.ytimg.com/vi/tjiIoMyw-O8/mqdefault.jpg",
+              "published_at": "2026-06-22T20:33:57Z",
+              "is_etf_related": true
+            }
+          ]
         },
         "tiger_youtube": {
           "channel_name": "TIGER ETF 유튜브 (미래에셋자산운용)",
@@ -36833,13 +37071,13 @@
         "ace_youtube": {
           "channel_name": "ACE ETF 유튜브 (한국투자신탁운용)",
           "success": true,
-          "snippet": "단돈 1만원으로 삼성전자·SK하이닉스 동시 투자하는 법! | ACE K반도체TOP2+ #shorts / AI 시대, 반도체 다음은 전력입니다｜ACE 코리아AI전력TOP10",
+          "snippet": "단돈 1만원대로 삼성전자·SK하이닉스 동시 투자하는 법! | ACE K반도체TOP2+ #shorts / AI 시대, 반도체 다음은 전력입니다｜ACE 코리아AI전력TOP10",
           "videos": [
             {
-              "title": "단돈 1만원으로 삼성전자·SK하이닉스 동시 투자하는 법! | ACE K반도체TOP2+ #shorts",
-              "url": "https://youtu.be/O48aSzdKEa0",
-              "thumbnail": "https://i.ytimg.com/vi/O48aSzdKEa0/mqdefault.jpg",
-              "published_at": "2026-06-22T08:36:37Z",
+              "title": "단돈 1만원대로 삼성전자·SK하이닉스 동시 투자하는 법! | ACE K반도체TOP2+ #shorts",
+              "url": "https://youtu.be/qJlli4lo5NA",
+              "thumbnail": "https://i.ytimg.com/vi/qJlli4lo5NA/mqdefault.jpg",
+              "published_at": "2026-06-23T08:25:36Z",
               "is_etf_related": true
             },
             {
@@ -36854,14 +37092,58 @@
         "rise_youtube": {
           "channel_name": "RISE ETF 유튜브 (KB자산운용)",
           "success": true,
-          "snippet": "",
-          "videos": []
+          "snippet": "이제 AI전&#39;력&#39;인프라 투자도 전&#39;략&#39;적으로! RISE AI전력인프라시리즈 ETF / 📢 [월간RISE] 삼성전자, SK하이닉스 어디까지 가나요? / 이제 AI전&#39;력&#39;인프라 투자도 전&#39;략&#39;적으로! RISE AI전력인프라시리즈 ETF",
+          "videos": [
+            {
+              "title": "이제 AI전&#39;력&#39;인프라 투자도 전&#39;략&#39;적으로! RISE AI전력인프라시리즈 ETF",
+              "url": "https://youtu.be/tgA7TUDNemU",
+              "thumbnail": "https://i.ytimg.com/vi/tgA7TUDNemU/mqdefault.jpg",
+              "published_at": "2026-06-26T06:49:39Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "📢 [월간RISE] 삼성전자, SK하이닉스 어디까지 가나요?",
+              "url": "https://youtu.be/OyxtTZ0dzP8",
+              "thumbnail": "https://i.ytimg.com/vi/OyxtTZ0dzP8/mqdefault_live.jpg",
+              "published_at": "2026-06-26T05:50:43Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "이제 AI전&#39;력&#39;인프라 투자도 전&#39;략&#39;적으로! RISE AI전력인프라시리즈 ETF",
+              "url": "https://youtu.be/ljX5kmmChYU",
+              "thumbnail": "https://i.ytimg.com/vi/ljX5kmmChYU/mqdefault.jpg",
+              "published_at": "2026-06-26T04:26:09Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "[라.디.오] EP.01 AI 투자의 골드러시가 전력이라고?",
+              "url": "https://youtu.be/pNmymNZfuyI",
+              "thumbnail": "https://i.ytimg.com/vi/pNmymNZfuyI/mqdefault.jpg",
+              "published_at": "2026-06-23T09:18:22Z",
+              "is_etf_related": true
+            }
+          ]
         },
         "hanaro_youtube": {
           "channel_name": "HANARO ETF 유튜브 (NH-Amundi)",
           "success": true,
-          "snippet": "",
-          "videos": []
+          "snippet": "하닉통? 없어요.. 그냥 없어요 SK스퀘어가 있어서 ㅎ | ETF 백서 📖 EP5. SK스퀘어 / AI 고점론 바로 잠재운 마이크론 실적!",
+          "videos": [
+            {
+              "title": "하닉통? 없어요.. 그냥 없어요 SK스퀘어가 있어서 ㅎ | ETF 백서 📖 EP5. SK스퀘어",
+              "url": "https://youtu.be/3n2cmdxfcoE",
+              "thumbnail": "https://i.ytimg.com/vi/3n2cmdxfcoE/mqdefault.jpg",
+              "published_at": "2026-06-26T08:00:38Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "AI 고점론 바로 잠재운 마이크론 실적!",
+              "url": "https://youtu.be/gP2XmOaUrlE",
+              "thumbnail": "https://i.ytimg.com/vi/gP2XmOaUrlE/mqdefault.jpg",
+              "published_at": "2026-06-26T02:00:33Z",
+              "is_etf_related": true
+            }
+          ]
         },
         "sol_youtube": {
           "channel_name": "SOL ETF 유튜브 (신한자산운용)",
@@ -36872,31 +37154,31 @@
         "tiger_event": {
           "channel_name": "TIGER ETF 이벤트 페이지",
           "success": true,
-          "snippet": "스페이스X 상장 기념! TIGER 미국우주테크 매수 인증 이벤트! / TIGER 미국나스닥100 ETF 순자산 10조 돌파 기념 매수 인증 이벤트! / TIGER SK하이닉스/삼성전자 단일종목 레버리지 투자 가이드북 다운로드 이벤트 / 단일종목 레버리지·인버스 사전 교육 이수 인증 이벤트 / 가정의 달 TIGER 패밀리클럽 이벤트",
+          "snippet": "TIGER 미국우주테크 매수 인증 이벤트! / TIGER 미국나스닥100 ETF 순자산 10조 돌파 기념 매수 인증 이벤트! / TIGER SK하이닉스/삼성전자 단일종목 레버리지 투자 가이드북 다운로드 이벤트 / 단일종목 레버리지·인버스 사전 교육 이수 인증 이벤트",
           "videos": []
         },
         "ace_event": {
           "channel_name": "ACE ETF 이벤트 공지",
           "success": true,
-          "snippet": "[EVENT] ACE 미국우주테크액티브(0180V0) 추가 매수 인증 이벤트 발표 예정 / [EVENT] ACE 미국우주테크액티브(0180V0) 매수 인증 이벤트 시즌 2 (~7/8) / [EVENT] ACE 고배당주Plus커버드콜액티브 10주 매수 인증 이벤트(~7/3) / [EVENT] ACE 반도체 3종 10주 매수 인증 이벤트(~6/26) / [EVENT] [세미나] 한투스테이션 36회_ACE 고배당주Plus커버드콜액티브 ETF 알아보기",
+          "snippet": "[EVENT] ACE 미국우주테크액티브(0180V0) 추가 매수 인증 이벤트 발표 예정 / [EVENT] ACE 미국우주테크액티브(0180V0) 매수 인증 이벤트 시즌 2 (~7/8) / [EVENT] ACE 고배당주Plus커버드콜액티브 10주 매수 인증 이벤트(~7/3) / [EVENT] ACE 반도체 3종 10주 매수 인증 이벤트(~6/26)",
           "videos": []
         },
         "rise_event": {
           "channel_name": "RISE ETF 이벤트 페이지",
           "success": true,
-          "snippet": "RISE 현대차고정피지컬AI 순자산 8천억 돌파 기념 매수인증 이벤트 2026-06-17 ~ 2026-06- 2026-06-17 ~ 2026-06-30 RISE K-위클리커버드콜 ETF 2종 꿀조합 매수인증 이벤트 2026-06-15 ~ 2026-07-12 2026-06-15 ~ 2026-07-12 RISE 코리아밸류업 1조 달성 기념 매수인증 이벤트 2026-06-01 ~ 2026-06-30 2026-06-01 ~ 2026-06-30",
+          "snippet": "RISE AI전력인프라 ETF 시리즈 매수 인증 이벤트 2026-06-26 ~ 2026-07-28 2026-06-26 ~ 2026-07-28 RISE 현대차고정피지컬AI 순자산 8천억 돌파 기념 매수인증 이벤트 2026-06-17 ~ 2026-06- 2026-06-17 ~ 2026-06-30 RISE K-위클리커버드콜 ETF 2종 꿀조합 매수인증 이벤트 2026-06-15 ~ 2026-07-12 2026-06-15 ~ 2026-07-12 RISE 코리아밸류업 1조 달성 기념 매수인증 이벤트 2026-06-01 ~ 2026-06-30",
           "videos": []
         },
         "rise_notice": {
           "channel_name": "RISE ETF 공지사항",
           "success": true,
-          "snippet": "RISE ETF 6월 중순 분배금 지급 안내 / RISE 대형고배당10TR 정기 리밸런싱 안내",
+          "snippet": "RISE ETF 6월 말 분배금 지급 안내 / RISE 대형고배당10TR 정기 리밸런싱 안내 / RISE 미국나스닥100 기초지수 변경 공지 (368590) / RISE ETF 6월 중순 분배금 지급 안내",
           "videos": []
         },
         "hanaro_event": {
           "channel_name": "HANARO ETF 이벤트 공지",
           "success": true,
-          "snippet": "HANARO K고배당 ETF 리밸런싱 관련 안내 / HANARO Fn K-반도체 ETF 리밸런싱 관련 안내 / HANARO K휴머노이드테마TOP10 ETF 리밸런싱 관련 안내 / HANARO 반도체핵심공정주도주 ETF 리밸런싱 관련 안내 / HANARO K-뷰티 ETF 리밸런싱 관련 안내",
+          "snippet": "HANARO ETF 2026년 6월 말 분배금 공지 / HANARO K고배당 ETF 리밸런싱 관련 안내 / HANARO Fn K-반도체 ETF 리밸런싱 관련 안내 / HANARO K휴머노이드테마TOP10 ETF 리밸런싱 관련 안내 / HANARO 반도체핵심공정주도주 ETF 리밸런싱 관련 안내",
           "videos": []
         },
         "sol_event": {
@@ -36908,7 +37190,7 @@
         "sol_blog": {
           "channel_name": "SOL ETF 블로그 (네이버)",
           "success": true,
-          "snippet": "",
+          "snippet": "[SOL ETF] 6월 분배금 안내 ② (지급 예정일 7월 1일) [솔직히말해서] AI 시대, 이제는 매그니피센트7보다 메모리7에 주목해야 하는 이유 전고체배터리 상용화의 길(feat. 혼다-퀀텀스케이프): SOL 전고체배터리&실리콘음극재(0005D0)",
           "videos": []
         },
         "rise_blog": {
@@ -36920,13 +37202,13 @@
         "plus_insight": {
           "channel_name": "PLUS ETF 인사이트 (plusetf.co.kr)",
           "success": true,
-          "snippet": "SPOT 뷰[PLUS 고배당주 · PLUS 자사주매입고배당주] 2026년 6월 정기 리밸런싱 정리 / SPOT 뷰[PLUS 태양광&ESS] 우주에서 가시화되는 모멘텀과 지상에서 개선되는 펀더멘털",
+          "snippet": "SPOT 뷰[PLUS 글로벌HBM반도체] 마이크론 랠리 대응은 PLUS 글로벌HBM반도체로! (비중 30%) / SPOT 뷰[PLUS 코스피50] 삼성전자 제치고 코스피 시총 1위 등극한 SK하이닉스 / SPOT 뷰[PLUS 고배당주 · PLUS 자사주매입고배당주] 2026년 6월 정기 리밸런싱 정리",
           "videos": []
         },
         "plus_event": {
           "channel_name": "PLUS ETF 이벤트 공지 (plusetf.co.kr)",
           "success": true,
-          "snippet": "",
+          "snippet": "[이벤트] PLUS 글로벌HBM반도체 순자산 2조원 돌파 이벤트 (~7/10)",
           "videos": []
         },
         "kodex_blog": {
@@ -36938,13 +37220,13 @@
         "etf_am_news": {
           "channel_name": "ETF 운용사 뉴스·이벤트 (네이버/구글)",
           "success": true,
-          "snippet": "ETF 시장도 '반도체 독주'…수익률 상위 21위까지 반도체가 휩쓸어 [투자전략] DRAM ETF 54% 급등…마이크론 실적이 반도체 랠리 가른다 'JTBC 디폴트 사태' 영향?…위축된 은행株 투심, 증권가선 &quot;문제없다&quot; [경제소식] DB손보 '프로미119 안전리더 캠프' 모집 [증권가로수] NH증권/KB증권/키움증권/유안타증권/마스턴운용/NH아문디운... [더밸류 브리핑] 오늘의 증권사 소식...미래에셋·신한투자·키움증권 [금융권 이모저모]삼성자산운용, 삼성 글로벌반도체펀드 순자산 1조원 ... “삼전닉스 순이익",
+          "snippet": "&quot;언제쯤 반등하려나&quot;…조선주 하락에도 '장밋빛 전망' 쏟아진다 바이오USA 개막에도 밀린 바이오株…기술수출 13조가 반전카드 될까 코스피, 쏠림의 역습…레버리지가 키운 '역대급 변동성' &quot;증권사만 배불린다&quot; 이찬진 발언에…부글부글 증권사들 [경제소식] 하나금융, 청년 장애인 지속가능 일자리 지원 [오늘증시] SK하이닉스 질주에 '9000선 시대'…장 초반 숨 고르기 [금융권 이모저모]삼성자산운용, 차세대 배터리 ETF 신규 상장 外 삼전닉스만 쏠리는 역설…1만피 앞두고 경험하지 못한 변동성 ETF",
           "videos": []
         },
         "kodex_kakao": {
           "channel_name": "KODEX ETF 카카오채널 (삼성자산운용)",
           "success": true,
-          "snippet": "",
+          "snippet": "[KODEX 웹세미나] Kodex 하반기 투자 키워드 [코드명 : AI 병목] ",
           "videos": []
         },
         "tiger_kakao": {
@@ -36968,13 +37250,13 @@
         "hanaro_kakao": {
           "channel_name": "HANARO ETF 카카오채널 (NH-Amundi)",
           "success": true,
-          "snippet": "",
+          "snippet": "스페이스X 상장 후폭풍? 우주항공 섹터 종목 선정 기준은?  ",
           "videos": []
         },
         "plus_kakao": {
           "channel_name": "PLUS ETF 카카오채널 (한화자산운용)",
           "success": true,
-          "snippet": "",
+          "snippet": "[6/23 신규 상장] PLUS 200커버드콜액티브 ETF ",
           "videos": []
         },
         "sol_kakao": {
@@ -37029,20 +37311,77 @@
         "samsung_fund_event": {
           "channel_name": "삼성자산운용 이벤트 페이지",
           "success": true,
-          "snippet": " (예정) KODEX 전고체배터리ESS TOP2플러스 ETF 신규 상장 이벤트🔋 Kodex Kodex ETF 삼성펀드 Kodex ETF 삼성펀드 KODEX 페이지로 이동할 수 있어요 ETF분배금 현황 KR EN 마이페이지 검색 메뉴 Kodex search 인기키워드 KODEX200 액티브 fang Kodex ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! KR EN 검색 메뉴 닫기 로그인 해주세요 로그인 마이페이지 최근 본 상품 ETF분배",
+          "snippet": " KODEX 전고체배터리ESS TOP2플러스 ETF 신규 상장 이벤트🔋 Kodex Kodex ETF 삼성펀드 Kodex ETF 삼성펀드 KODEX 페이지로 이동할 수 있어요 ETF분배금 현황 KR EN 마이페이지 검색 메뉴 Kodex search 인기키워드 KODEX200 액티브 fang Kodex ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! ETF 트렌드가 궁금하다면? 클릭! KR EN 검색 메뉴 닫기 로그인 해주세요 로그인 마이페이지 최근 본 상품 ETF분배금 현황 ",
           "videos": []
         },
         "news": {
           "channel_name": "네이버/구글 뉴스",
           "success": true,
-          "snippet": "[마켓시그널]상반기 한국 증시 결산…결국 돌고 돌아 반도체",
+          "snippet": "반도체 쏠림·레버리지의 부메랑…작은 노이즈에도 장중 9% 휘청 / 코스피 고공행진 속 증권사 광고비는 뒷걸음질…왜? / &quot;연장하면 나만 손해&quot;…수십조 ISA 만기족 흔드는 '3년 리셋'의 비밀",
           "videos": []
         },
         "kodex_youtube": {
           "channel_name": "KODEX ETF 유튜브 (삼성자산운용)",
           "success": true,
-          "snippet": "",
-          "videos": []
+          "snippet": "한 번 더 새로워진 AI시대의 반도체 투자ㅣ KODEX AI반도체TOP2플러스 ETFㅣETF상품정보 / 2차전지 투자? 이제 전고체배터리 시대! KODEX 전고체배터리ESS TOP2플러스 ETF (6/23 신규 상장)ㅣETF투자정보 / 캐시우드 x KODEX - 한국 반도체 투자, 외국에서는 어떻게 볼까? 특별 인터뷰 Ep.01",
+          "videos": [
+            {
+              "title": "한 번 더 새로워진 AI시대의 반도체 투자ㅣ KODEX AI반도체TOP2플러스 ETFㅣETF상품정보",
+              "url": "https://youtu.be/4EyHaYKR--0",
+              "thumbnail": "https://i.ytimg.com/vi/4EyHaYKR--0/mqdefault.jpg",
+              "published_at": "2026-06-26T08:25:30Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "2차전지 투자? 이제 전고체배터리 시대! KODEX 전고체배터리ESS TOP2플러스 ETF (6/23 신규 상장)ㅣETF투자정보",
+              "url": "https://youtu.be/jOtwY5duOuE",
+              "thumbnail": "https://i.ytimg.com/vi/jOtwY5duOuE/mqdefault.jpg",
+              "published_at": "2026-06-26T04:59:27Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "캐시우드 x KODEX - 한국 반도체 투자, 외국에서는 어떻게 볼까? 특별 인터뷰 Ep.01",
+              "url": "https://youtu.be/IRYqPyh3lXw",
+              "thumbnail": "https://i.ytimg.com/vi/IRYqPyh3lXw/mqdefault.jpg",
+              "published_at": "2026-06-24T09:20:11Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "🎁KODEX 홈페이지 이벤트🎁 KODEX 전고체배터리ESSTOP2플러스 ETF 신규상장 이벤트🎉",
+              "url": "https://youtu.be/43j3JT8iRRk",
+              "thumbnail": "https://i.ytimg.com/vi/43j3JT8iRRk/mqdefault.jpg",
+              "published_at": "2026-06-23T08:26:35Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "2차전지 Next 스탭! 전고체배터리ESS ETF 출시😎",
+              "url": "https://youtu.be/Uen8kVgkCyc",
+              "thumbnail": "https://i.ytimg.com/vi/Uen8kVgkCyc/mqdefault.jpg",
+              "published_at": "2026-06-23T07:03:31Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "AI데이터센터에 필수! 수요 급증하는 ESS 슈퍼사이클 수혜주 투자! KODEX 전고체배터리ESS TOP2플러스 ETF (6/23 신규 상장)ㅣETF투자정보",
+              "url": "https://youtu.be/00358lfoq4s",
+              "thumbnail": "https://i.ytimg.com/vi/00358lfoq4s/mqdefault.jpg",
+              "published_at": "2026-06-23T01:46:12Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "[웹세미나] Kodex 하반기 투자 키워드 [코드명 : AI 병목]",
+              "url": "https://youtu.be/soXTIr5rvpU",
+              "thumbnail": "https://i.ytimg.com/vi/soXTIr5rvpU/mqdefault_live.jpg",
+              "published_at": "2026-06-23T00:27:28Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "전기차 화재 위험 뚝! 전고체 배터리 양산 임박, 2차전지 ESS 슈퍼사이클 수혜주 투자! KODEX 전고체배터리ESS TOP2플러스 ETF (6/23 신규 상장)ㅣETF투자정보",
+              "url": "https://youtu.be/tjiIoMyw-O8",
+              "thumbnail": "https://i.ytimg.com/vi/tjiIoMyw-O8/mqdefault.jpg",
+              "published_at": "2026-06-22T20:33:57Z",
+              "is_etf_related": true
+            }
+          ]
         },
         "tiger_youtube": {
           "channel_name": "TIGER ETF 유튜브 (미래에셋자산운용)",
@@ -37061,13 +37400,13 @@
         "ace_youtube": {
           "channel_name": "ACE ETF 유튜브 (한국투자신탁운용)",
           "success": true,
-          "snippet": "단돈 1만원으로 삼성전자·SK하이닉스 동시 투자하는 법! | ACE K반도체TOP2+ #shorts / AI 시대, 반도체 다음은 전력입니다｜ACE 코리아AI전력TOP10",
+          "snippet": "단돈 1만원대로 삼성전자·SK하이닉스 동시 투자하는 법! | ACE K반도체TOP2+ #shorts / AI 시대, 반도체 다음은 전력입니다｜ACE 코리아AI전력TOP10",
           "videos": [
             {
-              "title": "단돈 1만원으로 삼성전자·SK하이닉스 동시 투자하는 법! | ACE K반도체TOP2+ #shorts",
-              "url": "https://youtu.be/O48aSzdKEa0",
-              "thumbnail": "https://i.ytimg.com/vi/O48aSzdKEa0/mqdefault.jpg",
-              "published_at": "2026-06-22T08:36:37Z",
+              "title": "단돈 1만원대로 삼성전자·SK하이닉스 동시 투자하는 법! | ACE K반도체TOP2+ #shorts",
+              "url": "https://youtu.be/qJlli4lo5NA",
+              "thumbnail": "https://i.ytimg.com/vi/qJlli4lo5NA/mqdefault.jpg",
+              "published_at": "2026-06-23T08:25:36Z",
               "is_etf_related": true
             },
             {
@@ -37082,14 +37421,58 @@
         "rise_youtube": {
           "channel_name": "RISE ETF 유튜브 (KB자산운용)",
           "success": true,
-          "snippet": "",
-          "videos": []
+          "snippet": "이제 AI전&#39;력&#39;인프라 투자도 전&#39;략&#39;적으로! RISE AI전력인프라시리즈 ETF / 📢 [월간RISE] 삼성전자, SK하이닉스 어디까지 가나요? / 이제 AI전&#39;력&#39;인프라 투자도 전&#39;략&#39;적으로! RISE AI전력인프라시리즈 ETF",
+          "videos": [
+            {
+              "title": "이제 AI전&#39;력&#39;인프라 투자도 전&#39;략&#39;적으로! RISE AI전력인프라시리즈 ETF",
+              "url": "https://youtu.be/tgA7TUDNemU",
+              "thumbnail": "https://i.ytimg.com/vi/tgA7TUDNemU/mqdefault.jpg",
+              "published_at": "2026-06-26T06:49:39Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "📢 [월간RISE] 삼성전자, SK하이닉스 어디까지 가나요?",
+              "url": "https://youtu.be/OyxtTZ0dzP8",
+              "thumbnail": "https://i.ytimg.com/vi/OyxtTZ0dzP8/mqdefault_live.jpg",
+              "published_at": "2026-06-26T05:50:43Z",
+              "is_etf_related": false
+            },
+            {
+              "title": "이제 AI전&#39;력&#39;인프라 투자도 전&#39;략&#39;적으로! RISE AI전력인프라시리즈 ETF",
+              "url": "https://youtu.be/ljX5kmmChYU",
+              "thumbnail": "https://i.ytimg.com/vi/ljX5kmmChYU/mqdefault.jpg",
+              "published_at": "2026-06-26T04:26:09Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "[라.디.오] EP.01 AI 투자의 골드러시가 전력이라고?",
+              "url": "https://youtu.be/pNmymNZfuyI",
+              "thumbnail": "https://i.ytimg.com/vi/pNmymNZfuyI/mqdefault.jpg",
+              "published_at": "2026-06-23T09:18:22Z",
+              "is_etf_related": true
+            }
+          ]
         },
         "hanaro_youtube": {
           "channel_name": "HANARO ETF 유튜브 (NH-Amundi)",
           "success": true,
-          "snippet": "",
-          "videos": []
+          "snippet": "하닉통? 없어요.. 그냥 없어요 SK스퀘어가 있어서 ㅎ | ETF 백서 📖 EP5. SK스퀘어 / AI 고점론 바로 잠재운 마이크론 실적!",
+          "videos": [
+            {
+              "title": "하닉통? 없어요.. 그냥 없어요 SK스퀘어가 있어서 ㅎ | ETF 백서 📖 EP5. SK스퀘어",
+              "url": "https://youtu.be/3n2cmdxfcoE",
+              "thumbnail": "https://i.ytimg.com/vi/3n2cmdxfcoE/mqdefault.jpg",
+              "published_at": "2026-06-26T08:00:38Z",
+              "is_etf_related": true
+            },
+            {
+              "title": "AI 고점론 바로 잠재운 마이크론 실적!",
+              "url": "https://youtu.be/gP2XmOaUrlE",
+              "thumbnail": "https://i.ytimg.com/vi/gP2XmOaUrlE/mqdefault.jpg",
+              "published_at": "2026-06-26T02:00:33Z",
+              "is_etf_related": true
+            }
+          ]
         },
         "sol_youtube": {
           "channel_name": "SOL ETF 유튜브 (신한자산운용)",
@@ -37100,31 +37483,31 @@
         "tiger_event": {
           "channel_name": "TIGER ETF 이벤트 페이지",
           "success": true,
-          "snippet": "스페이스X 상장 기념! TIGER 미국우주테크 매수 인증 이벤트! / TIGER 미국나스닥100 ETF 순자산 10조 돌파 기념 매수 인증 이벤트! / TIGER SK하이닉스/삼성전자 단일종목 레버리지 투자 가이드북 다운로드 이벤트 / 단일종목 레버리지·인버스 사전 교육 이수 인증 이벤트 / 가정의 달 TIGER 패밀리클럽 이벤트",
+          "snippet": "TIGER 미국우주테크 매수 인증 이벤트! / TIGER 미국나스닥100 ETF 순자산 10조 돌파 기념 매수 인증 이벤트! / TIGER SK하이닉스/삼성전자 단일종목 레버리지 투자 가이드북 다운로드 이벤트 / 단일종목 레버리지·인버스 사전 교육 이수 인증 이벤트",
           "videos": []
         },
         "ace_event": {
           "channel_name": "ACE ETF 이벤트 공지",
           "success": true,
-          "snippet": "[EVENT] ACE 미국우주테크액티브(0180V0) 추가 매수 인증 이벤트 발표 예정 / [EVENT] ACE 미국우주테크액티브(0180V0) 매수 인증 이벤트 시즌 2 (~7/8) / [EVENT] ACE 고배당주Plus커버드콜액티브 10주 매수 인증 이벤트(~7/3) / [EVENT] ACE 반도체 3종 10주 매수 인증 이벤트(~6/26) / [EVENT] [세미나] 한투스테이션 36회_ACE 고배당주Plus커버드콜액티브 ETF 알아보기",
+          "snippet": "[EVENT] ACE 미국우주테크액티브(0180V0) 추가 매수 인증 이벤트 발표 예정 / [EVENT] ACE 미국우주테크액티브(0180V0) 매수 인증 이벤트 시즌 2 (~7/8) / [EVENT] ACE 고배당주Plus커버드콜액티브 10주 매수 인증 이벤트(~7/3) / [EVENT] ACE 반도체 3종 10주 매수 인증 이벤트(~6/26)",
           "videos": []
         },
         "rise_event": {
           "channel_name": "RISE ETF 이벤트 페이지",
           "success": true,
-          "snippet": "RISE 현대차고정피지컬AI 순자산 8천억 돌파 기념 매수인증 이벤트 2026-06-17 ~ 2026-06- 2026-06-17 ~ 2026-06-30 RISE K-위클리커버드콜 ETF 2종 꿀조합 매수인증 이벤트 2026-06-15 ~ 2026-07-12 2026-06-15 ~ 2026-07-12 RISE 코리아밸류업 1조 달성 기념 매수인증 이벤트 2026-06-01 ~ 2026-06-30 2026-06-01 ~ 2026-06-30",
+          "snippet": "RISE AI전력인프라 ETF 시리즈 매수 인증 이벤트 2026-06-26 ~ 2026-07-28 2026-06-26 ~ 2026-07-28 RISE 현대차고정피지컬AI 순자산 8천억 돌파 기념 매수인증 이벤트 2026-06-17 ~ 2026-06- 2026-06-17 ~ 2026-06-30 RISE K-위클리커버드콜 ETF 2종 꿀조합 매수인증 이벤트 2026-06-15 ~ 2026-07-12 2026-06-15 ~ 2026-07-12 RISE 코리아밸류업 1조 달성 기념 매수인증 이벤트 2026-06-01 ~ 2026-06-30",
           "videos": []
         },
         "rise_notice": {
           "channel_name": "RISE ETF 공지사항",
           "success": true,
-          "snippet": "RISE ETF 6월 중순 분배금 지급 안내 / RISE 대형고배당10TR 정기 리밸런싱 안내",
+          "snippet": "RISE ETF 6월 말 분배금 지급 안내 / RISE 대형고배당10TR 정기 리밸런싱 안내 / RISE 미국나스닥100 기초지수 변경 공지 (368590) / RISE ETF 6월 중순 분배금 지급 안내",
           "videos": []
         },
         "hanaro_event": {
           "channel_name": "HANARO ETF 이벤트 공지",
           "success": true,
-          "snippet": "HANARO K고배당 ETF 리밸런싱 관련 안내 / HANARO Fn K-반도체 ETF 리밸런싱 관련 안내 / HANARO K휴머노이드테마TOP10 ETF 리밸런싱 관련 안내 / HANARO 반도체핵심공정주도주 ETF 리밸런싱 관련 안내 / HANARO K-뷰티 ETF 리밸런싱 관련 안내",
+          "snippet": "HANARO ETF 2026년 6월 말 분배금 공지 / HANARO K고배당 ETF 리밸런싱 관련 안내 / HANARO Fn K-반도체 ETF 리밸런싱 관련 안내 / HANARO K휴머노이드테마TOP10 ETF 리밸런싱 관련 안내 / HANARO 반도체핵심공정주도주 ETF 리밸런싱 관련 안내",
           "videos": []
         },
         "sol_event": {
@@ -37136,7 +37519,7 @@
         "sol_blog": {
           "channel_name": "SOL ETF 블로그 (네이버)",
           "success": true,
-          "snippet": "",
+          "snippet": "[SOL ETF] 6월 분배금 안내 ② (지급 예정일 7월 1일) [솔직히말해서] AI 시대, 이제는 매그니피센트7보다 메모리7에 주목해야 하는 이유 전고체배터리 상용화의 길(feat. 혼다-퀀텀스케이프): SOL 전고체배터리&실리콘음극재(0005D0)",
           "videos": []
         },
         "rise_blog": {
@@ -37148,13 +37531,13 @@
         "plus_insight": {
           "channel_name": "PLUS ETF 인사이트 (plusetf.co.kr)",
           "success": true,
-          "snippet": "SPOT 뷰[PLUS 고배당주 · PLUS 자사주매입고배당주] 2026년 6월 정기 리밸런싱 정리 / SPOT 뷰[PLUS 태양광&ESS] 우주에서 가시화되는 모멘텀과 지상에서 개선되는 펀더멘털",
+          "snippet": "SPOT 뷰[PLUS 글로벌HBM반도체] 마이크론 랠리 대응은 PLUS 글로벌HBM반도체로! (비중 30%) / SPOT 뷰[PLUS 코스피50] 삼성전자 제치고 코스피 시총 1위 등극한 SK하이닉스 / SPOT 뷰[PLUS 고배당주 · PLUS 자사주매입고배당주] 2026년 6월 정기 리밸런싱 정리",
           "videos": []
         },
         "plus_event": {
           "channel_name": "PLUS ETF 이벤트 공지 (plusetf.co.kr)",
           "success": true,
-          "snippet": "",
+          "snippet": "[이벤트] PLUS 글로벌HBM반도체 순자산 2조원 돌파 이벤트 (~7/10)",
           "videos": []
         },
         "kodex_blog": {
@@ -37166,13 +37549,13 @@
         "etf_am_news": {
           "channel_name": "ETF 운용사 뉴스·이벤트 (네이버/구글)",
           "success": true,
-          "snippet": "ETF 시장도 '반도체 독주'…수익률 상위 21위까지 반도체가 휩쓸어 [투자전략] DRAM ETF 54% 급등…마이크론 실적이 반도체 랠리 가른다 'JTBC 디폴트 사태' 영향?…위축된 은행株 투심, 증권가선 &quot;문제없다&quot; [경제소식] DB손보 '프로미119 안전리더 캠프' 모집 [증권가로수] NH증권/KB증권/키움증권/유안타증권/마스턴운용/NH아문디운... [더밸류 브리핑] 오늘의 증권사 소식...미래에셋·신한투자·키움증권 [금융권 이모저모]삼성자산운용, 삼성 글로벌반도체펀드 순자산 1조원 ... “삼전닉스 순이익",
+          "snippet": "&quot;언제쯤 반등하려나&quot;…조선주 하락에도 '장밋빛 전망' 쏟아진다 바이오USA 개막에도 밀린 바이오株…기술수출 13조가 반전카드 될까 코스피, 쏠림의 역습…레버리지가 키운 '역대급 변동성' &quot;증권사만 배불린다&quot; 이찬진 발언에…부글부글 증권사들 [경제소식] 하나금융, 청년 장애인 지속가능 일자리 지원 [오늘증시] SK하이닉스 질주에 '9000선 시대'…장 초반 숨 고르기 [금융권 이모저모]삼성자산운용, 차세대 배터리 ETF 신규 상장 外 삼전닉스만 쏠리는 역설…1만피 앞두고 경험하지 못한 변동성 ETF",
           "videos": []
         },
         "kodex_kakao": {
           "channel_name": "KODEX ETF 카카오채널 (삼성자산운용)",
           "success": true,
-          "snippet": "",
+          "snippet": "[KODEX 웹세미나] Kodex 하반기 투자 키워드 [코드명 : AI 병목] ",
           "videos": []
         },
         "tiger_kakao": {
@@ -37196,13 +37579,13 @@
         "hanaro_kakao": {
           "channel_name": "HANARO ETF 카카오채널 (NH-Amundi)",
           "success": true,
-          "snippet": "",
+          "snippet": "스페이스X 상장 후폭풍? 우주항공 섹터 종목 선정 기준은?  ",
           "videos": []
         },
         "plus_kakao": {
           "channel_name": "PLUS ETF 카카오채널 (한화자산운용)",
           "success": true,
-          "snippet": "",
+          "snippet": "[6/23 신규 상장] PLUS 200커버드콜액티브 ETF ",
           "videos": []
         },
         "sol_kakao": {

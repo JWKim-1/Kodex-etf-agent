@@ -354,17 +354,35 @@ def load_trend_cache() -> dict:
 
 def save_trend_cache(week_label: str, df: pd.DataFrame):
     """주간 시장 트렌드 데이터 캐시에 추가/갱신.
-    네이버금융은 실시간 데이터라 해당 주차에 수집한 것만 유효.
-    수집 시점이 week_label 범위 밖이면 저장 거부."""
-    from datetime import date as _date, timedelta as _td
-    today = _date.today()
+    장마감(15:30 KST) 이후 수집분만 유효 — 실시간 데이터 오염 방지.
+    금요일 15:30 이후 ~ 다음주 화요일까지만 해당 주차로 저장 허용."""
+    from datetime import date as _date, timedelta as _td, datetime as _dt
+    import pytz as _pytz
+    try:
+        _kst = _pytz.timezone("Asia/Seoul")
+        _now_kst = _dt.now(_kst)
+    except Exception:
+        _now_kst = _dt.now()
+
+    today = _now_kst.date()
+    weekday = _now_kst.weekday()   # 0=월 ... 4=금 5=토 6=일
+    hour = _now_kst.hour * 60 + _now_kst.minute  # 분 단위
+
+    MARKET_CLOSE = 15 * 60 + 30  # 15:30
+
     week_start = _parse_week_label(week_label)
     if week_start:
-        # 금요일 장마감 후 수집 기준 → 해당 주 월~다음주 화요일까지 허용
-        week_end = week_start + _td(days=4)   # 금요일
-        allow_until = week_end + _td(days=4)  # 다음주 화요일까지
-        if not (week_start <= today <= allow_until):
-            print(f"트렌드 캐시 저장 거부: {week_label} 허용범위({week_start}~{allow_until}) 밖 (오늘={today})")
+        week_friday = week_start + _td(days=4)
+        allow_until = week_friday + _td(days=4)  # 다음주 화요일
+
+        # 금요일이면 15:30 이후만 허용
+        if weekday == 4 and hour < MARKET_CLOSE:
+            print(f"트렌드 캐시 저장 거부: 장마감(15:30) 전 수집 불가 (현재 {_now_kst.strftime('%H:%M')} KST)")
+            return
+
+        # 해당 주차 허용 범위 체크
+        if not (week_friday <= today <= allow_until):
+            print(f"트렌드 캐시 저장 거부: {week_label}은 금요일({week_friday}) 장마감 후 수집해야 함 (오늘={today})")
             return
 
     existing = load_trend_cache()

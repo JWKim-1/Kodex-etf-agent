@@ -200,18 +200,32 @@ if selected_week in trend_cache:
     st.caption("📦 캐시된 데이터 사용")
 else:
     from krx_data_fetcher import fetch_etf_market_summary_naver
-    with st.spinner("네이버 금융에서 ETF 데이터 수집 중…"):
-        try:
-            df_trend = fetch_etf_market_summary_naver()
-            if not df_trend.empty:
-                save_trend_cache(selected_week, df_trend)
-                st.success(f"✅ 수집 완료: {len(df_trend):,}개 ETF")
-            else:
-                st.error("네이버 금융 데이터를 불러오지 못했습니다.")
+    from datetime import datetime as _dt2
+    try:
+        import pytz as _ptz2
+        _now2 = _dt2.now(_ptz2.timezone("Asia/Seoul"))
+    except Exception:
+        _now2 = _dt2.now()
+    _is_fri = _now2.weekday() == 4
+    _after_close = _now2.hour * 60 + _now2.minute >= 15 * 60 + 30
+    _ok_to_collect = (_is_fri and _after_close) or _now2.weekday() > 4 or _now2.weekday() == 0
+
+    if not _ok_to_collect:
+        st.warning("⏰ 시장트렌드 수집은 **금요일 장마감(15:30) 이후**에만 가능합니다. 장중 실시간 데이터는 주간 대표값이 아닙니다.")
+        df_trend = pd.DataFrame()
+    else:
+        with st.spinner("네이버 금융에서 ETF 데이터 수집 중…"):
+            try:
+                df_trend = fetch_etf_market_summary_naver()
+                if not df_trend.empty:
+                    save_trend_cache(selected_week, df_trend)
+                    st.success(f"✅ 수집 완료: {len(df_trend):,}개 ETF")
+                else:
+                    st.error("네이버 금융 데이터를 불러오지 못했습니다.")
+                    df_trend = pd.DataFrame()
+            except Exception as e:
+                st.error(f"수집 실패: {e}")
                 df_trend = pd.DataFrame()
-        except Exception as e:
-            st.error(f"수집 실패: {e}")
-            df_trend = pd.DataFrame()
 
 if df_trend.empty:
     st.warning("데이터를 불러오지 못했습니다. KRX 계정 정보(.env)를 확인해 주세요.")

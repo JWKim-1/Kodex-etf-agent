@@ -73,6 +73,8 @@ class MassAnalyzer(MarketingAnalyzerBase):
                         did_history.append(hres.did_value)
                 z, score = self._compute_zscore_score(result.did_value, did_history)
                 if z is not None:
+                    _mu = float(np.mean(did_history))
+                    _sigma = float(np.std(did_history, ddof=1))
                     result.raw_did_value = result.did_value
                     result.zscore = z
                     result.marketing_score = score
@@ -82,7 +84,13 @@ class MassAnalyzer(MarketingAnalyzerBase):
                     result.judgement_emoji = e
                     no_did_note = " ⚠️ DiD 미적용(시장효과 미제거)" if result.no_competitors else ""
                     result.calculation_log.append(
-                        f"[2단계 Z-score] 이력 {len(did_history)}주  Z={z:+.4f}  점수={score:.1f}{no_did_note}"
+                        f"[2단계 Z-score] 이력 {len(did_history)}주  "
+                        f"DiD평균={_mu:+.4f}  DiD표준편차={_sigma:.4f}  "
+                        f"Z=({result.raw_did_value:+.4f} − {_mu:+.4f}) ÷ {_sigma:.4f} = {z:+.4f}"
+                        f"{no_did_note}"
+                    )
+                    result.calculation_log.append(
+                        f"[최종 판정] {e} sigmoid({z:+.4f}×1.5) = {score:.1f}점  →  {j}"
                     )
                     if result.no_competitors:
                         result.notes.append("⚠️ 비교군 없음 — 절대변화율 Z-score (시장 공통 효과 미제거, 참고용)")

@@ -651,7 +651,7 @@ for code, res in did_results.items():
         if hasattr(res, 'calculation_log') and res.calculation_log:
             with st.expander("📋 단계별 계산 로그", expanded=False):
                 log_html = ""
-                icons = {"[KODEX":"🟦","[베이스라인":"📊","[비교군":"🆚","[DiD":"🧮","[판정":"🏁","[2단계":"📈","[AUM":"💡"}
+                icons = {"[KODEX":"🟦","[베이스라인":"📊","[비교군":"🆚","[DiD":"🧮","[판정":"🏁","[최종 판정":"🎯","[2단계":"📈","[AUM":"💡","[절대변화율":"⚠️"}
                 for line in res.calculation_log:
                     icon = "▸"
                     for k, v in icons.items():

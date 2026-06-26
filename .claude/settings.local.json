@@ -68,7 +68,8 @@
       "Bash(python -m py_compile agents/history/app_history.py)",
       "WebFetch(domain:www.fnnews.com)",
       "Bash(python -m py_compile agents/lifecycle/app_lifecycle.py)",
-      "Bash(python -m py_compile agents/mass/analyzer.py)"
+      "Bash(python -m py_compile agents/mass/analyzer.py)",
+      "Bash(python -m py_compile did_calculator.py agents/securities/analyzer.py agents/mass/analyzer.py agents/bank/analyzer.py)"
     ]
   }
 }

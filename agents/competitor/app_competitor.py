@@ -226,10 +226,9 @@ with _main_tab1:
         if not marketing_texts:
             return {"marketing_detected": False, "events": [], "summary": "수집된 텍스트 없음"}
 
-        # 채널당 300자로 제한 (전체 품질 균등 배분)
-        combined = "\n\n".join(marketing_texts)
-        if len(combined) > 6000:
-            combined = combined[:6000] + "\n...(이하 생략)"
+        # 채널별로 균등하게 잘라서 합치기 (특정 운용사가 토큰 독식 방지)
+        _per_ch = max(200, 12000 // max(len(marketing_texts), 1))
+        combined = "\n\n".join(t[:_per_ch] for t in marketing_texts)
 
         prompt = f"""다음은 ETF 운용사 채널(KODEX/TIGER/ACE/RISE/HANARO/SOL)에서 수집된 텍스트입니다.
 

@@ -523,7 +523,7 @@ class MarketingAnalyzer:
                         for ln in log2_lines:
                             result.notes.append(ln)
                             result.calculation_log.append(ln)
-                        judgement2, emoji2 = self._judge_score(score)
+                        judgement2, emoji2 = self._judge_score(score, result.raw_did_value)
                         result.did_value = z_score
                         result.zscore = z_score
                         result.marketing_score = score
@@ -925,10 +925,11 @@ class MarketingAnalyzer:
         elif z >= -1.5: return "정상 변동 범위", "⚪"
         else:           return "경쟁사 우위 — 경쟁 마케팅 의심", "🔴"
 
-    def _judge_score(self, score: float):
+    def _judge_score(self, score: float, did_value: float = None):
         """sigmoid 점수 기반 판정 — 은행 채널 기준 (Z≥2.0=🟢, Z≥1.5=🟡, Z<-1.5=🔴)."""
-        if score >= 95:   return "강한 이상 감지 — 은행 마케팅 거의 확실", "🟢"
-        elif score >= 90: return "이상 감지 — 역추적 권고", "🟡"
+        did_positive = did_value is None or did_value > 0
+        if score >= 95 and did_positive:   return "강한 이상 감지 — 은행 마케팅 거의 확실", "🟢"
+        elif score >= 90 and did_positive: return "이상 감지 — 역추적 권고", "🟡"
         elif score >= 10: return "정상 변동 범위", "⚪"
         else:             return "경쟁사 우위 — 경쟁 마케팅 의심", "🔴"
 

@@ -479,10 +479,11 @@ class MarketingAnalyzerBase:
         score = round(100 / (1 + np.exp(-z * 1.5)), 1)
         return z, score
 
-    def _judge_score(self, score: float):
-        """sigmoid 점수 기반 판정."""
-        if score >= 75:   return "마케팅 효과 있음", "🟢"
-        elif score >= 60: return "효과 있을 수 있음", "🟡"
+    def _judge_score(self, score: float, did_value: float = None):
+        """sigmoid 점수 기반 판정. DiD 양수 조건 추가."""
+        did_positive = did_value is None or did_value > 0
+        if score >= 75 and did_positive:   return "마케팅 효과 있음", "🟢"
+        elif score >= 60 and did_positive: return "효과 있을 수 있음", "🟡"
         elif score >= 40: return "중립", "⚪"
         elif score >= 25: return "경쟁사 우위", "🔴"
         else:             return "경쟁사 강세", "🔴"

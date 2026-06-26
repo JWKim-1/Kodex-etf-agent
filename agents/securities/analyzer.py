@@ -100,7 +100,7 @@ class MarketingAnalyzer(MarketingAnalyzerBase):
                     result.zscore = z
                     result.marketing_score = score
                     result.did_value = z
-                    j, e = self._judge_score(score)
+                    j, e = self._judge_score(score, result.raw_did_value)
                     result.judgement = j
                     result.judgement_emoji = e
                     no_did_note = " ⚠️ DiD 미적용(시장효과 미제거)" if result.no_competitors else ""

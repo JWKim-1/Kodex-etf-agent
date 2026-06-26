@@ -406,146 +406,6 @@ for tab, (sess_key, sess_label) in zip(tabs, SESSION_LABELS.items()):
                     fail_html += "</div>"
                     st.markdown(fail_html, unsafe_allow_html=True)
 
-# ── 백테스트 결과 탭 ──────────────────────────────────────────────────────────
-st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
-st.markdown("### 📊 백테스트 결과")
-
-_BT_FILE = os.path.join(_ROOT, "marketing_backtest_result.json")
-
-if not os.path.exists(_BT_FILE):
-    st.warning(
-        "결과 없음 — `marketing_backtest.py`를 실행해주세요.\n\n"
-        "```\npython marketing_backtest.py\n```"
-    )
-else:
-    with open(_BT_FILE, encoding="utf-8") as _f:
-        _bt = json.load(_f)
-
-    st.caption(
-        f"생성: {_bt.get('generated_at','')} | "
-        f"마케팅 이력 주차: {', '.join(_bt.get('marketing_history_weeks', []))} | "
-        f"주차 매핑: {_bt.get('week_map', {})}"
-    )
-
-    _note = _bt.get("analysis_note", "")
-    if _note:
-        st.info(f"ℹ️ {_note}")
-
-    _CH_LABELS = {
-        "securities": "📈 증권사",
-        "bank":       "🏦 은행",
-        "mass":       "🎯 개인(KODEX직접)",
-    }
-    _CH_COLORS = {
-        "securities": "#4d9fff",
-        "bank":       "#05b169",
-        "mass":       "#f0c040",
-    }
-
-    _bt_tabs = st.tabs([_CH_LABELS.get(k, k) for k in ["securities", "bank", "mass"]] + ["🔬 은행 보조분석"])
-
-    for _tab, _ch in zip(_bt_tabs[:3], ["securities", "bank", "mass"]):
-        with _tab:
-            _res = (_bt.get("channels") or {}).get(_ch, {})
-            _color = _CH_COLORS.get(_ch, "#aaa")
-
-            if not _res or _res.get("status") == "insufficient_data":
-                st.warning(f"⚠️ 데이터 부족: {_res.get('reason', '분석 불가')}")
-                _lim = _res.get("data_limitation", "")
-                if _lim:
-                    st.caption(f"데이터 제약: {_lim}")
-            else:
-                _n_with = _res.get("n_weeks_with_marketing", 0)
-                _n_wo   = _res.get("n_weeks_without", 0)
-                _mw     = _res.get("mean_did_with")
-                _mwo    = _res.get("mean_did_without")
-                _t      = _res.get("t_stat")
-                _p      = _res.get("p_value")
-                _sig    = _res.get("significant", False)
-                _pr     = _res.get("pearson_r")
-                _prp    = _res.get("pearson_p")
-
-                c1, c2, c3, c4 = st.columns(4)
-                c1.metric("마케팅 있는 주", f"{_n_with}주")
-                c2.metric("마케팅 없는 주", f"{_n_wo}주")
-                if _mw is not None:
-                    c3.metric("평균 DiD (마케팅O)", f"{_mw:.4f}")
-                if _mwo is not None:
-                    c4.metric("평균 DiD (마케팅X)", f"{_mwo:.4f}")
-
-                if _t is not None and _p is not None:
-                    st.markdown(
-                        f"**t-검정:** t = `{_t:.3f}` | p = `{_p:.4f}` | "
-                        + (f"<span style='color:#4ade80;font-weight:700;'>★ 유의 (p < 0.05)</span>"
-                           if _sig else "<span style='color:#aaa;'>비유의</span>"),
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    st.caption("t-검정: 샘플 부족으로 생략")
-
-                if _pr is not None:
-                    st.markdown(
-                        f"**Pearson r (이벤트 수 ↔ 주간 DiD):** `{_pr:.4f}` (p = `{_prp:.4f}`)"
-                    )
-                else:
-                    st.caption("Pearson 상관: 주차 수 부족으로 생략")
-
-                _lim = _res.get("data_limitation", "")
-                if _lim:
-                    with st.expander("데이터 제약 상세"):
-                        st.caption(_lim)
-
-                # ETF별 표
-                _by_etf = _res.get("by_etf", {})
-                if _by_etf:
-                    import pandas as _pd
-                    _etf_rows = []
-                    for _code, _ev in _by_etf.items():
-                        _diff = None
-                        if _ev.get("mean_with") is not None and _ev.get("mean_without") is not None:
-                            _diff = round(_ev["mean_with"] - _ev["mean_without"], 4)
-                        _etf_rows.append({
-                            "종목코드": _code,
-                            "종목명": _ev.get("name", ""),
-                            "마케팅O 평균": round(_ev["mean_with"], 4) if _ev.get("mean_with") is not None else None,
-                            "마케팅X 평균": round(_ev["mean_without"], 4) if _ev.get("mean_without") is not None else None,
-                            "효과(Δ)": _diff,
-                            "O 샘플수": _ev.get("n_with", 0),
-                            "X 샘플수": _ev.get("n_without", 0),
-                        })
-                    _etf_df = _pd.DataFrame(_etf_rows)
-                    if "효과(Δ)" in _etf_df.columns:
-                        _etf_df = _etf_df.sort_values("효과(Δ)", ascending=False, na_position="last")
-                    st.markdown("**ETF별 마케팅 효과 분해**")
-                    st.dataframe(_etf_df, use_container_width=True, hide_index=True)
-
-    # 은행 보조분석 탭
-    with _bt_tabs[3]:
-        _aux = _bt.get("bank_aux_analysis", {})
-        st.caption(_aux.get("note", ""))
-        _mw2  = _aux.get("mean_did_with")
-        _mwo2 = _aux.get("mean_did_without")
-        _t2   = _aux.get("t_stat")
-        _p2   = _aux.get("p_value")
-        _sig2 = _aux.get("significant", False)
-
-        if _mw2 is not None or _mwo2 is not None:
-            c1, c2 = st.columns(2)
-            if _mw2 is not None:
-                c1.metric("마케팅O 평균 Z-score", f"{_mw2:.4f}")
-            if _mwo2 is not None:
-                c2.metric("마케팅X 평균 Z-score", f"{_mwo2:.4f}")
-
-        if _t2 is not None and _p2 is not None:
-            st.markdown(
-                f"**t-검정:** t = `{_t2:.3f}` | p = `{_p2:.4f}` | "
-                + (f"<span style='color:#4ade80;font-weight:700;'>★ 유의</span>"
-                   if _sig2 else "<span style='color:#aaa;'>비유의</span>"),
-                unsafe_allow_html=True,
-            )
-        else:
-            st.info("bank_zscore_history에 marketing_detected=False 주차가 없어 비교 불가 (모든 수집 주차가 마케팅 기간).")
-
 # ── 이벤트 캘린더 ─────────────────────────────────────────────────────────────
 import re as _re, plotly.graph_objects as _go
 from datetime import datetime as _dt, timedelta as _td
@@ -601,6 +461,7 @@ for _wk in sorted(history.keys(), key=lambda w: _parse_week_label(w) or date.min
             _cal_events.append({
                 "session": _sk, "provider": _prov,
                 "title": _title,
+                "url": _ev.get("url","") or "",
                 "start": _sd, "end": _ed,
                 "color": _color,
                 "label": f"[{_SESS_LBL_CAL.get(_sk,_sk)}] {_title}",
@@ -749,10 +610,15 @@ if _cal_events:
                         _mtype_tag = f' · {_mev.get("mtype","")}' if _mev.get("mtype") else ""
                     _sess_lbl = _SESS_LBL_CAL.get(_mev["session"], _mev["session"])
                     _opacity = "0d" if not _pt else "06"
+                    _title_html = (
+                        f'<a href="{_mev["url"]}" target="_blank" style="font-size:.85rem;font-weight:600;color:#e8eaed;text-decoration:none;margin-top:2px;display:block;">{_mev["title"]}</a>'
+                        if _mev.get("url","").startswith("http")
+                        else f'<div style="font-size:.85rem;font-weight:600;color:#e8eaed;margin-top:2px;">{_mev["title"]}</div>'
+                    )
                     st.markdown(
                         f'<div style="border-left:3px solid {_color}{"88" if _pt else ""};padding:6px 12px;margin:4px 0;background:{_color}{_opacity};border-radius:0 8px 8px 0;">'
                         f'<span style="font-size:.65rem;color:{_color};font-weight:700;">[{_sess_lbl}] {_period}{_mtype_tag}</span>'
-                        f'<div style="font-size:.85rem;font-weight:600;color:#e8eaed;margin-top:2px;">{_mev["title"]}</div>'
+                        + _title_html +
                         f'</div>',
                         unsafe_allow_html=True,
                     )

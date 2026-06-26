@@ -262,21 +262,11 @@ with tab1:
                 _ret["종목코드"] = _ret["종목코드"].astype(str).str.strip()
                 _mx_full = pd.merge(_krx[["종목코드","순매수"]], _ret, on="종목코드", how="inner").dropna(subset=["수익률_pct","순매수"])
                 if not _mx_full.empty:
-                    # 수익 Top10 + 하위5 + 순매수 Top10 + 하위5 + 마케팅 감지 종목 + KODEX 전체
-                    _marketing_etfs = set()
-                    for _ev in all_events:
-                        _etf_str = _ev.get("target_etf","") or ""
-                        for _part in re.split(r"[,/\s]+", _etf_str):
-                            _part = _part.strip()
-                            if _part: _marketing_etfs.add(_part)
+                    # app_market.py와 동일: 수익률Top10 + Bottom10 + 순매수Top10 = 최대 30개
                     _sel = set()
                     _sel.update(_mx_full.nlargest(10, "수익률_pct")["종목코드"])
-                    _sel.update(_mx_full.nsmallest(5, "수익률_pct")["종목코드"])
+                    _sel.update(_mx_full.nsmallest(10, "수익률_pct")["종목코드"])
                     _sel.update(_mx_full.nlargest(10, "순매수")["종목코드"])
-                    _sel.update(_mx_full.nsmallest(5, "순매수")["종목코드"])
-                    if _marketing_etfs:
-                        _sel.update(_mx_full[_mx_full["종목코드"].isin(_marketing_etfs) |
-                                             _mx_full["종목명"].apply(lambda n: any(k in n for k in _marketing_etfs))]["종목코드"])
                     _mx = _mx_full[_mx_full["종목코드"].isin(_sel)].copy()
                     _med_ret = _mx["수익률_pct"].median()
                     _med_net = _mx["순매수"].median()
@@ -710,9 +700,24 @@ tr:nth-child(even){{background:#f5f8ff;}}
         parts.append("<p>KRX 수급 데이터 없음</p>")
     parts.append('</div><div class="divider"></div>')
 
-    # ── 섹션4: 경쟁사 동향 ──
+    # ── 섹션4: 경쟁사 동향 ── (marketing_history + channel_archive 둘 다 확인)
     parts.append('<div class="section"><h2>🏢 경쟁사 동향</h2>')
     comp_evs = [e for e in all_events if e.get("_sess")=="competitor"]
+    if not comp_evs:
+        try:
+            import json as _j2
+            _arch2 = _j2.loads(open(os.path.join(_ROOT, "channel_archive.json"), encoding="utf-8").read())
+            for _wk2 in [f"competitor_{selected_week}", f"competitor_{hist_week}"]:
+                _ae = _arch2.get(_wk2, {})
+                for _ck, _cv in _ae.get("channels", {}).items():
+                    for _ev2 in (_cv.get("data") or {}).get("event_details", []):
+                        _e2 = dict(_ev2)
+                        _e2.setdefault("marketing_type", "이벤트")
+                        _e2.setdefault("channel", _cv.get("channel_name", _ck))
+                        comp_evs.append(_e2)
+                if comp_evs: break
+        except Exception:
+            pass
     if comp_evs:
         parts.append('<div class="ev-grid">')
         for ev in comp_evs:

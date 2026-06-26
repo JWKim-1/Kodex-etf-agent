@@ -346,6 +346,43 @@ with tab2:
                         f'<div style="font-size:.76rem;color:#aaa;margin-top:4px;">{summary}</div>'
                         f'</div>', unsafe_allow_html=True)
 
+    # ── 마케팅 활동 AI 해석 ──
+    st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+    st.markdown("#### 💡 마케팅 활동 해석")
+    _mktg_insight_key = f"mktg_insight_{selected_week}"
+    _mktg_cached = _load_report_cache().get(_mktg_insight_key)
+    if _mktg_cached and not refresh:
+        st.markdown(f'<div class="insight-box">{_mktg_cached}</div>', unsafe_allow_html=True)
+    else:
+        _api_key_tab2 = os.getenv("ANTHROPIC_API_KEY","")
+        if _api_key_tab2 and all_events:
+            if st.button("🤖 마케팅 활동 해석 생성", key="btn_mktg_insight"):
+                _ev_lines = []
+                for _ev in all_events[:30]:
+                    _ev_lines.append(f"[{_SESS_LABEL.get(_ev.get('_sess',''),'')}] {_ev.get('title','')} / {_ev.get('event_summary','')[:60]}")
+                from llm_client import call_llm
+                from datetime import date as _d3; _y3 = _d3.today().year
+                _mp = f"""삼성자산운용 KODEX ETF 마케팅 담당자입니다.
+{_y3}년 {selected_week} 주간 수집된 마케팅 채널 활동 목록입니다:
+
+{chr(10).join(_ev_lines)}
+
+위 마케팅 활동들을 보고 아래를 작성하세요 (마크다운):
+## 이번 주 마케팅 흐름
+(어떤 채널에서 어떤 유형의 마케팅이 집중됐는지 2~3문장)
+
+## KODEX 관점 시사점
+(KODEX 마케팅 담당자가 이 흐름에서 읽어야 할 시사점 2~3문장)
+
+간결하고 실무적으로."""
+                with st.spinner("해석 생성 중..."):
+                    try:
+                        _mi = call_llm(_mp, anthropic_key=_api_key_tab2, max_tokens=600)
+                        _save_report_cache(_mktg_insight_key, _mi)
+                        st.markdown(f'<div class="insight-box">{_mi}</div>', unsafe_allow_html=True)
+                    except Exception as _e:
+                        st.error(f"실패: {_e}")
+
     # 유튜브/카카오 썸네일
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
     st.markdown("#### 📺 채널별 콘텐츠 썸네일")
@@ -491,6 +528,41 @@ with tab4:
                 rows.append({"채널": ch_data.get("channel_name", ch_key), "상태": ok, "영상": vids, "내용": snippet})
             if rows:
                 st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+
+        # ── 경쟁사 동향 AI 해석 ──
+        st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+        st.markdown("#### 💡 경쟁사 동향 해석")
+        _comp_insight_key = f"comp_insight_{selected_week}"
+        _comp_cached = _load_report_cache().get(_comp_insight_key)
+        if _comp_cached and not refresh:
+            st.markdown(f'<div class="insight-box">{_comp_cached}</div>', unsafe_allow_html=True)
+        else:
+            _api_key_tab4 = os.getenv("ANTHROPIC_API_KEY","")
+            if _api_key_tab4 and comp_events:
+                if st.button("🤖 경쟁사 동향 해석 생성", key="btn_comp_insight"):
+                    _ce_lines = [f"[{e.get('channel','')}] {e.get('title','')} / {(e.get('event_summary') or '')[:60]}" for e in comp_events[:20]]
+                    from llm_client import call_llm
+                    from datetime import date as _d4; _y4 = _d4.today().year
+                    _cp = f"""삼성자산운용 KODEX ETF 마케팅 담당자입니다.
+{_y4}년 {selected_week} 주간 경쟁사(TIGER/ACE/RISE/HANARO/SOL/PLUS) 마케팅 활동입니다:
+
+{chr(10).join(_ce_lines)}
+
+아래를 작성하세요 (마크다운):
+## 경쟁사 이번 주 핵심 움직임
+(어떤 운용사가 어떤 방향으로 마케팅하고 있는지 2~3문장)
+
+## KODEX 대응 방향
+(이 경쟁 구도에서 KODEX가 취해야 할 액션 2~3가지, 구체적으로)
+
+간결하고 실무적으로."""
+                    with st.spinner("해석 생성 중..."):
+                        try:
+                            _ci2 = call_llm(_cp, anthropic_key=_api_key_tab4, max_tokens=600)
+                            _save_report_cache(_comp_insight_key, _ci2)
+                            st.markdown(f'<div class="insight-box">{_ci2}</div>', unsafe_allow_html=True)
+                        except Exception as _e:
+                            st.error(f"실패: {_e}")
 
 # ════════════════════════════════════════════════════════
 # 탭5: AI 인사이트
@@ -673,6 +745,9 @@ tr:nth-child(even){{background:#f5f8ff;}}
             parts.append('</div>')
     else:
         parts.append("<p>이번 주 감지된 마케팅 이벤트 없음</p>")
+    _mi2 = _load_report_cache().get(f"mktg_insight_{selected_week}","")
+    if _mi2:
+        parts.append(f'<div class="insight-box"><strong>💡 마케팅 활동 해석</strong><br>{_mi2}</div>')
     parts.append('</div><div class="divider"></div>')
 
     # ── 섹션3: 수급 분석 ──
@@ -734,6 +809,9 @@ tr:nth-child(even){{background:#f5f8ff;}}
         parts.append('</div>')
     else:
         parts.append("<p>경쟁사 이벤트 데이터 없음</p>")
+    _ci3 = _load_report_cache().get(f"comp_insight_{selected_week}","")
+    if _ci3:
+        parts.append(f'<div class="insight-box"><strong>💡 경쟁사 동향 해석</strong><br>{_ci3}</div>')
     parts.append('</div><div class="divider"></div>')
 
     # ── 섹션5: AI 인사이트 ──

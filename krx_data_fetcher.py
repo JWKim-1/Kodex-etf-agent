@@ -201,8 +201,20 @@ def fetch_multiple_weeks(
     return results
 
 
-CACHE_FILE = "krx_data_cache.parquet"
-TREND_CACHE_FILE = "krx_trend_cache.parquet"
+def _resolve_cache_path(filename: str) -> str:
+    """로컬은 현재 디렉토리, 클라우드(읽기전용)는 /tmp 사용."""
+    local = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+    try:
+        # 쓰기 가능한지 테스트
+        test = local + ".writetest"
+        open(test, "w").close()
+        os.remove(test)
+        return local
+    except PermissionError:
+        return os.path.join("/tmp", filename)
+
+CACHE_FILE = _resolve_cache_path("krx_data_cache.parquet")
+TREND_CACHE_FILE = _resolve_cache_path("krx_trend_cache.parquet")
 
 
 def fetch_etf_market_summary_naver() -> pd.DataFrame:

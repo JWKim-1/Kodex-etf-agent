@@ -86,13 +86,21 @@ def extract_events(collection_results: dict, api_key: str, mode: str) -> dict:
         if "raw_text" in d and d["raw_text"]:
             lines.append(d["raw_text"][:400])
         for v in d.get("videos", [])[:5]:
-            if v.get("title"): lines.append(f"- {v['title']}")
+            if v.get("title"):
+                url_part = f" | URL: {v['url']}" if v.get("url") else ""
+                lines.append(f"- {v['title']}{url_part}")
         for e in d.get("event_details", [])[:5]:
-            if e.get("title"): lines.append(f"- {e['title']}")
+            if e.get("title"):
+                url_part = f" | URL: {e['url']}" if e.get("url") else ""
+                lines.append(f"- {e['title']}{url_part}")
         for a in d.get("articles", [])[:5]:
-            if a.get("title"): lines.append(f"- {a['title']}")
+            if a.get("title"):
+                url_part = f" | URL: {a['url']}" if a.get("url") else ""
+                lines.append(f"- {a['title']}{url_part}")
         for p in d.get("posts", [])[:5]:
-            if p.get("title"): lines.append(f"- {p['title']}")
+            if p.get("title"):
+                url_part = f" | URL: {p['url']}" if p.get("url") else ""
+                lines.append(f"- {p['title']}{url_part}")
         if not lines:
             continue
         combined = " ".join(lines)

@@ -137,6 +137,22 @@ for sk in ["securities","bank","mass","competitor"]:
     for ev in (hist_entry.get(sk) or {}).get("events",{}).get("events") or []:
         ev = dict(ev); ev["_sess"] = sk; all_events.append(ev)
 
+# raw 데이터에서 제목 매칭으로 URL 주입 (LLM이 URL 누락한 경우 보완)
+_url_by_title = {}
+for sk in ["securities","bank","mass","competitor"]:
+    for _ch_data in ((hist_entry.get(sk) or {}).get("raw") or {}).values():
+        for _src in ["event_details","videos","articles","posts"]:
+            for _item in (_ch_data.get(_src) or []):
+                _t = (_item.get("title") or "").strip()
+                _u = _item.get("url","") or ""
+                if _t and _u.startswith("http"):
+                    _url_by_title[_t] = _u
+for _ev in all_events:
+    if not (_ev.get("url") or "").startswith("http"):
+        _match = _url_by_title.get((_ev.get("title") or "").strip())
+        if _match:
+            _ev["url"] = _match
+
 krx_df = cache.get(selected_week, pd.DataFrame())
 trend_df = trend_cache.get(selected_week, pd.DataFrame())
 

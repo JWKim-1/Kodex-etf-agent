@@ -1405,8 +1405,10 @@ if _did_cache_key not in st.session_state:
     except Exception:
         pass
 
+_did_from_parquet = False
 if _did_cache_key in st.session_state:
     did_results = st.session_state[_did_cache_key]
+    _did_from_parquet = True
     st.caption(f"📦 저장된 분석 결과 사용 ({current_sheet}) · 재계산하려면 분석 실행 버튼 클릭")
     if st.button("🔄 DiD 재계산", key="rerun_did"):
         del st.session_state[_did_cache_key]
@@ -1480,18 +1482,20 @@ if did_results:
     )
     st.plotly_chart(fig_did, use_container_width=True)
 
-    # ── KODEX vs 비교군 그룹 바 차트 ──
+    # ── KODEX vs 비교군 그룹 바 차트 (parquet 복원 시 변화율 데이터 없으므로 스킵) ──
+    if _did_from_parquet:
+        st.caption("ℹ️ 변화율 차트는 DiD 재계산 후 표시됩니다.")
     chart_rows = []
-    for res in did_results.values():
-        short = res.kodex_name.replace("KODEX ", "")
-        chart_rows.append({"ETF": short, "구분": "KODEX", "변화율": res.kodex_change_pct * 100, "order": 0, "no_comp": res.no_competitors})
-        if res.competitors:
-            for i, comp in enumerate(res.competitors):
-                label = comp.provider
-                chart_rows.append({"ETF": short, "구분": label, "변화율": comp.change_pct * 100, "order": i+1, "no_comp": False})
-        else:
-            # 비교군 없을 때 더미 막대 (0, 빗금 표시용)
-            chart_rows.append({"ETF": short, "구분": "비교군없음", "변화율": 0, "order": 1, "no_comp": True})
+    if not _did_from_parquet:
+        for res in did_results.values():
+            short = res.kodex_name.replace("KODEX ", "")
+            chart_rows.append({"ETF": short, "구분": "KODEX", "변화율": res.kodex_change_pct * 100, "order": 0, "no_comp": res.no_competitors})
+            if res.competitors:
+                for i, comp in enumerate(res.competitors):
+                    label = comp.provider
+                    chart_rows.append({"ETF": short, "구분": label, "변화율": comp.change_pct * 100, "order": i+1, "no_comp": False})
+            else:
+                chart_rows.append({"ETF": short, "구분": "비교군없음", "변화율": 0, "order": 1, "no_comp": True})
 
     if chart_rows:
         from plotly.subplots import make_subplots
@@ -1577,8 +1581,8 @@ for code, res in did_results.items():
                   delta_color="normal" if _score >= 60 else ("off" if _score >= 40 else "inverse"))
 
         # ── 베이스라인 부족 경고 ──
-        bw = res.baseline.weeks_used if res.baseline else 0
-        if bw < 8:
+        bw = res.baseline.weeks_used if res.baseline else None
+        if bw is not None and bw < 8:
             st.warning(
                 f"⚠️ 베이스라인 {bw}주만 확보 (8주 미만) — 신규 상장 ETF로 데이터 부족. "
                 f"DiD 신뢰도 낮음. {8 - bw}주 더 쌓이면 정상화됩니다."

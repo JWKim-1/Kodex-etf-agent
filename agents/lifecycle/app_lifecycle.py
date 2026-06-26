@@ -138,7 +138,9 @@ def _cards(items, status_field, badge_color_map):
     for x in items_sorted:
         by_week[x["week"]].append(x)
     for week in sorted(by_week.keys(), key=lambda w: _parse_week_label(w) or date.min, reverse=True):
-        st.markdown(f"**📅 {week}**")
+        _wd = _parse_week_label(week)
+        _yr = f" ({_wd.year}년)" if _wd else ""
+        st.markdown(f"**📅 {week}{_yr}**")
         cols = st.columns(3)
         for i, x in enumerate(by_week[week]):
             sf = x.get(status_field, "")

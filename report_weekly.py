@@ -95,7 +95,7 @@ st.markdown("""
 _TYPE_COLOR = {"이벤트":"#00c6ff","프로모션":"#05b169","추천콘텐츠":"#f0c040","수수료혜택":"#a78bfa"}
 _TYPE_ICON  = {"이벤트":"🎁","프로모션":"💰","추천콘텐츠":"📺","수수료혜택":"🎯"}
 _SESS_COLOR = {"securities":"#4d9fff","bank":"#05b169","mass":"#f0c040","competitor":"#f43f5e"}
-_SESS_LABEL = {"securities":"📈 증권","bank":"🏦 은행","mass":"🎯 개인(KODEX)","competitor":"🏢 경쟁사"}
+_SESS_LABEL = {"securities":"📈 증권","bank":"🏦 은행","competitor":"🏢 경쟁사(ETF운용사)"}
 _PROV_COLOR = {
     "KODEX":"#4d9fff","TIGER":"#ff8c42","ACE":"#05b169",
     "RISE":"#a78bfa","HANARO":"#00c6ff","SOL":"#f43f5e","PLUS":"#fb923c",
@@ -132,15 +132,17 @@ st.markdown("")
 hist_week = _closest_history_week(history, selected_week)
 hist_entry = history.get(hist_week, {})
 
+# mass는 competitor와 동일 데이터 — competitor만 표시
+_RPT_SESSIONS = ["securities", "bank", "competitor"]
 all_events = []
-for sk in ["securities","bank","mass","competitor"]:
+for sk in _RPT_SESSIONS:
     for ev in (hist_entry.get(sk) or {}).get("events",{}).get("events") or []:
         ev = dict(ev); ev["_sess"] = sk; all_events.append(ev)
 
 # marketing_history에 이벤트 없으면 channel_archive LLM 캐시 폴백
 if not all_events:
     _llm_key_map = {"securities": f"sec_llm_{selected_week}", "bank": f"bank_llm_{selected_week}",
-                    "mass": f"mass_llm_{selected_week}", "competitor": f"comp_llm_{selected_week}"}
+                    "competitor": f"comp_llm_{selected_week}"}
     try:
         _arch_all = json.loads(open(os.path.join(_ROOT, "channel_archive.json"), encoding="utf-8").read())
     except Exception:

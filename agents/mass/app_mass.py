@@ -392,7 +392,25 @@ else:
     if llm_result.get("summary"):
         st.caption(llm_result["summary"])
 
-detected_codes = llm_result.get("etf_codes", [])
+# KRX 검증 + 역매핑 (LLM이 이름/잘못된 코드 반환 대응)
+_name_to_code_m = {v: k for k, v in all_kodex_etfs.items()}
+_raw_codes_m = llm_result.get("etf_codes", [])
+detected_codes = []
+for _c in _raw_codes_m:
+    _c = str(_c).strip()
+    if _c in all_kodex_etfs:
+        detected_codes.append(_c)
+    elif _c in _name_to_code_m:
+        detected_codes.append(_name_to_code_m[_c])
+    else:
+        _m = next((k for k, v in all_kodex_etfs.items() if _c in v or v in _c), None)
+        if _m: detected_codes.append(_m)
+for _ev in llm_result.get("evidence", []):
+    _title = _ev.get("title","") + " " + _ev.get("event_summary","")
+    for _name, _code in _name_to_code_m.items():
+        _kw = _name.replace("KODEX","").strip()
+        if len(_kw) >= 4 and _kw in _title and _code not in detected_codes:
+            detected_codes.append(_code); break
 target_codes = detected_codes
 
 if not target_codes:

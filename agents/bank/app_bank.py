@@ -379,10 +379,34 @@ all_kodex = current_df_bank[current_df_bank["종목명"].str.contains("KODEX", n
 bank_active_cnt = all_kodex[all_kodex["은행"].notna() & (all_kodex["은행"] != 0.0)].shape[0]
 st.caption(f"KODEX {len(all_kodex)}개 중 은행 거래 있는 ETF: {bank_active_cnt}개")
 
-llm_etf_codes = st.session_state.get("bank_llm_result", {}).get("etf_codes", [])
-if llm_etf_codes:
-    st.info(f"📡 채널 감지 ETF {len(llm_etf_codes)}개 기준 분석")
-    bank_target_codes = llm_etf_codes
+llm_etf_codes_raw = st.session_state.get("bank_llm_result", {}).get("etf_codes", [])
+llm_ev = st.session_state.get("bank_llm_result", {}).get("evidence", [])
+if llm_etf_codes_raw:
+    # KRX 검증 + 역매핑
+    _all_kodex_map = dict(zip(all_kodex[_code_col].tolist(), all_kodex["종목명"].tolist()))
+    _name_to_code_b = {v: k for k, v in _all_kodex_map.items()}
+    llm_etf_codes = []
+    for _c in llm_etf_codes_raw:
+        _c = str(_c).strip()
+        if _c in _all_kodex_map:
+            llm_etf_codes.append(_c)
+        elif _c in _name_to_code_b:
+            llm_etf_codes.append(_name_to_code_b[_c])
+        else:
+            _m = next((k for k, v in _all_kodex_map.items() if _c in v or v in _c), None)
+            if _m: llm_etf_codes.append(_m)
+    for _ev in llm_ev:
+        _title = _ev.get("title","") + " " + _ev.get("event_summary","")
+        for _name, _code in _name_to_code_b.items():
+            _kw = _name.replace("KODEX","").strip()
+            if len(_kw) >= 4 and _kw in _title and _code not in llm_etf_codes:
+                llm_etf_codes.append(_code); break
+    if llm_etf_codes:
+        st.info(f"📡 채널 감지 ETF {len(llm_etf_codes)}개 기준 분석")
+        bank_target_codes = llm_etf_codes
+    else:
+        st.caption("채널 감지 없음 — 전체 KODEX ETF 기준 DiD")
+        bank_target_codes = all_kodex[_code_col].tolist()
 else:
     st.caption("채널 감지 없음 — 전체 KODEX ETF 기준 DiD")
     bank_target_codes = all_kodex[_code_col].tolist()

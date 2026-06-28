@@ -147,8 +147,6 @@ def extract_events(collection_results: dict, api_key: str, mode: str) -> dict:
 - 채용공고, 사회공헌, 기업 IR
 - 단순 뉴스 보도 (운용사/채널이 마케팅 주체 아닌 경우)
 
-events는 최대 15개만 추출 (중요도 순).
-
 JSON만 출력:
 {{
   "marketing_detected": true/false,
@@ -192,8 +190,18 @@ JSON만 출력:
                             if depth == 0: last_close = i
                     if last_close:
                         return json.loads(raw_json[:last_close+1])
-                except json.JSONDecodeError as e2:
-                    logger.warning(f"LLM JSON 교정 후에도 파싱 실패 ({mode}): {e2}")
+                except json.JSONDecodeError:
+                    pass
+                # 3차: JSON 파싱 실패 시 단순 재시도 (짧은 요약만 요청)
+                try:
+                    retry_prompt = f"위 분석 결과를 valid JSON으로 다시 출력하세요. events 배열의 각 항목은 title, marketing_type, channel, target_etf 필드만 포함.\n\n{prompt[-2000:]}"
+                    text2 = call_llm(retry_prompt, anthropic_key=api_key, max_tokens=8192)
+                    m2 = re.search(r"\{.*\}", text2, re.DOTALL)
+                    if m2:
+                        fixed2 = re.sub(r",\s*([\}\]])", r"\1", m2.group())
+                        return json.loads(fixed2)
+                except Exception as e2:
+                    logger.warning(f"LLM JSON 재시도 실패 ({mode}): {e2}")
     except Exception as e:
         logger.warning(f"LLM 분석 실패 ({mode}): {e}")
 

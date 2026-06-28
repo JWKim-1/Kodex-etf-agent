@@ -69,7 +69,12 @@
       "WebFetch(domain:www.fnnews.com)",
       "Bash(python -m py_compile agents/lifecycle/app_lifecycle.py)",
       "Bash(python -m py_compile agents/mass/analyzer.py)",
-      "Bash(python -m py_compile did_calculator.py agents/securities/analyzer.py agents/mass/analyzer.py agents/bank/analyzer.py)"
+      "Bash(python -m py_compile did_calculator.py agents/securities/analyzer.py agents/mass/analyzer.py agents/bank/analyzer.py)",
+      "Bash(python -m py_compile did_calculator.py)",
+      "Bash(python -m py_compile did_calculator.py app.py)",
+      "Bash(python -m py_compile scheduled_collect.py did_calculator.py)",
+      "Bash(python -m py_compile agents/bank/app_bank.py agents/mass/app_mass.py)",
+      "Bash(python -m py_compile app.py agents/securities/analyzer.py agents/bank/analyzer.py agents/mass/analyzer.py did_calculator.py scheduled_collect.py)"
     ]
   }
 }

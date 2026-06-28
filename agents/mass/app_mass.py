@@ -557,10 +557,17 @@ if _mass_did_key not in st.session_state and _pkl_path and os.path.exists(_pkl_p
 
 if _mass_did_key in st.session_state:
     did_results = st.session_state[_mass_did_key]
-    st.caption(f"📦 저장된 분석 결과 사용 ({current_sheet})")
-    if st.button("🔄 DiD 재계산", key="mass_rerun_did"):
-        if _pkl_path and os.path.exists(_pkl_path): os.remove(_pkl_path)
-        del st.session_state[_mass_did_key]; st.rerun()
+    # target_codes가 캐시보다 많으면 재계산
+    _cached_codes = set(did_results.keys())
+    _target_set = set(str(c) for c in target_codes)
+    if not _target_set.issubset(_cached_codes):
+        del st.session_state[_mass_did_key]
+        did_results = None
+    else:
+        st.caption(f"📦 저장된 분석 결과 사용 ({current_sheet})")
+        if st.button("🔄 DiD 재계산", key="mass_rerun_did"):
+            if _pkl_path and os.path.exists(_pkl_path): os.remove(_pkl_path)
+            del st.session_state[_mass_did_key]; st.rerun()
 else:
     with st.spinner("DiD 분석 중..."):
         did_results = analyzer.analyze(all_sheets, target_codes, current_sheet)

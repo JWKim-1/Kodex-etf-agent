@@ -147,6 +147,8 @@ def extract_events(collection_results: dict, api_key: str, mode: str) -> dict:
 - 채용공고, 사회공헌, 기업 IR
 - 단순 뉴스 보도 (운용사/채널이 마케팅 주체 아닌 경우)
 
+events는 최대 15개만 추출 (중요도 순).
+
 JSON만 출력:
 {{
   "marketing_detected": true/false,

@@ -563,10 +563,10 @@ JSON만 출력:
                 _imgs,
                 anthropic_key=anthropic_api_key,
                 gemini_key=gem_key,
-                max_tokens=2000,
+                max_tokens=8192,
             )
         else:
-            text = call_llm(prompt, anthropic_key=anthropic_api_key, gemini_key=gem_key, max_tokens=2000)
+            text = call_llm(prompt, anthropic_key=anthropic_api_key, gemini_key=gem_key, max_tokens=8192)
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
             raw_json = m.group()

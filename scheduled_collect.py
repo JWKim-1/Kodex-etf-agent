@@ -167,7 +167,7 @@ JSON만 출력:
 
     try:
         from llm_client import call_llm
-        text = call_llm(prompt, anthropic_key=api_key, gemini_key=os.getenv("GEMINI_API_KEY",""), max_tokens=3000)
+        text = call_llm(prompt, anthropic_key=api_key, gemini_key=os.getenv("GEMINI_API_KEY",""), max_tokens=8192)
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
             raw_json = m.group()

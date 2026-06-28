@@ -253,7 +253,8 @@ _mass_llm_arch_key = f"mass_llm_{current_sheet}"
 
 # 캐시에서 LLM 결과 먼저 확인
 _mass_llm_failed = False
-_cached_llm = load_raw_data(_mass_llm_arch_key)
+_cached_llm_raw = load_raw_data(_mass_llm_arch_key)
+_cached_llm = (_cached_llm_raw.get("raw") or _cached_llm_raw) if _cached_llm_raw else None
 _mass_cache_valid = bool(
     _cached_llm and not (
         _cached_llm.get("marketing_detected") is False

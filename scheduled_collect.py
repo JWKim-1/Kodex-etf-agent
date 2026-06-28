@@ -123,7 +123,7 @@ def extract_events(collection_results: dict, api_key: str, mode: str) -> dict:
     focus_map = {
         "securities": "증권사가 KODEX ETF를 어떻게 마케팅하는지 — 추천/프로모션/수수료혜택 감지",
         "bank":       "은행이 ETF 매수를 유도하는 이벤트/혜택 감지 — KODEX 관련 우선",
-        "mass":       "ETF 운용사(KODEX/TIGER/ACE/RISE/HANARO/SOL) 전체의 마케팅 활동 감지 — 이벤트·프로모션·신규상장·수수료혜택·유튜브콘텐츠 등 모든 마케팅 활동 포함 (매수 유도 여부 불문)",
+        "mass":       "ETF 운용사(KODEX/TIGER/ACE/RISE/HANARO/SOL/PLUS) 전체의 마케팅 활동 감지 — KODEX를 포함한 모든 운용사의 이벤트·프로모션·신규상장·수수료혜택·유튜브콘텐츠 등 마케팅 활동 포함. KODEX 활동 반드시 포함할 것.",
         "competitor": "KODEX 경쟁사(TIGER/ACE/RISE/HANARO/SOL) 마케팅 vs KODEX 활동 비교 — 경쟁사가 집중 마케팅하는 상품과 KODEX 대응 현황",
     }
     focus_desc = focus_map.get(mode, "")

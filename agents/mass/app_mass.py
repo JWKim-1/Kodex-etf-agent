@@ -405,8 +405,8 @@ for _c in _raw_codes_m:
     else:
         _m = next((k for k, v in all_kodex_etfs.items() if _c in v or v in _c), None)
         if _m: detected_codes.append(_m)
-for _ev in llm_result.get("evidence", []):
-    _title = _ev.get("title","") + " " + _ev.get("event_summary","")
+for _ev in (llm_result.get("evidence") or llm_result.get("events") or []):
+    _title = _ev.get("title","") + " " + _ev.get("event_summary","") + " " + (_ev.get("target_etf") or "")
     _title_norm = __import__('re').sub(r"\s+", "", _title)
     for _name, _code in _name_to_code_m.items():
         _kw = _name.replace("KODEX","").strip()

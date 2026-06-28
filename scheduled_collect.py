@@ -115,7 +115,7 @@ def extract_events(collection_results: dict, api_key: str, mode: str) -> dict:
     mode_map = {
         "securities": "증권사(삼성/미래에셋/키움/토스/한투/신한/KB증권)",
         "bank":       "은행(KB/신한/하나/우리/NH농협은행)",
-        "mass":       "ETF 운용사 전체(KODEX/TIGER/ACE/RISE/HANARO/SOL) — 개인 투자자 대상 마케팅 (운용사 구분 없이 모든 ETF 이벤트 포함)",
+        "mass":       "ETF 운용사 전체(KODEX/TIGER/ACE/RISE/HANARO/SOL) — 이번 주 마케팅 활동 전체",
         "competitor": "ETF 운용사 전체(KODEX/TIGER/ACE/RISE/HANARO/SOL) — KODEX 경쟁사 비교 관점",
     }
     mode_desc = mode_map.get(mode, mode)
@@ -123,7 +123,7 @@ def extract_events(collection_results: dict, api_key: str, mode: str) -> dict:
     focus_map = {
         "securities": "증권사가 KODEX ETF를 어떻게 마케팅하는지 — 추천/프로모션/수수료혜택 감지",
         "bank":       "은행이 ETF 매수를 유도하는 이벤트/혜택 감지 — KODEX 관련 우선",
-        "mass":       "ETF 운용사(KODEX/TIGER/ACE/RISE/HANARO/SOL) 전체가 개인 투자자를 대상으로 진행한 마케팅 감지 — 운용사 구분 없이 개인 투자자에게 ETF 매수를 유도하는 모든 이벤트·프로모션·혜택 포함",
+        "mass":       "ETF 운용사(KODEX/TIGER/ACE/RISE/HANARO/SOL) 전체의 마케팅 활동 감지 — 이벤트·프로모션·신규상장·수수료혜택·유튜브콘텐츠 등 모든 마케팅 활동 포함 (매수 유도 여부 불문)",
         "competitor": "KODEX 경쟁사(TIGER/ACE/RISE/HANARO/SOL) 마케팅 vs KODEX 활동 비교 — 경쟁사가 집중 마케팅하는 상품과 KODEX 대응 현황",
     }
     focus_desc = focus_map.get(mode, "")

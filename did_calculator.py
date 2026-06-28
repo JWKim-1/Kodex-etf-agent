@@ -565,10 +565,18 @@ JSON만 출력:
                 max_tokens=800,
             )
         else:
-            text = call_llm(prompt, anthropic_key=anthropic_api_key, gemini_key=gem_key, max_tokens=512)
+            text = call_llm(prompt, anthropic_key=anthropic_api_key, gemini_key=gem_key, max_tokens=2000)
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
-            return json.loads(m.group())
+            raw_json = m.group()
+            try:
+                return json.loads(raw_json)
+            except json.JSONDecodeError:
+                fixed = re.sub(r",\s*([\}\]])", r"\1", raw_json)
+                try:
+                    return json.loads(fixed)
+                except json.JSONDecodeError as e2:
+                    logger.warning(f"LLM JSON 교정 후에도 파싱 실패: {e2}")
     except Exception as e:
         logger.warning(f"LLM ETF 추출 실패: {e}")
 

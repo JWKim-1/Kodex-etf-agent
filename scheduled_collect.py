@@ -170,7 +170,16 @@ JSON만 출력:
         text = call_llm(prompt, anthropic_key=api_key, gemini_key=os.getenv("GEMINI_API_KEY",""), max_tokens=3000)
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
-            return json.loads(m.group())
+            raw_json = m.group()
+            try:
+                return json.loads(raw_json)
+            except json.JSONDecodeError:
+                # trailing comma 등 흔한 JSON 오류 자동 교정
+                fixed = re.sub(r",\s*([\}\]])", r"\1", raw_json)
+                try:
+                    return json.loads(fixed)
+                except json.JSONDecodeError as e2:
+                    logger.warning(f"LLM JSON 교정 후에도 파싱 실패 ({mode}): {e2}")
     except Exception as e:
         logger.warning(f"LLM 분석 실패 ({mode}): {e}")
 
@@ -367,7 +376,11 @@ def _run_core(week_label: str, week_start_dt: datetime, week_end_dt: datetime):
             import analyzer as _bank_analyzer_mod
             MarketingAnalyzer = _bank_analyzer_mod.MarketingAnalyzer
 
-            all_sheets_did = load_cache_recent(25)
+            # KRX 캐시 최신 상태로 재로드 (수집 후 시간차 대응)
+            import importlib as _ikrx
+            import krx_data_fetcher as _krx_mod
+            _ikrx.reload(_krx_mod)
+            all_sheets_did = _krx_mod.load_cache_recent(25)
             if all_sheets_did and week_label in all_sheets_did:
                 SKIP = {"참고사항", "설명", "README"}
                 sheet_names_did = [s for s in all_sheets_did if s not in SKIP]

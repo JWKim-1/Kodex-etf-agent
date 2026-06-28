@@ -385,13 +385,18 @@ with tab2:
     _mktg_cached = _load_report_cache().get(_mktg_insight_key)
     if _mktg_cached and not refresh:
         st.markdown(f'<div class="insight-box">{_mktg_cached}</div>', unsafe_allow_html=True)
-    else:
+        _api_key_tab2 = os.getenv("ANTHROPIC_API_KEY","")
+        if _api_key_tab2:
+            if st.button("🔄 마케팅 해석 재생성", key="btn_mktg_regen"):
+                refresh = True
+                _mktg_cached = None
+    if not _mktg_cached or refresh:
         _api_key_tab2 = os.getenv("ANTHROPIC_API_KEY","")
         if _api_key_tab2 and all_events:
             if st.button("🤖 마케팅 활동 해석 생성", key="btn_mktg_insight"):
                 _ev_lines = []
                 for _ev in all_events[:30]:
-                    _ev_lines.append(f"[{_SESS_LABEL.get(_ev.get('_sess',''),'')}] {_ev.get('title','')} / {_ev.get('event_summary','')[:60]}")
+                    _ev_lines.append(f"[{_SESS_LABEL.get(_ev.get('_sess',''),'')}] {_ev.get('title','')} / {_ev.get('event_summary','')[:80]}")
                 from llm_client import call_llm
                 from datetime import date as _d3; _y3 = _d3.today().year
                 _mp = f"""삼성자산운용 KODEX ETF 마케팅 담당자입니다.
@@ -399,17 +404,20 @@ with tab2:
 
 {chr(10).join(_ev_lines)}
 
-위 마케팅 활동들을 보고 아래를 작성하세요 (마크다운):
+위 마케팅 활동들을 분석하여 아래 형식으로 상세하게 작성하세요 (마크다운):
 ## 이번 주 마케팅 흐름
-(어떤 채널에서 어떤 유형의 마케팅이 집중됐는지 2~3문장)
+(어떤 채널에서 어떤 유형의 마케팅이 집중됐는지, 주요 이벤트·프로모션 내용 포함 4~5문장)
+
+## 채널별 주요 활동
+(증권/은행/경쟁사 채널별로 이번 주 눈에 띄는 활동 각 2~3개 구체적으로)
 
 ## KODEX 관점 시사점
-(KODEX 마케팅 담당자가 이 흐름에서 읽어야 할 시사점 2~3문장)
+(KODEX 마케팅 담당자가 이 흐름에서 읽어야 할 시사점, 대응 방향 포함 3~4문장)
 
-간결하고 실무적으로."""
+실무적이고 구체적으로 작성하세요."""
                 with st.spinner("해석 생성 중..."):
                     try:
-                        _mi = call_llm(_mp, anthropic_key=_api_key_tab2, max_tokens=600)
+                        _mi = call_llm(_mp, anthropic_key=_api_key_tab2, max_tokens=3000)
                         _save_report_cache(_mktg_insight_key, _mi)
                         st.markdown(f'<div class="insight-box">{_mi}</div>', unsafe_allow_html=True)
                     except Exception as _e:

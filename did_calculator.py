@@ -536,6 +536,8 @@ def extract_target_etfs_with_llm(collection_results: Dict,
 - 운용사(KODEX/TIGER/ACE 등) 구분 없이 이벤트·프로모션·수수료혜택·매수유도 모두 포함
 - 단순 시세·교육·분석 콘텐츠는 제외
 
+⚠️ etf_codes는 반드시 KRX 6자리 숫자 종목코드만 입력 (예: "069500"). ETF 이름이나 이벤트 제목 절대 금지. 모르면 빈 배열 [].
+
 JSON만 출력:
 {{
   "marketing_detected": true,

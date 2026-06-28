@@ -1241,7 +1241,8 @@ else:
                     for it in items:
                         st.markdown(f"- {it}")
 
-    detected_codes = llm_result.get("etf_codes", [])
+    # 숫자 6자리 코드만 유효 — LLM이 이름을 넣는 경우 필터링
+    detected_codes = [c for c in llm_result.get("etf_codes", []) if str(c).strip().isdigit() and len(str(c).strip()) <= 7]
 
 # ETF 자동 확정
 target_codes = detected_codes

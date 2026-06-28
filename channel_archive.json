@@ -10669,235 +10669,6 @@
       }
     }
   },
-  "sec_llm_6.22-6.26": {
-    "archived_at": "2026-06-28 21:48:10",
-    "raw": {
-      "marketing_detected": true,
-      "summary": "삼성자산운용이 KODEX ETF 신규상장 이벤트와 웹세미나를 통해 적극적으로 마케팅하고 있으며, 신한투자증권과 KB증권은 ISA와 수수료 혜택 중심의 이벤트를 진행 중입니다. 미래에셋과 키움증권은 반도체·AI 투자 콘텐츠를 통해 간접적으로 ETF 투자 수요를 유도하고 있습니다.",
-      "events": [
-        {
-          "channel": "삼성자산운용 웹사이트",
-          "provider": "삼성자산운용",
-          "title": "KODEX 전고체배터리ESS TOP2플러스 ETF 신규 상장 이벤트",
-          "url": "https://www.samsungfund.com/etf/lounge/event-view.do?seq=95",
-          "marketing_type": "신규상장",
-          "event_period": "2026-06-23 ~ 2026-07-31",
-          "event_summary": "신규 상장 ETF의 매수 유도를 위한 이벤트로 당첨자 발표를 통해 고객 참여 극대화.",
-          "target_etf": "KODEX 전고체배터리ESS TOP2플러스 ETF"
-        },
-        {
-          "channel": "삼성자산운용 웹사이트",
-          "provider": "삼성자산운용",
-          "title": "KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF 신규상장 이벤트",
-          "url": "https://www.samsungfund.com/etf/lounge/event-view.do?seq=94",
-          "marketing_type": "신규상장",
-          "event_period": null,
-          "event_summary": "현대차 로보틱스 관련 신규 ETF 상장 기념 이벤트로 신규 상품 인지도 제고.",
-          "target_etf": "KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF"
-        },
-        {
-          "channel": "삼성자산운용 웹사이트",
-          "provider": "삼성자산운용",
-          "title": "[6~8월 릴레이 이벤트] Kodex ETF 순자산 200조 돌파 기념",
-          "url": "https://www.samsungfund.com/etf/lounge/event-view.do?seq=93",
-          "marketing_type": "프로모션",
-          "event_period": "2026-06-01 ~ 2026-08-31",
-          "event_summary": "KODEX ETF 순자산 200조 달성 기념 릴레이 이벤트로 브랜드 신뢰도 강화 및 고객 참여 유도.",
-          "target_etf": "KODEX ETF 전체"
-        },
-        {
-          "channel": "삼성자산운용 웹사이트",
-          "provider": "삼성자산운용",
-          "title": "KODEX 미국대표지수 ETF 적립식 매수 이벤트",
-          "url": "https://www.samsungfund.com/etf/lounge/event-view.do?seq=92",
-          "marketing_type": "이벤트",
-          "event_period": null,
-          "event_summary": "미국 지수 ETF의 적립식 투자 활성화를 위한 유도형 이벤트.",
-          "target_etf": "KODEX 미국대표지수 ETF"
-        },
-        {
-          "channel": "삼성자산운용 웹사이트",
-          "provider": "삼성자산운용",
-          "title": "KODEX AI반도체TOP2플러스 ETF 매수 인증 이벤트",
-          "url": "https://www.samsungfund.com/etf/lounge/event-view.do?seq=91",
-          "marketing_type": "이벤트",
-          "event_period": null,
-          "event_summary": "AI반도체 ETF 매수 인증을 통한 직접적인 매수 유도 이벤트.",
-          "target_etf": "KODEX AI반도체TOP2플러스 ETF"
-        },
-        {
-          "channel": "삼성자산운용 카카오채널",
-          "provider": "삼성자산운용",
-          "title": "[KODEX 웹세미나] Kodex 하반기 투자 키워드 [코드명 : AI 병목]",
-          "url": "https://pf.kakao.com/_UxctLxb/posts/113765961",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "AI 관련 투자 키워드를 제시하는 웹세미나로 KODEX ETF의 투자 매력성 강조.",
-          "target_etf": "KODEX ETF (AI 관련)"
-        },
-        {
-          "channel": "미래에셋증권 블로그",
-          "provider": "미래에셋증권",
-          "title": "쉽게보는 리서치 : 반도체 : 마이크론 실적 리뷰",
-          "url": null,
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "반도체 산업 분석을 통해 반도체 관련 ETF 투자 수요 간접 유도.",
-          "target_etf": null
-        },
-        {
-          "channel": "미래에셋증권 블로그",
-          "provider": "미래에셋증권",
-          "title": "쉽게보는 리서치 : SK하이닉스 (000660/매수)",
-          "url": null,
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "SK하이닉스 매수 추천을 통해 반도체 투자 관심 유도.",
-          "target_etf": null
-        },
-        {
-          "channel": "미래에셋증권 블로그",
-          "provider": "미래에셋증권",
-          "title": "쉽게보는 리서치 : 삼성전자 (005930/매수)",
-          "url": null,
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "삼성전자 매수 추천으로 반도체·전자 관련 투자 수요 유도.",
-          "target_etf": null
-        },
-        {
-          "channel": "키움증권 유튜브",
-          "provider": "키움증권",
-          "title": "반도체 수퍼 사이클! AI 투자 아직도 유효한 이유는?",
-          "url": "https://youtu.be/HUWBzpS2bsI",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "AI 투자의 유효성을 설명하며 AI·반도체 관련 ETF 투자 수요 유도.",
-          "target_etf": null
-        },
-        {
-          "channel": "키움증권 유튜브",
-          "provider": "키움증권",
-          "title": "반도체 급등 신호 나왔다! 앞으로 만스피 달성 위한 조건은?",
-          "url": "https://youtu.be/yk31RYYyC58",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "반도체 시장 전망을 분석하여 반도체 투자 수요 창출.",
-          "target_etf": null
-        },
-        {
-          "channel": "키움증권 유튜브",
-          "provider": "키움증권",
-          "title": "패시브vs액티브 ETF 완벽 총정리",
-          "url": "https://youtu.be/g9JuSczNmOw",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "ETF 투자 방식 비교 설명으로 ETF 투자 수요 일반화 유도.",
-          "target_etf": null
-        },
-        {
-          "channel": "신한투자증권 유튜브",
-          "provider": "신한투자증권",
-          "title": "국가가 매달 주는 용돈 활용해 자녀 자산 1억 만드는 법",
-          "url": "https://youtu.be/owt0rnDfXzo",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "자산 형성 방법을 제시하며 ETF 등 투자 상품 수요 유도.",
-          "target_etf": null
-        },
-        {
-          "channel": "KB증권 유튜브",
-          "provider": "KB증권",
-          "title": "제약 바이오, 저점 매수의 기회 왔다? 하반기가 기회인 바이오 긴급 점검",
-          "url": "https://youtu.be/xl9UieVpfNY",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "바이오 섹터 투자 기회를 강조하여 바이오 관련 ETF 투자 수요 유도.",
-          "target_etf": null
-        },
-        {
-          "channel": "KB증권 유튜브",
-          "provider": "KB증권",
-          "title": "시장이 우려하는 칩플레이션 발생, AI기판주로 선택과 집중 필요!",
-          "url": "https://youtu.be/OAvjaD85_Ps",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "AI 기판 관련 투자 기회 강조로 AI·반도체 관련 투자 수요 유도.",
-          "target_etf": null
-        },
-        {
-          "channel": "KB증권 유튜브",
-          "provider": "KB증권",
-          "title": "엔비디아 AI 팩토리 폭발, 기판과 패키징 대장주 정리",
-          "url": "https://youtu.be/08ts1tfQU1U",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "AI 관련 주요 기업 분석으로 AI·반도체 투자 수요 창출.",
-          "target_etf": null
-        },
-        {
-          "channel": "신한투자증권 카카오채널",
-          "provider": "신한투자증권",
-          "title": "[쏠쏠한 리포트] 신한투자증권 글로벌 데일리 (6월 24-26일)",
-          "url": "https://pf.kakao.com/_xdnLFd/posts/113774125",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "일일 글로벌 시황 분석 콘텐츠로 투자 정보 제공 및 고객 참여 유도.",
-          "target_etf": null
-        },
-        {
-          "channel": "신한투자증권 이벤트",
-          "provider": "신한투자증권",
-          "title": "중개형ISA 이벤트",
-          "url": "https://m.shinhansec.com/mweb/anev/evnt/aevnt0001",
-          "marketing_type": "이벤트",
-          "event_period": null,
-          "event_summary": "중개형ISA 상품 가입 유도 이벤트로 수수료 혜택 및 절세 상품 프로모션.",
-          "target_etf": null
-        },
-        {
-          "channel": "신한투자증권 이벤트",
-          "provider": "신한투자증권",
-          "title": "국내주식 온라인 수수료 제로베이스 이벤트",
-          "url": "https://m.shinhansec.com/mweb/anev/evnt/aevnt0001",
-          "marketing_type": "수수료혜택",
-          "event_period": null,
-          "event_summary": "국내 주식 및 ETF 거래 수수료 폐지로 투자 진입 장벽 제거.",
-          "target_etf": null
-        },
-        {
-          "channel": "KB증권 이벤트",
-          "provider": "KB증권",
-          "title": "중개형ISA 순입금(이전) 이벤트 시즌3",
-          "url": "https://m.kbsec.com/go.able?linkcd=s060200020000",
-          "marketing_type": "이벤트",
-          "event_period": null,
-          "event_summary": "ISA 계좌 이전 고객 대상 인센티브 제공으로 자산 유입 촉진.",
-          "target_etf": null
-        },
-        {
-          "channel": "KB증권 이벤트",
-          "provider": "KB증권",
-          "title": "영(Young)하니까 수수료는 0원!",
-          "url": "https://m.kbsec.com/go.able?linkcd=s060200020000",
-          "marketing_type": "수수료혜택",
-          "event_period": null,
-          "event_summary": "MZ세대 대상 수수료 혜택으로 젊은 투자자 유입 확대.",
-          "target_etf": null
-        },
-        {
-          "channel": "KB증권 이벤트",
-          "provider": "KB증권",
-          "title": "RIA ETF 순매수 이벤트",
-          "url": "https://m.kbsec.com/go.able?linkcd=s060200020000",
-          "marketing_type": "이벤트",
-          "event_period": null,
-          "event_summary": "RIA 채널의 ETF 순매수 유도 이벤트로 ETF 투자 활성화.",
-          "target_etf": null
-        }
-      ]
-    }
-  },
   "bank_6.22-6.26": {
     "archived_at": "2026-06-28 21:48:10",
     "channels": {
@@ -14715,165 +14486,6 @@
       }
     }
   },
-  "mass_llm_6.22-6.26": {
-    "archived_at": "2026-06-28 21:55:40",
-    "raw": {
-      "marketing_detected": true,
-      "summary": "ETF 운용사 6개사(KODEX/TIGER/ACE/RISE/HANARO/SOL/PLUS)가 신규상장 ETF 홍보, 매수 인증 이벤트, 유튜브 투자정보 콘텐츠 등 다채로운 마케팅 활동을 전개 중입니다. AI·반도체·배터리·전력인프라 등 테마 중심의 신규 상품 출시와 순자산 달성 기념 이벤트가 주력입니다.",
-      "events": [
-        {
-          "channel": "삼성펀드 이벤트페이지",
-          "provider": "KODEX (삼성자산운용)",
-          "title": "KODEX 전고체배터리ESS TOP2플러스 ETF 신규 상장 이벤트",
-          "url": "https://www.samsungfund.com/etf/lounge/event-view.do?seq=95",
-          "marketing_type": "신규상장",
-          "event_period": "2026-06-23 ~ 2026-07-31",
-          "event_summary": "전고체배터리 테마 신규 상장 ETF 홍보 이벤트. 당첨자 발표 2026년 8월.",
-          "target_etf": "KODEX 전고체배터리ESS TOP2플러스 ETF"
-        },
-        {
-          "channel": "삼성펀드 이벤트페이지",
-          "provider": "KODEX (삼성자산운용)",
-          "title": "KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF 신규상장 이벤트",
-          "url": "https://www.samsungfund.com/etf/lounge/event-view.do?seq=94",
-          "marketing_type": "신규상장",
-          "event_period": null,
-          "event_summary": "현대차 로보틱스 밸류체인 관련 신규 상장 ETF 이벤트.",
-          "target_etf": "KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF"
-        },
-        {
-          "channel": "삼성펀드 이벤트페이지",
-          "provider": "KODEX (삼성자산운용)",
-          "title": "[6~8월 릴레이 이벤트] Kodex ETF 순자산 200조 돌파 기념",
-          "url": "https://www.samsungfund.com/etf/lounge/event-view.do?seq=93",
-          "marketing_type": "프로모션",
-          "event_period": "2026-06-01 ~ 2026-08-31",
-          "event_summary": "KODEX ETF 순자산 200조 돌파 기념 릴레이 이벤트.",
-          "target_etf": "KODEX 전체"
-        },
-        {
-          "channel": "유튜브",
-          "provider": "KODEX (삼성자산운용)",
-          "title": "2차전지 투자? 이제 전고체배터리 시대! KODEX 전고체배터리ESS TOP2플러스 ETF (6/23 신규 상장)",
-          "url": "https://youtu.be/jOtwY5duOuE",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "전고체배터리 ETF의 투자 매력과 신규 상장 정보를 담은 유튜브 영상.",
-          "target_etf": "KODEX 전고체배터리ESS TOP2플러스 ETF"
-        },
-        {
-          "channel": "유튜브",
-          "provider": "KODEX (삼성자산운용)",
-          "title": "한 번 더 새로워진 AI시대의 반도체 투자ㅣ KODEX AI반도체TOP2플러스 ETFㅣETF상품정보",
-          "url": "https://youtu.be/4EyHaYKR--0",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "AI 시대 반도체 투자 전략과 KODEX AI반도체TOP2플러스 ETF 상품정보 소개.",
-          "target_etf": "KODEX AI반도체TOP2플러스 ETF"
-        },
-        {
-          "channel": "유튜브",
-          "provider": "ACE ETF (한국투자신탁운용)",
-          "title": "단돈 1만원대로 삼성전자·SK하이닉스 동시 투자하는 법! | ACE K반도체TOP2+ #shorts",
-          "url": "https://youtu.be/qJlli4lo5NA",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "저비용으로 반도체 대형주에 동시 투자 가능한 ACE K반도체TOP2+ 소개.",
-          "target_etf": "ACE K반도체TOP2+"
-        },
-        {
-          "channel": "이벤트페이지",
-          "provider": "TIGER ETF (미래에셋자산운용)",
-          "title": "TIGER 미국나스닥100 ETF 순자산 10조 돌파 기념 매수 인증 이벤트",
-          "url": "https://investments.miraeasset.com/tigeretf/ko/customer/event/list.do",
-          "marketing_type": "이벤트",
-          "event_period": null,
-          "event_summary": "순자산 10조원 돌파 기념으로 진행하는 매수 인증 이벤트.",
-          "target_etf": "TIGER 미국나스닥100 ETF"
-        },
-        {
-          "channel": "이벤트페이지",
-          "provider": "ACE ETF (한국투자신탁운용)",
-          "title": "[EVENT] ACE 미국우주테크액티브(0180V0) 매수 인증 이벤트 시즌 2",
-          "url": "https://www.aceetf.co.kr/cs/notice?category=60&search=&page=1",
-          "marketing_type": "이벤트",
-          "event_period": "2026-06-01 ~ 2026-07-08",
-          "event_summary": "ACE 미국우주테크액티브 ETF 매수 인증 이벤트 시즌 2 진행.",
-          "target_etf": "ACE 미국우주테크액티브(0180V0)"
-        },
-        {
-          "channel": "이벤트페이지",
-          "provider": "ACE ETF (한국투자신탁운용)",
-          "title": "[EVENT] ACE 반도체 3종 10주 매수 인증 이벤트",
-          "url": "https://www.aceetf.co.kr/cs/notice?category=60&search=&page=1",
-          "marketing_type": "이벤트",
-          "event_period": "2026-06-01 ~ 2026-06-26",
-          "event_summary": "ACE 반도체 관련 3개 ETF 제품 10주 매수 인증 이벤트.",
-          "target_etf": "ACE 반도체 3종"
-        },
-        {
-          "channel": "이벤트페이지",
-          "provider": "RISE ETF (KB자산운용)",
-          "title": "RISE AI전력인프라 ETF 시리즈 매수 인증 이벤트",
-          "url": "https://www.riseetf-event.com/event33?utm_source=hp_event&utm_medium=image&utm_campaign=infra",
-          "marketing_type": "이벤트",
-          "event_period": "2026-06-26 ~ 2026-07-28",
-          "event_summary": "AI 시대 전력인프라 관련 ETF 시리즈 매수 인증 이벤트.",
-          "target_etf": "RISE AI전력인프라 ETF 시리즈"
-        },
-        {
-          "channel": "유튜브",
-          "provider": "RISE ETF (KB자산운용)",
-          "title": "이제 AI전력인프라 투자도 전략적으로! RISE AI전력인프라시리즈 ETF",
-          "url": "https://youtu.be/tgA7TUDNemU",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "AI 시대 전력인프라 투자의 필요성과 RISE 상품 소개.",
-          "target_etf": "RISE AI전력인프라 ETF"
-        },
-        {
-          "channel": "유튜브",
-          "provider": "ACE ETF (한국투자신탁운용)",
-          "title": "AI 시대, 반도체 다음은 전력입니다｜ACE 코리아AI전력TOP10",
-          "url": "https://youtu.be/F_-MQ5dAuyg",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "AI 시대 전력 인프라의 중요성과 ACE 코리아AI전력TOP10 투자 전략 제시.",
-          "target_etf": "ACE 코리아AI전력TOP10"
-        },
-        {
-          "channel": "이벤트페이지",
-          "provider": "PLUS ETF (한화자산운용)",
-          "title": "[이벤트] PLUS 글로벌HBM반도체 순자산 2조원 돌파 이벤트",
-          "url": "https://www.plusetf.co.kr/customer/notice/detail?n=31655",
-          "marketing_type": "이벤트",
-          "event_period": "2026-06-01 ~ 2026-07-10",
-          "event_summary": "순자산 2조원 돌파 기념 PLUS 글로벌HBM반도체 ETF 이벤트.",
-          "target_etf": "PLUS 글로벌HBM반도체"
-        },
-        {
-          "channel": "카카오채널",
-          "provider": "PLUS ETF (한화자산운용)",
-          "title": "[6/23 신규 상장] PLUS 200커버드콜액티브 ETF",
-          "url": "https://pf.kakao.com/_LdQkG/posts/113735495",
-          "marketing_type": "신규상장",
-          "event_period": "2026-06-23",
-          "event_summary": "PLUS 200커버드콜액티브 ETF 신규 상장 홍보.",
-          "target_etf": "PLUS 200커버드콜액티브 ETF"
-        },
-        {
-          "channel": "블로그",
-          "provider": "SOL ETF",
-          "title": "전고체배터리 상용화의 길(feat. 혼다-퀀텀스케이프): SOL 전고체배터리&실리콘음극재(0005D0)",
-          "url": "https://blog.naver.com/soletf/224325415124?fromRss=true&trackingCode=rss",
-          "marketing_type": "추천콘텐츠",
-          "event_period": null,
-          "event_summary": "전고체배터리 기술 동향과 SOL 전고체배터리&실리콘음극재 ETF 투자 관점 소개.",
-          "target_etf": "SOL 전고체배터리&실리콘음극재(0005D0)"
-        }
-      ]
-    }
-  },
   "comp_llm_6.22-6.26": {
     "archived_at": "2026-06-28 21:48:11",
     "raw": {
@@ -15248,6 +14860,98 @@
           "marketing_type": "신규상장",
           "event_period": null,
           "event_summary": "신규상장 상품의 카카오톡 채널 공지로 고객 인지도 제고 및 매수 유도.",
+          "target_etf": "PLUS 200커버드콜액티브"
+        }
+      ]
+    }
+  },
+  "sec_llm_6.22-6.26": {
+    "archived_at": "2026-06-28 22:18:50",
+    "raw": {
+      "marketing_detected": true,
+      "etf_codes": [
+        "372710",
+        "379800",
+        "379810",
+        "133690"
+      ],
+      "summary": "삼성자산운용과 삼성증권이 신규 상장 KODEX ETF들을 대상으로 적극적인 이벤트 마케팅을 진행 중입니다. 전고체배터리ESS, 현대차로보틱스밸류체인, KODEX 200조 달성 등 다양한 신규 및 기념 이벤트를 통해 개인 투자자의 매수를 유도하고 있습니다.",
+      "evidence": [
+        {
+          "channel": "삼성자산운용 이벤트 페이지",
+          "title": "KODEX 전고체배터리ESS TOP2플러스 ETF 신규 상장 이벤트",
+          "url": "삼성자산운용 공식 페이지",
+          "event_period": "2026-06-23 ~ 2026-07-31",
+          "reason": "신규 상장 ETF 추격 수요를 위해 베스킨라빈스 2만 원권 300명 제공 이벤트 진행 중",
+          "marketing_type": "이벤트",
+          "etf_codes": [
+            "372710"
+          ]
+        },
+        {
+          "channel": "삼성자산운용 이벤트 페이지",
+          "title": "KODEX 현대차로보틱스밸류체인 TOP3플러스 ETF 신규상장 이벤트",
+          "url": "삼성자산운용 공식 페이지",
+          "event_period": "2026-06-09 ~ 2026-07-31",
+          "reason": "신규 상장 ETF에 대한 교촌치킨 하이브리지 SET 300명 제공 프로모션으로 매수 유도",
+          "marketing_type": "이벤트",
+          "etf_codes": [
+            "379800"
+          ]
+        },
+        {
+          "channel": "삼성자산운용 이벤트 페이지",
+          "title": "KODEX 200조 순자산 달성 기념 이벤트",
+          "url": "삼성자산운용 공식 페이지",
+          "event_period": "2026-06-01 ~ 2026-06-30",
+          "reason": "국내 ETF 최초 200조 돌파 기념으로 삼성자전거 캠핑 복주(구성 1명) 제공",
+          "marketing_type": "이벤트",
+          "etf_codes": [
+            "133690"
+          ]
+        },
+        {
+          "channel": "삼성증권 이벤트 페이지",
+          "title": "차곡차곡 미국대표지수 ETF 모으기",
+          "url": "삼성증권 공식 페이지",
+          "event_period": "2026-06-01 ~ 2026-12-31",
+          "reason": "다이소 1만 원권 매달 500명 추첨으로 미국지수 ETF 적립식 매수 유도",
+          "marketing_type": "프로모션",
+          "etf_codes": [
+            "379810"
+          ]
+        }
+      ]
+    }
+  },
+  "mass_llm_6.22-6.26": {
+    "archived_at": "2026-06-28 22:19:47",
+    "raw": {
+      "marketing_detected": true,
+      "summary": "한화자산운용(PLUS ETF)과 삼성자산운용(KODEX)의 신규상장 홍보, 웹세미나 콘텐츠, 순자산 이벤트 등 적극적인 마케팅 활동이 감지됨. AI반도체, 배터리, 커버드콜 등 테마별 신규상장과 투자 키워드 제시를 통해 매수 유도 중.",
+      "events": [
+        {
+          "title": "PLUS 글로벌HBM반도체 순자산 2조원 돌파 이벤트",
+          "marketing_type": "이벤트",
+          "channel": "PLUS ETF 공식 사이트",
+          "target_etf": "PLUS 글로벌HBM반도체"
+        },
+        {
+          "title": "ETF LIVE : AI반도체 패러다임에 맞춤형으로 진화한 ETF",
+          "marketing_type": "추천콘텐츠",
+          "channel": "KODEX 공식 블로그",
+          "target_etf": "AI반도체 관련 ETF"
+        },
+        {
+          "title": "[KODEX 웹세미나] Kodex 하반기 투자 키워드 [코드명 : AI 병목]",
+          "marketing_type": "추천콘텐츠",
+          "channel": "KODEX 카카오채널",
+          "target_etf": null
+        },
+        {
+          "title": "[6/23 신규 상장] PLUS 200커버드콜액티브 ETF",
+          "marketing_type": "신규상장",
+          "channel": "PLUS ETF 카카오채널",
           "target_etf": "PLUS 200커버드콜액티브"
         }
       ]

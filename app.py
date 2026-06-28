@@ -1241,8 +1241,21 @@ else:
                     for it in items:
                         st.markdown(f"- {it}")
 
-    # 숫자 6자리 코드만 유효 — LLM이 이름을 넣는 경우 필터링
-    detected_codes = [c for c in llm_result.get("etf_codes", []) if str(c).strip().isdigit() and len(str(c).strip()) <= 7]
+    # LLM이 코드 대신 이름을 반환한 경우 역변환
+    _name_to_code = {v: k for k, v in all_kodex_etfs.items()}
+    _raw_codes = llm_result.get("etf_codes", [])
+    detected_codes = []
+    for _c in _raw_codes:
+        _c = str(_c).strip()
+        if _c.isdigit():
+            detected_codes.append(_c)
+        elif _c in _name_to_code:
+            detected_codes.append(_name_to_code[_c])
+        else:
+            # 부분 매칭 시도
+            _matched = next((k for k, v in all_kodex_etfs.items() if _c in v or v in _c), None)
+            if _matched:
+                detected_codes.append(_matched)
 
 # ETF 자동 확정
 target_codes = detected_codes

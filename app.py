@@ -713,7 +713,7 @@ def keyword_fallback(collection_results, all_kodex_etfs: dict) -> dict:
             "marketing_detected": True,
             "etf_codes": found,
             "summary": f"키워드 기반 감지 (Anthropic API 없음): {', '.join(names)}" + (f" 외 {len(found)-5}개" if len(found) > 5 else ""),
-            "evidence": evidence[:8],
+            "evidence": evidence,
         }
     return {"marketing_detected": False, "etf_codes": [], "summary": "마케팅 활동 미감지 (키워드 방식)", "evidence": []}
 
@@ -1070,7 +1070,9 @@ if IS_BACKTEST and not collection_results:
                   "summary": f"{current_sheet} 채널 수집 결과 없음"}
 else:
     _sec_llm_key = f"sec_llm_{current_sheet}"
-    _sec_cached = load_raw_data(_sec_llm_key) if has_archive(_sec_llm_key) else None
+    _sec_cached_raw = load_raw_data(_sec_llm_key) if has_archive(_sec_llm_key) else None
+    # save_raw_data가 {"archived_at":..., "raw":{...}} 형태로 감싸므로 언팩
+    _sec_cached = (_sec_cached_raw.get("raw") or _sec_cached_raw) if _sec_cached_raw else None
     _sec_cache_valid = bool(
         _sec_cached and not (
             _sec_cached.get("marketing_detected") is False

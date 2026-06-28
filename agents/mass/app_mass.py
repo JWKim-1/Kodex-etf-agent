@@ -325,8 +325,14 @@ _type_cls  = {"이벤트":"ev-type-event","프로모션":"ev-type-promo","추천
 _type_icon = {"이벤트":"🎁","프로모션":"💰","추천콘텐츠":"📺","수수료혜택":"🎯"}
 
 if llm_result.get("marketing_detected"):
-    _display_codes = detected_codes if detected_codes else llm_result.get("etf_codes", [])
-    etf_names_det = [all_kodex_etfs.get(c, c) for c in _display_codes]
+    # etf_codes 없으면 events의 target_etf에서 이름 추출
+    _evs_tmp = llm_result.get("evidence") or llm_result.get("events") or []
+    _det_names = []
+    for _e in _evs_tmp:
+        _te = _e.get("target_etf","") or ""
+        if _te and _te not in _det_names and "관련" not in _te and "None" not in _te:
+            _det_names.append(_te)
+    etf_names_det = [all_kodex_etfs.get(c, c) for c in llm_result.get("etf_codes", [])] or _det_names[:5]
     st.success(f"📣 마케팅 활동 감지 — 대상 ETF: **{', '.join(etf_names_det) if etf_names_det else '감지됨'}**")
     if llm_result.get("summary"):
         st.caption(llm_result["summary"])

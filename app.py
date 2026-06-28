@@ -1386,50 +1386,19 @@ st.markdown('<div class="step-header">Step 5 · DiD 계산 (이중차분법)</di
 _did_cache_key = f"sec_did_{current_sheet}"
 did_results = None
 
-if _did_cache_key not in st.session_state:
-    # parquet 캐시에서 로드 시도
-    try:
-        import pandas as _pd_did
-        _did_hist = _pd_did.read_parquet(os.path.join(os.path.dirname(__file__), "did_history.parquet"))
-        _week_hist = _did_hist[(_did_hist["week"] == current_sheet) & (_did_hist["channel"] == "securities")]
-        if not _week_hist.empty:
-            # parquet → ETFDiDResult 재구성 (판정/점수만 복원)
-            _hist_map = {}
-            for _, _hrow in _week_hist.iterrows():
-                _code = str(_hrow.get("code",""))
-                import math as _math
-                _z = float(_hrow.get("value",0) or 0)
-                _score = round(100 / (1 + _math.exp(-_z * 1.5)), 1)
-                _j = str(_hrow.get("judgement",""))
-                _emoji = "🟢" if _score>=75 else "🟡" if _score>=60 else "⚪" if _score>=40 else "🔴"
-                _hist_map[_code] = type("_R", (), {
-                    "kodex_code": _code,
-                    "kodex_name": str(_hrow.get("name",_code)),
-                    "did_value": _z,
-                    "raw_did_value": _z,
-                    "zscore": _z,
-                    "marketing_score": _score,
-                    "judgement": _j,
-                    "judgement_emoji": _emoji,
-                    "competitors": [], "no_competitors": bool(_hrow.get("no_competitors",False)),
-                    "notes": [], "calculation_log": [],
-                    "lp": None, "current": None, "baseline": None,
-                    "kodex_change_pct": 0.0, "control_avg_pct": 0.0,
-                })()
-            if _hist_map and all(c in _hist_map for c in target_codes):
-                # target_codes에 해당하는 것만 — 과거 분석 결과 전체가 뜨는 버그 방지
-                st.session_state[_did_cache_key] = {c: _hist_map[c] for c in target_codes if c in _hist_map}
-    except Exception:
-        pass
-
 _did_from_parquet = False
 if _did_cache_key in st.session_state:
     did_results = st.session_state[_did_cache_key]
-    _did_from_parquet = True
-    st.caption(f"📦 저장된 분석 결과 사용 ({current_sheet}) · 재계산하려면 분석 실행 버튼 클릭")
-    if st.button("🔄 DiD 재계산", key="rerun_did"):
+    # calculation_log 없으면 캐시 무효화 → 재계산
+    if did_results and not any(getattr(v, "calculation_log", []) for v in did_results.values()):
         del st.session_state[_did_cache_key]
-        st.rerun()
+        did_results = None
+    else:
+        _did_from_parquet = True
+        st.caption(f"📦 저장된 분석 결과 사용 ({current_sheet}) · 재계산하려면 분석 실행 버튼 클릭")
+        if st.button("🔄 DiD 재계산", key="rerun_did"):
+            del st.session_state[_did_cache_key]
+            st.rerun()
 else:
     with st.spinner("DiD 분석 중..."):
         did_results = analyzer.analyze(all_sheets, target_codes, current_sheet)

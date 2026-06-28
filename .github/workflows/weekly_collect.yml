@@ -18,6 +18,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Chrome 설치 (Selenium용)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
       - name: 패키지 설치
         run: pip install -r requirements.txt
 

@@ -397,9 +397,11 @@ if llm_etf_codes_raw:
             if _m: llm_etf_codes.append(_m)
     for _ev in llm_ev:
         _title = _ev.get("title","") + " " + _ev.get("event_summary","")
+        _title_norm = __import__('re').sub(r"\s+", "", _title)
         for _name, _code in _name_to_code_b.items():
             _kw = _name.replace("KODEX","").strip()
-            if len(_kw) >= 4 and _kw in _title and _code not in llm_etf_codes:
+            _kw_norm = __import__('re').sub(r"\s+", "", _kw)
+            if len(_kw_norm) >= 4 and (_kw_norm in _title_norm or _kw in _title) and _code not in llm_etf_codes:
                 llm_etf_codes.append(_code); break
     if llm_etf_codes:
         st.info(f"📡 채널 감지 ETF {len(llm_etf_codes)}개 기준 분석")

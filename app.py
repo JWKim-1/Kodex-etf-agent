@@ -1258,12 +1258,14 @@ else:
                 detected_codes.append(_matched)
             # 아예 못찾으면 버림 (잘못된 코드)
 
-    # evidence 제목에서 ETF 이름 추출 → KRX 역매핑 (LLM 코드 오류 보완)
+    # evidence 제목에서 ETF 이름 추출 → KRX 역매핑 (공백 정규화 포함)
+    import re as _re
     for _ev in llm_result.get("evidence", []):
-        _title = _ev.get("title", "") + " " + _ev.get("event_summary", "")
+        _title_raw = _ev.get("title", "") + " " + _ev.get("event_summary", "")
+        _title_norm = _re.sub(r"\s+", "", _title_raw)  # 공백 제거 버전
         for _name, _code in _name_to_code.items():
-            _kw = _name.replace("KODEX", "").strip()
-            if len(_kw) >= 4 and _kw in _title and _code not in detected_codes:
+            _kw = _re.sub(r"\s+", "", _name.replace("KODEX", "").replace("KОДEX", "")).strip()
+            if len(_kw) >= 4 and (_kw in _title_norm or _kw in _title_raw) and _code not in detected_codes:
                 detected_codes.append(_code)
                 break
 

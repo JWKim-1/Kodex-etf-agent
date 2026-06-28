@@ -174,10 +174,22 @@ JSON만 출력:
             try:
                 return json.loads(raw_json)
             except json.JSONDecodeError:
-                # trailing comma 등 흔한 JSON 오류 자동 교정
+                # 1차: trailing comma 제거
                 fixed = re.sub(r",\s*([\}\]])", r"\1", raw_json)
                 try:
                     return json.loads(fixed)
+                except json.JSONDecodeError:
+                    pass
+                # 2차: 마지막 완전한 JSON 객체까지만 파싱 시도
+                try:
+                    depth, last_close = 0, 0
+                    for i, ch in enumerate(raw_json):
+                        if ch == '{': depth += 1
+                        elif ch == '}':
+                            depth -= 1
+                            if depth == 0: last_close = i
+                    if last_close:
+                        return json.loads(raw_json[:last_close+1])
                 except json.JSONDecodeError as e2:
                     logger.warning(f"LLM JSON 교정 후에도 파싱 실패 ({mode}): {e2}")
     except Exception as e:

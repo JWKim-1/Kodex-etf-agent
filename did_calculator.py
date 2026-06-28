@@ -578,6 +578,17 @@ JSON만 출력:
                 fixed = re.sub(r",\s*([\}\]])", r"\1", raw_json)
                 try:
                     return json.loads(fixed)
+                except json.JSONDecodeError:
+                    pass
+                try:
+                    depth, last_close = 0, 0
+                    for i, ch in enumerate(raw_json):
+                        if ch == '{': depth += 1
+                        elif ch == '}':
+                            depth -= 1
+                            if depth == 0: last_close = i
+                    if last_close:
+                        return json.loads(raw_json[:last_close+1])
                 except json.JSONDecodeError as e2:
                     logger.warning(f"LLM JSON 교정 후에도 파싱 실패: {e2}")
     except Exception as e:

@@ -389,7 +389,14 @@ def _run_core(week_label: str, week_start_dt: datetime, week_end_dt: datetime):
                 _first_df = all_sheets_did[sheet_names_did[0]] if sheet_names_did else None
                 if _first_df is not None:
                     _code_col = next((c for c in _first_df.columns if "종목" in str(c) or "코드" in str(c)), None)
-                    bank_target_codes_did = _first_df[_code_col].dropna().tolist() if _code_col else []
+                    _name_col = next((c for c in _first_df.columns if "종목명" in str(c)), None)
+                    if _code_col and _name_col:
+                        _kodex_mask = _first_df[_name_col].astype(str).str.contains("KODEX", na=False)
+                        bank_target_codes_did = _first_df.loc[_kodex_mask, _code_col].dropna().tolist()
+                    elif _code_col:
+                        bank_target_codes_did = _first_df[_code_col].dropna().tolist()
+                    else:
+                        bank_target_codes_did = []
                     analyzer_did = MarketingAnalyzer()
                     summary_did = analyzer_did.analyze(all_sheets_did, bank_target_codes_did, week_label)
                     with open(_pkl_path, "wb") as _pf:

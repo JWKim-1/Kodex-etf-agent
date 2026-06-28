@@ -538,10 +538,10 @@ JSON만 출력:
                 return json.loads(raw)
             except json.JSONDecodeError:
                 try:
-                    from json_repair import repair_json
-                    return json.loads(repair_json(raw))
-                except Exception:
-                    pass
+                    fixed = re.sub(r",\s*([\}\]])", r"\1", raw)
+                    return json.loads(fixed)
+                except json.JSONDecodeError as e2:
+                    logger.warning(f"LLM JSON 교정 후에도 파싱 실패: {e2}")
     except Exception as e:
         logger.warning(f"LLM ETF 추출 실패: {e}")
 

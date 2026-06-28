@@ -556,13 +556,14 @@ JSON만 출력:
         from llm_client import call_llm, call_llm_with_images
         gem_key = __import__("os").getenv("GEMINI_API_KEY", "")
         if collected_image_urls:
-            img_note = f"\n\n[첨부 이미지 {len(collected_image_urls)}개: 이벤트 배너. 이미지에서 이벤트 기간·대상 ETF·혜택 조건을 추출해주세요.]"
+            _imgs = collected_image_urls[:4]  # 이미지 최대 4개로 제한 (토큰 절약)
+            img_note = f"\n\n[첨부 이미지 {len(_imgs)}개: 이벤트 배너. 이미지에서 이벤트 기간·대상 ETF·혜택 조건을 추출해주세요.]"
             text = call_llm_with_images(
                 prompt + img_note,
-                collected_image_urls,
+                _imgs,
                 anthropic_key=anthropic_api_key,
                 gemini_key=gem_key,
-                max_tokens=800,
+                max_tokens=2000,
             )
         else:
             text = call_llm(prompt, anthropic_key=anthropic_api_key, gemini_key=gem_key, max_tokens=2000)

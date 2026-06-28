@@ -137,6 +137,20 @@ for sk in ["securities","bank","mass","competitor"]:
     for ev in (hist_entry.get(sk) or {}).get("events",{}).get("events") or []:
         ev = dict(ev); ev["_sess"] = sk; all_events.append(ev)
 
+# marketing_history에 이벤트 없으면 channel_archive LLM 캐시 폴백
+if not all_events:
+    _llm_key_map = {"securities": f"sec_llm_{selected_week}", "bank": f"bank_llm_{selected_week}",
+                    "mass": f"mass_llm_{selected_week}", "competitor": f"comp_llm_{selected_week}"}
+    try:
+        _arch_all = json.loads(open(os.path.join(_ROOT, "channel_archive.json"), encoding="utf-8").read())
+    except Exception:
+        _arch_all = {}
+    for sk, lk in _llm_key_map.items():
+        _llm_entry = _arch_all.get(lk, {})
+        _llm_raw = _llm_entry.get("raw", _llm_entry)
+        for ev in (_llm_raw.get("events") or []):
+            ev = dict(ev); ev["_sess"] = sk; all_events.append(ev)
+
 # raw 데이터에서 제목 매칭으로 URL 주입 (LLM이 URL 누락한 경우 보완)
 _url_by_title = {}
 for sk in ["securities","bank","mass","competitor"]:

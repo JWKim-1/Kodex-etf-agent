@@ -1,0 +1,101 @@
+name: 주간 데이터 수집
+
+on:
+  schedule:
+    - cron: '30 6 * * 5'  # 매주 금요일 15:30 KST (06:30 UTC)
+  workflow_dispatch:        # 수동 실행 버튼
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 패키지 설치
+        run: pip install -r requirements.txt
+
+      - name: KRX 순매수 데이터 수집
+        env:
+          KRX_ID: ${{ secrets.KRX_ID }}
+          KRX_PW: ${{ secrets.KRX_PW }}
+        run: |
+          python - <<'EOF'
+          from datetime import date, timedelta
+          from krx_data_fetcher import fetch_weekly_etf_data, load_cache, save_cache
+
+          today = date.today()
+          monday = today - timedelta(days=today.weekday())
+          friday = monday + timedelta(days=4)
+          week_label = f"{monday.month}.{monday.day}-{friday.month}.{friday.day}"
+
+          print(f"수집 주차: {week_label}")
+          result = fetch_weekly_etf_data(week_start=monday, week_end=friday)
+          if result is not None and not result.empty:
+              sheets = load_cache()
+              sheets[week_label] = result
+              save_cache(sheets)
+              print(f"완료: {len(result)}개 ETF 저장")
+          else:
+              print("수집 실패")
+          EOF
+
+      - name: 마케팅 채널 수집 및 LLM 분석
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          DART_API_KEY: ${{ secrets.DART_API_KEY }}
+        run: |
+          python - <<'EOF'
+          from datetime import datetime, date, timedelta
+          import scheduled_collect as sc
+
+          today = date.today()
+          monday = today - timedelta(days=today.weekday())
+          friday = monday + timedelta(days=4)
+          week_label = f"{monday.month}.{monday.day}-{friday.month}.{friday.day}"
+
+          print(f"마케팅 수집 주차: {week_label}")
+          wstart = datetime(monday.year, monday.month, monday.day)
+          wend = datetime(friday.year, friday.month, friday.day, 23, 59)
+          sc.run_for_week(week_label, wstart, wend)
+          EOF
+        continue-on-error: true  # Selenium 없어도 나머지 수집은 진행
+
+      - name: 시장트렌드 수집
+        run: |
+          python - <<'EOF'
+          from datetime import date, timedelta
+          from krx_data_fetcher import fetch_etf_market_summary_naver, load_trend_cache, save_trend_cache
+
+          today = date.today()
+          monday = today - timedelta(days=today.weekday())
+          friday = monday + timedelta(days=4)
+          week_label = f"{monday.month}.{monday.day}-{friday.month}.{friday.day}"
+
+          tc = load_trend_cache()
+          if week_label not in tc:
+              df = fetch_etf_market_summary_naver()
+              if not df.empty:
+                  save_trend_cache(week_label, df)
+                  print(f"시장트렌드 완료: {len(df)}개 ETF")
+          else:
+              print("시장트렌드 캐시 이미 있음")
+          EOF
+        continue-on-error: true
+
+      - name: 변경사항 커밋 및 푸시
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add krx_data_cache.parquet channel_archive.json marketing_history.json krx_trend_cache.parquet did_history.parquet bank_zscore_history.parquet || true
+          git diff --staged --quiet || git commit -m "자동 수집: $(date +'%Y-%m-%d') 주간 데이터"
+          git push

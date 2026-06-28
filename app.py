@@ -1241,21 +1241,31 @@ else:
                     for it in items:
                         st.markdown(f"- {it}")
 
-    # LLM이 코드 대신 이름을 반환한 경우 역변환
     _name_to_code = {v: k for k, v in all_kodex_etfs.items()}
     _raw_codes = llm_result.get("etf_codes", [])
     detected_codes = []
     for _c in _raw_codes:
         _c = str(_c).strip()
-        if _c.isdigit():
+        # 실제 KRX에 존재하는 코드인지 검증
+        if _c in all_kodex_etfs:
             detected_codes.append(_c)
         elif _c in _name_to_code:
             detected_codes.append(_name_to_code[_c])
         else:
-            # 부분 매칭 시도
+            # 부분 매칭
             _matched = next((k for k, v in all_kodex_etfs.items() if _c in v or v in _c), None)
             if _matched:
                 detected_codes.append(_matched)
+            # 아예 못찾으면 버림 (잘못된 코드)
+
+    # evidence 제목에서 ETF 이름 추출 → KRX 역매핑 (LLM 코드 오류 보완)
+    for _ev in llm_result.get("evidence", []):
+        _title = _ev.get("title", "") + " " + _ev.get("event_summary", "")
+        for _name, _code in _name_to_code.items():
+            _kw = _name.replace("KODEX", "").strip()
+            if len(_kw) >= 4 and _kw in _title and _code not in detected_codes:
+                detected_codes.append(_code)
+                break
 
 # ETF 자동 확정
 target_codes = detected_codes

@@ -325,8 +325,9 @@ _type_cls  = {"이벤트":"ev-type-event","프로모션":"ev-type-promo","추천
 _type_icon = {"이벤트":"🎁","프로모션":"💰","추천콘텐츠":"📺","수수료혜택":"🎯"}
 
 if llm_result.get("marketing_detected"):
-    etf_names_det = [all_kodex_etfs.get(c, c) for c in llm_result.get("etf_codes", [])]
-    st.success(f"📣 마케팅 활동 감지 — 대상 ETF: **{', '.join(etf_names_det)}**")
+    _display_codes = detected_codes if detected_codes else llm_result.get("etf_codes", [])
+    etf_names_det = [all_kodex_etfs.get(c, c) for c in _display_codes]
+    st.success(f"📣 마케팅 활동 감지 — 대상 ETF: **{', '.join(etf_names_det) if etf_names_det else '감지됨'}**")
     if llm_result.get("summary"):
         st.caption(llm_result["summary"])
 
@@ -685,7 +686,11 @@ for code, res in did_results.items():
                     icon = "▸"
                     for k, v in icons.items():
                         if line.startswith(k): icon = v; break
-                    log_html += f"<div style='padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);'><span style='opacity:.5;margin-right:6px;'>{icon}</span><span style='font-size:0.82rem;font-family:monospace;'>{line}</span></div>"
-                st.markdown(f"<div style='background:rgba(0,0,0,0.2);padding:12px;border-radius:8px;'>{log_html}</div>", unsafe_allow_html=True)
+                    color = "#4d9fff" if "KODEX" in line[:15] else \
+                            "#f4a261" if "비교군" in line[:10] else \
+                            "#4ec880" if "판정" in line else \
+                            "#e9c46a" if "2단계" in line[:5] else "inherit"
+                    log_html += f"<div style='padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);'><span style='opacity:.5;margin-right:6px;'>{icon}</span><span style='color:{color};font-size:0.82rem;font-family:monospace;'>{line}</span></div>"
+                st.markdown(f"<div style='padding:8px;'>{log_html}</div>", unsafe_allow_html=True)
 
 st.caption("삼성자산운용 ETF 마케팅 AI Agent · 개인 채널 분석")

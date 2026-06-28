@@ -4,7 +4,5 @@ __pycache__/
 .env
 .streamlit/credentials.toml
 *.log
-.did_cache/
-*.pkl
 .instagram_session
 
